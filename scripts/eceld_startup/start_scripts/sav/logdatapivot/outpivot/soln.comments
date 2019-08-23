@@ -1,0 +1,5 @@
+8771 scope=single**important-packet-identifier=all-packet-payload**program-used= metasploit**cmd=msfconsole**description=MSF Auxiliary Scan - GET Request**confidence=3
+8799 scope=single**important-packet-identifier=Module**program-used=metasploit**cmd=msfconsole**description= MSF Auxiliary Scan - Module Found**confidence=3
+8910 scope=single**important-packet-identifier=JMXInvokerServlet**program-used=metasploit**cmd=msfconsole**description=MSF Exploit JMX-servlet**confidence=3
+##9003 scope=conversation**important-packet-identifier=GET **program-used=metasploit-reverse-shell**cmd=msfconsole-meterpreter**description=Illegitimate Connection**confidence=3
+9012 scope=single**important-packet-identifier=meterpreter**program-used=metasploit**cmd=metasploit**description=metaploit reverse shell setup info to victim**confidence=3

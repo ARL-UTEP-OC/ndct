@@ -1,0 +1,11 @@
+[
+    {
+       "start-times": ["08/05/2019-21:44:01.560258", "08/05/2019-21:46:10.178765", "08/05/2019-21:46:38.178159"],
+       "id": 1, 
+       "message-if-missed": "You missed an access to the web page in question..",
+       "hints-if-missed": ["#1 of 2: Look at the HTTP Packets and their GET Requests (the expert info column is a good resource) and make sure you add a custom identifer starting with GET", "#2 of 2: GET /admins_only/donttouch.html HTTP/1.1 is the custom identifier"],
+       "message-if-found": "Illegitimate access to donttouch.html from IP Address Found",
+       "difficulty": "3"
+    }
+]
+
