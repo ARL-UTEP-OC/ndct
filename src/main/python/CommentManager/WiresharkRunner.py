@@ -10,7 +10,7 @@ class WiresharkRunner(QThread):
     def __init__(self, lua_scripts=None, pcap_filename=None):
         logging.debug('WiresharkRunner(): Instantiated')
         QThread.__init__(self)
-        self.cmd = ConfigurationManager.get_instance().read_config_value("COMMENT_MANAGER","WIRESHARK_FILENAME")
+        self.cmd = ConfigurationManager.get_instance().read_config_abspath("COMMENT_MANAGER","WIRESHARK_FILENAME")
         if pcap_filename != None:
             self.cmd+= " -r " + pcap_filename
         if lua_scripts != None and len(lua_scripts) > 0:

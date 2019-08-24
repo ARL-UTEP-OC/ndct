@@ -20,7 +20,7 @@ class Validator():
         self.commented_json_filename = commented_json_filename
         if self.commented_json_filename == None:
             #read from config file
-            self.commented_json_filename = ConfigurationManager.get_instance().read_config_value("VALIDATOR", "COMMENTS_JSON_FILENAME")
+            self.commented_json_filename = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "COMMENTS_JSON_FILENAME")
 
         logging.debug('CommentManager(): Complete')
 
@@ -34,7 +34,7 @@ class Validator():
         self.rules_output_filename = rules_output_filename
         if rules_output_filename == None:
             #read from config file
-            self.rules_output_filename = ConfigurationManager.get_instance().read_config_value("VALIDATOR", "SURICATA_RULES_FILENAME")
+            self.rules_output_filename = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SURICATA_RULES_FILENAME")
         try:
             #make sure path exists, if not, create it
             dirname = os.path.dirname(self.rules_output_filename)
@@ -55,17 +55,17 @@ class Validator():
         self.suricata_executable_filename = suricata_executable_filename
         if self.suricata_executable_filename == None:
             #read from config file
-            self.suricata_executable_filename = ConfigurationManager.get_instance().read_config_value("VALIDATOR", "SURICATA_EXECUTABLE_FILENAME")
+            self.suricata_executable_filename = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SURICATA_EXECUTABLE_FILENAME")
 
         self.suricata_config_filename = suricata_config_filename
         if self.suricata_config_filename == None:
             #read from config file
-            self.suricata_config_filename = ConfigurationManager.get_instance().read_config_value("VALIDATOR", "SURICATA_CONFIG_FILENAME")
+            self.suricata_config_filename = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SURICATA_CONFIG_FILENAME")
 
         self.suricata_alert_path = suricata_alert_path
         if self.suricata_alert_path == None:
             #read from config file
-            self.suricata_alert_path = ConfigurationManager.get_instance().read_config_value("VALIDATOR", "SURICATA_ALERT_PATH")
+            self.suricata_alert_path = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SURICATA_ALERT_PATH")
         try:
             #if path exists, remove it and then recreate it
             if os.path.exists(self.suricata_alert_path) == True:
@@ -80,12 +80,12 @@ class Validator():
         self.suricata_rules_filename = suricata_rules_filename
         if self.suricata_rules_filename == None:
             #read from config file
-            self.suricata_rules_filename = ConfigurationManager.get_instance().read_config_value("VALIDATOR", "SURICATA_RULES_FILENAME")
+            self.suricata_rules_filename = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SURICATA_RULES_FILENAME")
 
         self.validate_pcap_filename = validate_pcap_filename
         if self.validate_pcap_filename == None:
             #read from config file
-            self.validate_pcap_filename = ConfigurationManager.get_instance().read_config_value("VALIDATOR", "PCAP_FOR_VALIDATION_FILENAME")
+            self.validate_pcap_filename = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "PCAP_FOR_VALIDATION_FILENAME")
 
         #Sample command: suricata -c /etc/suricata/suricata.yaml -l . -r $1 -k none
         logging.debug('run_suricata_with_rules(): Instantiated')
@@ -107,11 +107,11 @@ class Validator():
         self.suricata_soln_alerts_json = suricata_soln_alerts_json
         if self.suricata_soln_alerts_json == None:
             #read from config file
-            self.suricata_soln_alerts_json = ConfigurationManager.get_instance().read_config_value("VALIDATOR", "SOLN_FILENAME")
+            self.suricata_soln_alerts_json = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SOLN_FILENAME")
         self.suricata_alert_path = suricata_alert_path
         if self.suricata_alert_path == None:
             #read from config file
-            self.suricata_alert_path = ConfigurationManager.get_instance().read_config_value("VALIDATOR", "SURICATA_ALERT_PATH")
+            self.suricata_alert_path = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SURICATA_ALERT_PATH")
         #generate the scoring bin data structure based on the input JSON data 
         self.scorer.extractSolutionsFromJSON(self.suricata_soln_alerts_json)
         #generate the report:
@@ -123,7 +123,7 @@ class Validator():
         logging.debug('write_score_file(): Instantiated')
         self.oscore_file = oscore_file
         if self.oscore_file == None:
-            self.oscore_file = ConfigurationManager.get_instance().read_config_value("VALIDATOR", "SCORE_REPORT_FILENAME")
+            self.oscore_file = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SCORE_REPORT_FILENAME")
         self.scorer.writeResultsToFile(self.oscore_file, self.score_data)
         logging.debug('write_score_file(): Completed')
 

@@ -33,10 +33,18 @@ class ConfigurationManager():
             logging.debug('ConfigurationManager(): Completed Instantiation')
             ConfigurationManager.__instance = self
 
-    def read_config_value(self, configsection, configkey):
+    def read_config_abspath(self, configsection, configkey):
         logging.debug('readConfigValue(): Instantiated')
         if configsection in self.cp and configkey in self.cp[configsection]:
             return os.path.abspath(self.cp[configsection][configkey])
+        else:
+            logging.error("ConfigurationManager(): section/key not found in config file: " + os.path.abspath(ConfigurationManager.CONFIG_FILENAME) + " " + str(configsection) + "/" + str(configkey))
+        return None
+
+    def read_config_value(self, configsection, configkey):
+        logging.debug('readConfigValue(): Instantiated')
+        if configsection in self.cp and configkey in self.cp[configsection]:
+            return self.cp[configsection][configkey]
         else:
             logging.error("ConfigurationManager(): section/key not found in config file: " + os.path.abspath(ConfigurationManager.CONFIG_FILENAME) + " " + str(configsection) + "/" + str(configkey))
         return None
@@ -47,9 +55,9 @@ if __name__ == '__main__':
     cm = ConfigurationManager.get_instance()
     cm2 = ConfigurationManager.get_instance()
     logging.debug("Checking Key/Values")
-    logging.debug(cm2.read_config_value("GUI", "SHOW_COLLECTION_WIDGETS"))
-    logging.debug(cm2.read_config_value("GUI", "NOT_HERE"))
-    logging.debug(cm2.read_config_value("NOT_HERE", "NOT_HERE"))
+    logging.debug(cm2.read_config_abspath("GUI", "SHOW_COLLECTION_WIDGETS"))
+    logging.debug(cm2.read_config_abspath("GUI", "NOT_HERE"))
+    logging.debug(cm2.read_config_abspath("NOT_HERE", "NOT_HERE"))
     logging.debug("Completed ConfigurationManager()") 
 
 

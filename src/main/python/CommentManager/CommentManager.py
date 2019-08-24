@@ -15,7 +15,7 @@ class CommentManager():
         self.user_pcap_filename = user_pcap_filename
         if user_pcap_filename == None:
             #read from config file
-            self.commented_pcap_filename = ConfigurationManager.get_instance().read_config_value("COMMENT_MANAGER", "USER_PCAP_FILENAME")
+            self.commented_pcap_filename = ConfigurationManager.get_instance().read_config_abspath("COMMENT_MANAGER", "USER_PCAP_FILENAME")
         
         self.ce = CommentExtractor()
         logging.debug('CommentManager(): Complete')
@@ -30,7 +30,7 @@ class CommentManager():
         self.comment_json_output_filename = comment_json_output_filename
         if self.comment_json_output_filename == None:
             #read from config file
-            self.comment_json_output_filename = ConfigurationManager.get_instance().read_config_value("COMMENT_MANAGER", "COMMENTS_JSON_FILENAME")
+            self.comment_json_output_filename = ConfigurationManager.get_instance().read_config_abspath("COMMENT_MANAGER", "COMMENTS_JSON_FILENAME")
         self.ce.writeJSONToFile(self.comment_json_output_filename, self.jsondata)
         logging.debug('writeCommentJSONToFile(): Completed')
 
@@ -40,7 +40,7 @@ class CommentManager():
         self.user_pcap_filename = user_pcap_filename
         if user_pcap_filename == None:
             #read from config file
-            self.user_pcap_filename = ConfigurationManager.get_instance().read_config_value("COMMENT_MANAGER", "USER_PCAP_FILENAME")
+            self.user_pcap_filename = ConfigurationManager.get_instance().read_config_abspath("COMMENT_MANAGER", "USER_PCAP_FILENAME")
 
         self.wireshark_thread = WiresharkRunner(lua_scripts=dissector_filenames, pcap_filename=self.user_pcap_filename)
         self.wireshark_thread.start()

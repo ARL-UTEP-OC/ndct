@@ -43,7 +43,7 @@ class LogManager():
         self.export_data_path = export_data_path
         if export_data_path == None:
             #read from config file
-            self.export_data_path = ConfigurationManager.get_instance().read_config_value("LOG_MANAGER", "EXPORT_DATA_PATH_TEMP")
+            self.export_data_path = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "EXPORT_DATA_PATH_TEMP")
 
         anyParsersRunning = self.ecel_manager.is_parser_running()
         logging.debug ("Checking if parsers running: " + str(anyParsersRunning))
@@ -69,18 +69,18 @@ class LogManager():
         self.export_data_path_temp = export_data_path_temp
         if self.export_data_path_temp == None:
             #read from config file
-            self.export_data_path_temp = ConfigurationManager.get_instance().read_config_value("LOG_MANAGER", "EXPORT_DATA_PATH_TEMP")
+            self.export_data_path_temp = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "EXPORT_DATA_PATH_TEMP")
         
         #this is where the latest exported data will be placed
         self.export_data_path_latest = export_data_path_latest
         if self.export_data_path_latest == None:
             #read from config file
-            self.export_data_path_latest = ConfigurationManager.get_instance().read_config_value("LOG_MANAGER", "EXPORT_DATA_PATH_LATEST")
+            self.export_data_path_latest = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "EXPORT_DATA_PATH_LATEST")
 
         self.user_pcap_filename = user_pcap_filename
         if self.user_pcap_filename == None:
             #read from config file
-            self.user_pcap_filename = ConfigurationManager.get_instance().read_config_value("LOG_MANAGER", "USER_PCAP_FILENAME")
+            self.user_pcap_filename = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "USER_PCAP_FILENAME")
 
         latestlogdirs = self.getSortedInDirs(self.export_data_path_temp, dircontains="export")
         latestlogdir = ""
@@ -141,19 +141,19 @@ class LogManager():
         self.export_data_path_latest = export_data_path_latest
         if self.export_data_path_latest == None:
             #read from config file
-            self.export_data_path_latest = ConfigurationManager.get_instance().read_config_value("LOG_MANAGER", "EXPORT_DATA_PATH_LATEST")
+            self.export_data_path_latest = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "EXPORT_DATA_PATH_LATEST")
 
         #this is where the dissectors will be placed
         self.dissector_path = dissector_path
         if self.dissector_path == None:
             #read from config file
-            self.dissector_path = ConfigurationManager.get_instance().read_config_value("LOG_MANAGER", "DISSECTOR_PATH")
+            self.dissector_path = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "DISSECTOR_PATH")
 
         #this is where the dissectors will be placed
         self.dissector_code_template_filename = dissector_code_template_filename
         if self.dissector_code_template_filename == None:
             #read from config file
-            self.dissector_code_template_filename = ConfigurationManager.get_instance().read_config_value("LOG_MANAGER", "DISSECTOR_CODE_TEMPLATE_FILENAME")
+            self.dissector_code_template_filename = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "DISSECTOR_CODE_TEMPLATE_FILENAME")
 
         #get files in directory
         self.filelist = dg.getJSONFiles(self.export_data_path_latest)
