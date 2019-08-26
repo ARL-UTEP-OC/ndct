@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd /root/git/eceld/
-./ecel_service.py &
+./eceld_service.py &
