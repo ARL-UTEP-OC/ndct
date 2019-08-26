@@ -4,8 +4,8 @@ from PyQt5.QtCore import QThread, pyqtSignal
 import time
 
 class BatchThread(QThread):
-    signal = pyqtSignal()
-    signal2 = pyqtSignal()
+    progress_signal = pyqtSignal()
+    completion_signal = pyqtSignal()
 
     def __init__(self):
         logging.debug('BatchThread(): Instantiated')
@@ -13,12 +13,12 @@ class BatchThread(QThread):
         self.functionlist = []
         logging.debug('BatchThread(): Completed')
 
-    def addFunction(self, funcname, *args):
-        logging.debug('BatchThread.addFunction(): Instantiated')
+    def add_function(self, funcname, *args):
+        logging.debug('BatchThread.add_function(): Instantiated')
         self.functionlist.append((funcname, *args))
-        logging.debug('BatchThread.addFunction(): Complete')
+        logging.debug('BatchThread.add_function(): Complete')
 
-    def getLoadCount(self):
+    def get_load_count(self):
         return len(self.functionlist)
     
     def run(self):
@@ -28,6 +28,6 @@ class BatchThread(QThread):
             #run the function with provided arguments
             funcname(*args)
             #emit when file done reading
-            self.signal.emit()
-        self.signal2.emit()
+            self.progress_signal.emit()
+        self.completion_signal.emit()
         logging.debug('BatchThread.run(): Completed')

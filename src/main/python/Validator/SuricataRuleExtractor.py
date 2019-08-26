@@ -15,11 +15,11 @@ class SuricataRuleExtractor():
     def __init__(self):
         self.tcp_convo_counter = 0
 
-    def jsonToRules(self, json_rules_filename):
+    def json_to_rules(self, json_rules_filename):
         try:
-            logging.debug("jsonToRules() instantiated")
+            logging.debug("json_to_rules() instantiated")
             with open(json_rules_filename) as json_input:
-                logging.debug("jsonToRules(): Reading comments")
+                logging.debug("json_to_rules(): Reading comments")
                 comments_json = json.load(json_input)
             #sample: alert tcp 10.0.2.2 8080 -> any any (msg: "Found"; content: "Module"; flags: PA; sid: 3; )
             suricata_rules = []
@@ -30,7 +30,7 @@ class SuricataRuleExtractor():
                 protocol_dict = comment["id"]
                 suri_proto = ""
 
-                suri_msg = comment["description"] + " CMD-" + self.complyString(comment["run-descriptor"])
+                suri_msg = comment["description"] + " CMD-" + self.comply_string(comment["run-descriptor"])
                 protocol_dict = comment["protocol"]
 
                 if "eth:ethertype:ip" in protocol_dict:
@@ -120,7 +120,7 @@ class SuricataRuleExtractor():
                                 if len(mypayload) == 0:
                                     suri_content = ""
                                 else:
-                                    suri_content = "\"" + self.complyString(mypayload) + "\""
+                                    suri_content = "\"" + self.comply_string(mypayload) + "\""
                             #either all or match selected, but no data provided; so default to "ignore"
                             else: 
                                 suri_content = ""
@@ -192,31 +192,31 @@ class SuricataRuleExtractor():
             return suricata_rules
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.error("jsonToRules(): An error occured")
+            logging.error("json_to_rules(): An error occured")
             traceback.print_exception(exc_type, exc_value, exc_traceback)
             exit()
 
-    def writeRulesToFile(self, ofilename, ruledata):
-        logging.debug("writeRulesToFile() Instantiated")
+    def write_rules_to_file(self, ofilename, ruledata):
+        logging.debug("write_rules_to_file() Instantiated")
         try:
 		    # now write output to a file
-            logging.debug("writeRulesToFile() File opened for writing: " + str(ofilename))
+            logging.debug("write_rules_to_file() File opened for writing: " + str(ofilename))
             ruleOF = open(ofilename, "w")
-            logging.debug("writeRulesToFile() Writing Rule Data to file.")
+            logging.debug("write_rules_to_file() Writing Rule Data to file.")
             for rule in ruledata:
                 logging.debug("Rule: \r\n" + str(rule))
                 ruleOF.write(str(rule) + "\r\n")
-            logging.debug("writeRulesToFile() Writing complete; closing file.")
+            logging.debug("write_rules_to_file() Writing complete; closing file.")
             ruleOF.close()
-            logging.debug("writeRulesToFile() Completed.")
+            logging.debug("write_rules_to_file() Completed.")
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.error("writeRulesToFile(): An error occured")
+            logging.error("write_rules_to_file(): An error occured")
             traceback.print_exception(exc_type, exc_value, exc_traceback)
             exit()
 
-    def complyString(self, mystring, replacePipe=False, replaceSemi=False):
-        logging.debug("complyString() Instantiated")
+    def comply_string(self, mystring, replacePipe=False, replaceSemi=False):
+        logging.debug("comply_string() Instantiated")
         if mystring == None or mystring == "":
             return ""
         answer = mystring
@@ -229,8 +229,8 @@ class SuricataRuleExtractor():
         answer = answer.replace("\\r", "|0D|")
         answer = answer.replace(":","|3A|")
         answer = answer.replace("\"","|22|")
-        logging.debug("complyString() compliant string: " + str(answer))        
-        logging.debug("complyString() Completed")        
+        logging.debug("comply_string() compliant string: " + str(answer))        
+        logging.debug("comply_string() Completed")        
         return answer
 
 if __name__ == "__main__":
@@ -242,5 +242,5 @@ if __name__ == "__main__":
     ifilename = sys.argv[1]
     ofilename = sys.argv[2]
     se = SuricataRuleExtractor()
-    ruledata = se.jsonToRules(ifilename)
-    se.writeRulesToFile(ofilename, ruledata)
+    ruledata = se.json_to_rules(ifilename)
+    se.write_rules_to_file(ofilename, ruledata)

@@ -49,6 +49,14 @@ class ConfigurationManager():
             logging.error("ConfigurationManager(): section/key not found in config file: " + os.path.abspath(ConfigurationManager.CONFIG_FILENAME) + " " + str(configsection) + "/" + str(configkey))
         return None
 
+    def set_config_file(self, config_filename):
+        try:
+            self.cp.read(config_filename)
+        except:
+            logging.error("exportData(): An error occured when trying to read config file: " + str(ConfigurationManager.CONFIG_FILENAME))
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
+
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)
     logging.debug("Instantiating ConfigurationManager()")

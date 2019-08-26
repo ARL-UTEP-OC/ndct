@@ -22,12 +22,13 @@ class Scorer():
         self.total_TP = 0
         self.total_FP = 0
         self.total_FN = 0
+        self.score_report = ""
 
-    def extractSolutionsFromJSON(self, soln_filename):
+    def extract_solutions_from_json(self, soln_filename):
         try:
-            logging.debug("extractSolutionsFromJSON() instantiated")
+            logging.debug("extract_solutions_from_json() instantiated")
             with open(soln_filename) as json_input:
-                logging.debug("extractSolutionsFromJSON(): Reading comments")
+                logging.debug("extract_solutions_from_json(): Reading comments")
                 event_json = json.load(json_input)
 
             for event in event_json:
@@ -41,12 +42,12 @@ class Scorer():
             logging.debug("constructBinsFromJSON() Completed")
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.error("extractSolutionsFromJSON(): An error occured")
+            logging.error("extract_solutions_from_json(): An error occured")
             traceback.print_exception(exc_type, exc_value, exc_traceback)
             exit()
 
-    def scoreAlerts(self, alerts_filename):
-        logging.debug("scoreAlerts() instantiated")
+    def score_alerts(self, alerts_filename):
+        logging.debug("score_alerts() instantiated")
         self.raw_alerts = ""
         self.total_TP = 0
         self.total_FP = 0
@@ -67,7 +68,7 @@ class Scorer():
                 toIP = fromIP = details.split("} ")[1].split(" ")[2]
                 #Find matches (true positives)
                 if alert_time in self.bins:
-                    logging.debug("scoreAlerts() Found: " + alert_time)
+                    logging.debug("score_alerts() Found: " + alert_time)
                     #set to True
                     line = "CORRECT  FOUND: " + line
                     self.bins[alert_time]["found"] = True
@@ -75,17 +76,17 @@ class Scorer():
                     #store id and a timestamps (only one needed since all share detailed JSON values)
                     if self.bins[alert_time]["id"] not in self.grouped_truepositive:
                         self.grouped_truepositive[self.bins[alert_time]["id"]] = alert_time    
-                    logging.debug("writeResultsToFile() Found: " + str(self.bins[alert_time]["message_if_found"]))
+                    logging.debug("write_results_to_file() Found: " + str(self.bins[alert_time]["message_if_found"]))
                 #Otherwise its a false positive
                 else:
-                    logging.debug("scoreAlerts() NOT Found: " + alert_time)
+                    logging.debug("score_alerts() NOT Found: " + alert_time)
                     #set to True
                     line = "FALSE POSITIVE: " + line
                     self.total_FP +=1
                     #store id and a timestamps (only one needed since all share detailed JSON values)
                     if alert_time not in self.grouped_falsepositive:
                         self.grouped_falsepositive[alert_time] = True
-                    logging.debug("scoreAlerts() False Positive: " + str(alert_time))
+                    logging.debug("score_alerts() False Positive: " + str(alert_time))
                 self.raw_alerts += line
             #Now go through and find the false negatives
             for alert_time in self.bins:
@@ -94,22 +95,23 @@ class Scorer():
                     #store id and a timestamps (only one needed since all share detailed JSON values)
                     if self.bins[alert_time]["id"] not in self.grouped_falsenegative:
                         self.grouped_falsenegative[self.bins[alert_time]["id"]] = alert_time    
-                    logging.debug("writeResultsToFile() NOT Found: " + str(self.bins[alert_time]["message_if_missed"]))
+                    logging.debug("write_results_to_file() NOT Found: " + str(self.bins[alert_time]["message_if_missed"]))
             
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.error("scoreAlerts(): An error occured")
+            logging.error("score_alerts(): An error occured")
             traceback.print_exception(exc_type, exc_value, exc_traceback)
             exit()
         
-        logging.debug("scoreAlerts() Completed")
+        logging.debug("score_alerts() Completed")
 
-    def generateResultsReport(self):
-        logging.debug("generateResultsReport() Instantiated")
+    def generate_results_report(self):
+        logging.debug("generate_results_report() Instantiated")
+        self.score_report = ""
         answer = ""
 
         # now store into string
-        logging.debug("generateResultsReport() Generating String Data.")
+        logging.debug("generate_results_report() Generating String Data.")
         great_job_text = """
 ************************************************************************
   _____                _    __          ______  _____  _  ___ 
@@ -159,21 +161,25 @@ class Scorer():
         for line in self.raw_alerts:
             answer += line
         
-        logging.debug("generateResultsReport() String generation complete.")
-        logging.debug("generateResultsReport() Completed.")
+        logging.debug("generate_results_report() String generation complete.")
+        logging.debug("generate_results_report() Completed.")
+        self.score_report = answer
         return answer
 
-    def writeResultsToFile(self, ofilename, score_data):
-        logging.debug("writeResultsToFile() Instantiated")
+    def get_score_report(self):
+        return self.score_report
+
+    def write_results_to_file(self, ofilename, score_data):
+        logging.debug("write_results_to_file() Instantiated")
         try:
 		    # now write output to a file
-            logging.debug("writeResultsToFile() File opened for writing: " + str(ofilename))
+            logging.debug("write_results_to_file() File opened for writing: " + str(ofilename))
             resultsOF = open(ofilename, "w")
-            logging.debug("writeResultsToFile() Writing Rule Data to file.")
+            logging.debug("write_results_to_file() Writing Rule Data to file.")
             resultsOF.write(score_data)
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.error("writeResultsToFile(): An error occured")
+            logging.error("write_results_to_file(): An error occured")
             traceback.print_exception(exc_type, exc_value, exc_traceback)
             exit()
 
@@ -187,9 +193,9 @@ if __name__ == "__main__":
     submitted_alerts = sys.argv[2]
     ofilename = sys.argv[3]
     scorer = Scorer()
-    scorer.extractSolutionsFromJSON(soln_alerts_json)
-    scorer.scoreAlerts(submitted_alerts)
+    scorer.extract_solutions_from_json(soln_alerts_json)
+    scorer.score_alerts(submitted_alerts)
     #generate the report:
-    score_data = scorer.generateResultsReport()
-    scorer.writeResultsToFile(ofilename, score_data)
+    score_data = scorer.generate_results_report()
+    scorer.write_results_to_file(ofilename, score_data)
     logging.debug("Program Complete")

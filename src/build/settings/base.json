@@ -1,6 +1,6 @@
 {
-    "app_name": "ECELD-NetLabel",
-    "author": "Root",
+    "app_name": "ECELD-NetSys",
+    "author": "Acosta",
     "main_module": "src/main/python/main.py",
-    "version": "0.0.0"
+    "version": "0.1.0"
 }

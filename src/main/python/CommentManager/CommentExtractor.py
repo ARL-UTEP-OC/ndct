@@ -16,30 +16,30 @@ class CommentExtractor():
 	def __init__(self):
 		pass
 
-	def commentToJSON(self, ifilename):
-		logging.debug("commentToJSON() Instantiated.")
+	def comment_to_json(self, ifilename):
+		logging.debug("comment_to_json() Instantiated.")
 		try:
 			#TODO add default -edata field
 			extract_cmd = CommentExtractor.TSHARK_COMMAND + " -r " + ifilename + " -T fields  -E separator=, -eframe.protocols -eframe.time_epoch -eframe.number -eip.src -eip.dst -eudp.srcport -eudp.dstport -etcp.srcport -etcp.dstport -etcp.flags.str -etcp.payload -eframe.comment pkt_comment"
 			#extractCmd = tsharkCommand + " -r " + inputFilename + " -T fields" + " -E separator=," + " -eframe.protocols" + " -eframe.time_epoch" + " -eip.src" + " -eip.dst" + " -eudp.srcport" + " -eudp.dstport" + " -etcp.srcport" + " -etcp.dstport" + " -etcp.flags")
-			logging.debug("commentToJSON() running command: " + extract_cmd)
+			logging.debug("comment_to_json() running command: " + extract_cmd)
 			process = Popen(shlex.split(extract_cmd), stdout=subprocess.PIPE)
-			logging.debug("commentToJSON() waiting for system call to complete...")
+			logging.debug("comment_to_json() waiting for system call to complete...")
 			out, err = process.communicate()
-			logging.debug("commentToJSON() Completed.")
-			return self.procOutputToJSON(out)
+			logging.debug("comment_to_json() Completed.")
+			return self.proc_output_to_json(out)
 			
 		except Exception as e:
 			exc_type, exc_value, exc_traceback = sys.exc_info()
-			logging.error("commentToJSON(): An error occured ")
+			logging.error("comment_to_json(): An error occured ")
 			traceback.print_exception(exc_type, exc_value, exc_traceback)
 			exit()		
 	
-	def procOutputToJSON(self, outdata):
-		logging.debug("procOutputToJSON() Instantiated")
+	def proc_output_to_json(self, outdata):
+		logging.debug("proc_output_to_json() Instantiated")
 		id = 0
 		comment_data_list = []
-		logging.debug("procOutputToJSON() Reading Packet Data")
+		logging.debug("proc_output_to_json() Reading Packet Data")
 		for field in outdata.splitlines():
 			id+=1
 			protocol_dict = {}
@@ -77,8 +77,8 @@ class CommentExtractor():
 				scope = "single"
 			if payload_identifier == "":
 				payload_identifier = ""
-			logging.debug("procOutputToJSON(): packet_info: " + str(packet_info))
-			logging.debug("procOutputToJSON(): packet_comment: " + str(packet_comment))
+			logging.debug("proc_output_to_json(): packet_info: " + str(packet_info))
+			logging.debug("proc_output_to_json(): packet_comment: " + str(packet_comment))
 			
 			#build basic IP json:
 			if "eth:ethertype:ip" in protocols: 
@@ -94,7 +94,7 @@ class CommentExtractor():
 				elif scope == "conversation":
 					comm_mode_dict = "conversation"
 				elif scope.startswith("suricata;"):
-					logging.debug("procOutputToJSON(): Suricata " + str(scope))
+					logging.debug("proc_output_to_json(): Suricata " + str(scope))
 					comm_mode_dict = {"suricata-rule-attr": scope.split(";")[1:]}
 				elif scope == "filter":
 					pass
@@ -138,33 +138,33 @@ class CommentExtractor():
 
 					protocol_dict["eth:ethertype:ip:tcp"] = {"sport": sport_dict, "dport": dport_dict, "flags": tcp_flags, "payload-identifier": payload_identifier_dict}
 			
-			logging.debug("procOutputToJSON(): Done Reading Packet Data")
+			logging.debug("proc_output_to_json(): Done Reading Packet Data")
 
 			#build the over-arching comment_data object
 			comment_data_list.append({"id": id, "frameno": number, "protocol": protocol_dict, "description": description, "run-descriptor": sf_call})
-			logging.debug("procOutputToJSON(): Formatted JSON:"+json.dumps(comment_data_list, indent=3))
-			logging.debug("procOutputToJSON() Completed.")
+			logging.debug("proc_output_to_json(): Formatted JSON:"+json.dumps(comment_data_list, indent=3))
+			logging.debug("proc_output_to_json() Completed.")
 
 		return comment_data_list
 			
-	def writeJSONToFile(self, ofilename, jsonData):
-		logging.debug("writeJSONToFile() Instantiated")
+	def write_json_to_file(self, ofilename, jsonData):
+		logging.debug("write_json_to_file() Instantiated")
 		try:
 			# now write output to a file
-			logging.debug("writeJSONToFile() File opened for writing: " + str(ofilename))
+			logging.debug("write_json_to_file() File opened for writing: " + str(ofilename))
 			#first create the directory if it doesn't exist yet:
 			dirname = os.path.dirname(ofilename)
 			if os.path.exists(dirname) == False:
 				os.makedirs(dirname)
 			jsonOF = open(ofilename, "w")
-			logging.debug("writeJSONToFile() Writing JSON Data to file.")
+			logging.debug("write_json_to_file() Writing JSON Data to file.")
 			jsonOF.write(json.dumps(jsonData, indent=3, sort_keys=True))
-			logging.debug("writeJSONToFile() Writing complete; closing file.")
+			logging.debug("write_json_to_file() Writing complete; closing file.")
 			jsonOF.close()
-			logging.debug("writeJSONToFile() Completed.")
+			logging.debug("write_json_to_file() Completed.")
 		except Exception as e:
 			exc_type, exc_value, exc_traceback = sys.exc_info()
-			logging.error("writeJSONToFile(): An error occured")
+			logging.error("write_json_to_file(): An error occured")
 			traceback.print_exception(exc_type, exc_value, exc_traceback)
 			exit()
 
@@ -177,5 +177,5 @@ if __name__ == "__main__":
 	ifilename = sys.argv[1]
 	ofilename = sys.argv[2]
 	ce = CommentExtractor()
-	jsondata = ce.commentToJSON(ifilename)
-	ce.writeJSONToFile(ofilename, jsondata)
+	jsondata = ce.comment_to_json(ifilename)
+	ce.write_json_to_file(ofilename, jsondata)

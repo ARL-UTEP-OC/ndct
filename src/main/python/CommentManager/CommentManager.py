@@ -20,19 +20,19 @@ class CommentManager():
         self.ce = CommentExtractor()
         logging.debug('CommentManager(): Complete')
 
-    def extractJSON(self):
-        logging.debug('extractJSON(): Instantiated')
-        self.jsondata = self.ce.commentToJSON(self.commented_pcap_filename)
-        logging.debug('extractJSON(): Completed')
+    def extract_json(self):
+        logging.debug('extract_json(): Instantiated')
+        self.jsondata = self.ce.comment_to_json(self.commented_pcap_filename)
+        logging.debug('extract_json(): Completed')
     
-    def writeCommentJSONToFile(self, comment_json_output_filename = None):
-        logging.debug('writeCommentJSONToFile(): Instantiated')
+    def write_comment_json_to_file(self, comment_json_output_filename = None):
+        logging.debug('write_comment_json_to_file(): Instantiated')
         self.comment_json_output_filename = comment_json_output_filename
         if self.comment_json_output_filename == None:
             #read from config file
             self.comment_json_output_filename = ConfigurationManager.get_instance().read_config_abspath("COMMENT_MANAGER", "COMMENTS_JSON_FILENAME")
-        self.ce.writeJSONToFile(self.comment_json_output_filename, self.jsondata)
-        logging.debug('writeCommentJSONToFile(): Completed')
+        self.ce.write_json_to_file(self.comment_json_output_filename, self.jsondata)
+        logging.debug('write_comment_json_to_file(): Completed')
 
     def run_wireshark_with_dissectors(self, dissector_filenames=[], user_pcap_filename=None):
         logging.debug('run_wireshark_with_dissectors(): Instantiated')

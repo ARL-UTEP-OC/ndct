@@ -12,8 +12,8 @@ class DissectorGenerator():
     def __init__(self, lua_scripts=None, pcap_filename=None):
         pass
 
-    def getJSONFiles(self, folder_loc=None):
-        logging.debug("getJSONFiles(): instantiated")
+    def get_json_files(self, folder_loc=None):
+        logging.debug("get_json_files(): instantiated")
         #will hold the filenames
         filelist = list()
         try:
@@ -21,24 +21,24 @@ class DissectorGenerator():
                 json_folder = folder_loc
             else:
                 json_folder = os.path.join(os.getcwd(), './')
-            logging.debug("getJSONFiles(): reading filenames")
+            logging.debug("get_json_files(): reading filenames")
             for r, d, f in os.walk(json_folder):
                 for file in f:
                     if '.JSON' in file:
                         filelist.append(os.path.join(r, file))
             logging.debug("Found files: " + str(filelist))
-            logging.debug("getJSONFiles(): File reading complete")
+            logging.debug("get_json_files(): File reading complete")
             return (filelist)
 
         except Exception:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.error("readJSONData(): An error occured ")
+            logging.error("read_json_data(): An error occured ")
             traceback.print_exception(exc_type, exc_value, exc_traceback)
             exit()	   
 
     #Read and extract data from JSON file
-    def readJSONData(self, file_loc=None):
-        logging.debug("readJSONData(): instantiated")
+    def read_json_data(self, file_loc=None):
+        logging.debug("read_json_data(): instantiated")
         #will hold the event and its timestamp
         eventlist = list()
         try:
@@ -46,26 +46,26 @@ class DissectorGenerator():
                 json_filename = file_loc
             else:
                 json_filename = os.path.join(os.getcwd(), '2019_06_11Traffic_Curation_files/IV_snoopyData.JSON')
-            logging.debug("readJSONData(): reading file as json data: " + str(json_filename))
+            logging.debug("read_json_data(): reading file as json data: " + str(json_filename))
 
             with open(json_filename, 'r') as json_file:
                 data = json.load(json_file)
                 for p in data:
                     if "content" not in p:
                         p['content'] = "Event Occured"
-                    logging.debug("readJSONData(): appending: " + (str(p['content']) + " " + str(p['start']) + " " + str(timegm(time.strptime(str(p['start']), "%Y-%m-%dT%H:%M:%S")) ) ))
+                    logging.debug("read_json_data(): appending: " + (str(p['content']) + " " + str(p['start']) + " " + str(timegm(time.strptime(str(p['start']), "%Y-%m-%dT%H:%M:%S")) ) ))
                     eventlist.append( (str(p['content']),str(p['start']), timegm(time.strptime(str(p['start']), "%Y-%m-%dT%H:%M:%S"))) )
-            logging.debug("readJSONData(): File reading complete")
+            logging.debug("read_json_data(): File reading complete")
             return (eventlist)
 
         except Exception:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.error("readJSONData(): An error occured ")
+            logging.error("read_json_data(): An error occured ")
             traceback.print_exception(exc_type, exc_value, exc_traceback)
             exit()		
             
-    def eventsToDissector(self, eventlist, dissector_name, start_threshold=0.1, end_threshold=1, template_filename=None, ofilename=None):
-        logging.debug("eventsToDissector(): Instantiated")
+    def events_to_dissector(self, eventlist, dissector_name, start_threshold=0.1, end_threshold=1, template_filename=None, ofilename=None):
+        logging.debug("events_to_dissector(): Instantiated")
         if template_filename == None:
             template_filename = "templates/timebased.jnj2"
         if ofilename == None:
@@ -88,7 +88,7 @@ class DissectorGenerator():
             env = Environment(
                 loader=FileSystemLoader(os.path.dirname(template_filename))
                 )
-            logging.debug("eventsToDissector(): rendering " + ofilename + " using template: " + template_filename)
+            logging.debug("events_to_dissector(): rendering " + ofilename + " using template: " + template_filename)
             
             with open(ofilename, "w") as out:
                 #create the string from the template using the dissector_name, events, time, and thresholds
@@ -100,7 +100,7 @@ class DissectorGenerator():
 
         except Exception:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.error("eventsToDissector(): An error occured ")
+            logging.error("events_to_dissector(): An error occured ")
             traceback.print_exception(exc_type, exc_value, exc_traceback)
             exit()
 
@@ -108,15 +108,15 @@ if __name__=="__main__":
     logging.basicConfig(format='%(levelname)s:%(message)s', level = logging.DEBUG)
     logging.debug("main(): Instantiated")
     dg = DissectorGenerator()
-    filelist = dg.getJSONFiles("/root/git/eceld-netlabel/sample-logs/")
+    filelist = dg.get_json_files("/root/git/eceld-netlabel/sample-logs/")
     file_events = {}
     dissector_filenames = []
     for filename in filelist:
         #save the filename as a key, all the events (event, time) as the value
-        file_events = dg.readJSONData(filename)
+        file_events = dg.read_json_data(filename)
         base = os.path.basename(filename)
         basenoext = os.path.splitext(base)[0]
-        dissector_filename = dg.eventsToDissector(file_events, dissector_name=basenoext, ofilename="/root/git/eceld-netlabel/output-dissectors/"+basenoext, template_filename="/root/git/eceld-netlabel/templates/timebased.jnj2", start_threshold=0, end_threshold=2)
+        dissector_filename = dg.events_to_dissector(file_events, dissector_name=basenoext, ofilename="/root/git/eceld-netlabel/output-dissectors/"+basenoext, template_filename="/root/git/eceld-netlabel/templates/timebased.jnj2", start_threshold=0, end_threshold=2)
         dissector_filenames.append(dissector_filename)
     logging.debug("main(): Dissector Files Created: " + str(dissector_filenames))
     logging.debug("main(): Complete")

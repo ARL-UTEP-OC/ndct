@@ -25,12 +25,12 @@ class Validator():
         logging.debug('CommentManager(): Complete')
 
     def extract_rules(self):
-        logging.debug('extractJSON(): Instantiated')
-        self.rule_list = self.se.jsonToRules(self.commented_json_filename)
-        logging.debug('extractJSON(): Completed')
+        logging.debug('extract_json(): Instantiated')
+        self.rule_list = self.se.json_to_rules(self.commented_json_filename)
+        logging.debug('extract_json(): Completed')
 
-    def writeRulesToFile(self, rules_output_filename = None):
-        logging.debug('writeRulesToFile(): Instantiated')
+    def write_rules_to_file(self, rules_output_filename = None):
+        logging.debug('write_rules_to_file(): Instantiated')
         self.rules_output_filename = rules_output_filename
         if rules_output_filename == None:
             #read from config file
@@ -42,12 +42,12 @@ class Validator():
                 os.makedirs(dirname)
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.error("writeRulesToFile(): An error occured")
+            logging.error("write_rules_to_file(): An error occured")
             traceback.print_exception(exc_type, exc_value, exc_traceback)
             exit()
 
-        self.se.writeRulesToFile(self.rules_output_filename, self.rule_list)
-        logging.debug('writeRulesToFile(): Completed')
+        self.se.write_rules_to_file(self.rules_output_filename, self.rule_list)
+        logging.debug('write_rules_to_file(): Completed')
 
     def run_suricata_with_rules(self, suricata_executable_filename=None, suricata_config_filename=None, suricata_alert_path=None, suricata_rules_filename=None, validate_pcap_filename=None):
         logging.debug('run_suricata_with_rules(): Instantiated')
@@ -73,7 +73,7 @@ class Validator():
             os.makedirs(self.suricata_alert_path)
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.error("writeRulesToFile(): An error occured")
+            logging.error("write_rules_to_file(): An error occured")
             traceback.print_exception(exc_type, exc_value, exc_traceback)
             exit()
 
@@ -113,18 +113,23 @@ class Validator():
             #read from config file
             self.suricata_alert_path = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SURICATA_ALERT_PATH")
         #generate the scoring bin data structure based on the input JSON data 
-        self.scorer.extractSolutionsFromJSON(self.suricata_soln_alerts_json)
+        self.scorer.extract_solutions_from_json(self.suricata_soln_alerts_json)
         #generate the report:
-        self.scorer.scoreAlerts(os.path.join(self.suricata_alert_path,Validator.ALERT_FILENAME))
-        self.score_data = self.scorer.generateResultsReport()
-        return self.score_data
+        self.scorer.score_alerts(os.path.join(self.suricata_alert_path,Validator.ALERT_FILENAME))
+        self.score_data = self.scorer.generate_results_report()
+        logging.debug('generate_score_report(): Completed')
+
+    def get_score_report(self):
+        logging.debug('get_score_report(): Instantiated')
+        logging.debug('get_score_report(): Completed')
+        return self.scorer.get_score_report()
         
     def write_score_file(self, oscore_file=None):
         logging.debug('write_score_file(): Instantiated')
         self.oscore_file = oscore_file
         if self.oscore_file == None:
             self.oscore_file = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SCORE_REPORT_FILENAME")
-        self.scorer.writeResultsToFile(self.oscore_file, self.score_data)
+        self.scorer.write_results_to_file(self.oscore_file, self.score_data)
         logging.debug('write_score_file(): Completed')
 
     
