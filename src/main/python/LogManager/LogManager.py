@@ -175,7 +175,7 @@ class LogManager():
             file_events = dg.read_json_data(filename)
             base = os.path.basename(filename)
             basenoext = os.path.splitext(base)[0]
-            dissector_filename = dg.events_to_dissector(file_events, dissector_name=basenoext, ofilename=os.path.join(self.dissector_path,basenoext), template_filename=self.dissector_code_template_filename, start_threshold=0.0, end_threshold=0.2)
+            dissector_filename = dg.events_to_dissector(file_events, dissector_name=basenoext, ofilename=os.path.join(self.dissector_path,basenoext), template_filename=self.dissector_code_template_filename, start_threshold=0.0, end_threshold=2.0)
             self.generated_dissector_filenames.append(dissector_filename)
         logging.debug('generate_dissectors(): Completed')
 
