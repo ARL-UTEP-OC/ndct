@@ -1,0 +1,39 @@
+[
+    {
+       "start-times": ["10/25/2017-09:15:30.267163"],
+       "id": 1, 
+       "type": "required",
+       "message-if-missed": "Missed Auxiliary Scan GET Request..",
+       "hints-if-missed": ["#1 of 2: Look at the HTTP Packets and their GET Requests (the expert info column is a good resource) and make sure you add a custom identifer starting with GET", "You'll need to label a single packet from 10.0.0.2 -> 10.0.2.2 using destination port 8080"],
+       "message-if-found": "MSF Auxiliary Scan - GET Request Found",
+       "difficulty": "2"
+    },
+    {
+        "start-times": ["10/25/2017-09:15:30.438699", "10/25/2017-09:15:30.440688", "10/25/2017-09:15:30.442104"],
+        "id": 2, 
+        "type": "required",
+        "message-if-missed": "Missed Module Identified during Auxiliary Scan..",
+        "hints-if-missed": ["#1 of 2: "],
+        "message-if-found": "MSF Module Found During Auxiliary Scan",
+        "difficulty": "2"
+     },
+     {
+        "start-times": ["10/25/2017-09:15:30.554497", "10/25/2017-09:17:19.897893", "10/25/2017-09:17:19.935683", "10/25/2017-09:17:19.954149", "10/25/2017-09:17:30.609695", "10/25/2017-09:17:30.599042"],
+        "id": 3, 
+        "type": "required",
+        "message-if-missed": "Missed JMX Servlet Access..",
+        "hints-if-missed": ["#1 of 2: "],
+        "message-if-found": "MSF Exploit Run - JMX Servlet Page Access",
+        "difficulty": "3"
+     },
+     {
+        "start-times": ["10/25/2017-09:17:31.621946"],
+        "id": 4, 
+        "type": "required",
+        "message-if-missed": "Missed Meterpreter reverse shell configuration packet",
+        "hints-if-missed": ["#1 of 2: "],
+        "message-if-found": "MSF Meterpreter reverse shell started - Config in packet",
+        "difficulty": "3"
+     }
+]
+
