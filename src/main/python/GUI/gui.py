@@ -189,7 +189,7 @@ class MainGUI(QMainWindow):
     def on_wireshark_annotate_button_clicked(self):
         logging.debug('on_activate_wireshark_button_clicked(): Instantiated')
         #open wireshark using the captured pcap and the generated lua files
-        self.comment_mgr.run_wireshark_with_dissectors(self.logman.get_generated_dissector_filenames())
+        self.comment_mgr.run_wireshark_with_dissectors()
         self.log_start_button.setEnabled(True)
         self.log_stop_button.setEnabled(False)
         self.wireshark_annotate_button.setEnabled(True)
