@@ -52,6 +52,10 @@ class Scorer():
         self.total_TP = 0
         self.total_FP = 0
         self.total_FN = 0
+        self.grouped_truepositive.clear()
+        self.grouped_falsenegative.clear()
+        self.grouped_falsepositive.clear()
+	
         try:
             f = open(alerts_filename, "r")
             
