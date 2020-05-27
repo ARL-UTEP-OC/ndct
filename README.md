@@ -3,7 +3,7 @@
 ## System Requirements
 ECEL should run from a variety of Linux Distros, but it has been primarily tested on:
 * Kali Linux 2019.2 64-bit
-* Python 3.6.9
+* Python 3.6.9 (https://www.python.org/downloads/release/python-369/)
 
 ## Setting up from source
 
@@ -21,7 +21,7 @@ source venv/bin/activate
 ```
 4. Install python dependencies
 ```
-pip install -r install-requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Run the GUI
