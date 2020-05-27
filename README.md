@@ -3,6 +3,7 @@
 ## System Requirements
 ECEL should run from a variety of Linux Distros, but it has been primarily tested on:
 * Kali Linux 2019.2 64-bit
+* Python 3.6.9
 
 ## Setting up from source
 
