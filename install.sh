@@ -35,22 +35,29 @@ fi
 #
 REQUIRED_PROGRAMS="wireshark suricata python3-pip python3-venv git"
 REQUIRED_PYTHON_PACKAGES="PyQt5 Pyro4 Pillow jinja2"
-REQUIRED_PACKAGES="eceld_service"
 
-for plugin in $REQUIRED_PACKAGES; do
-    plugin_prompt="$plugin is not installed. The logger will not work without it. Install?"
-    if ! command -v $plugin >/dev/null 2>&1 && prompt_accepted_Yn "$plugin_prompt"; then
-	git clone https://github.com/ARL-UTEP-OC/eceld "$ECEL_NETSYS_DIR"/eceld
-	pushd "$ECEL_NETSYS_DIR"/eceld
-	chmod +x install.sh
-	./install.sh
-	popd
-    fi
-    if ! command -v $plugin >/dev/null 2>&1; then
-	echo "Installation of $plugin not successful (can't execute program) quitting..."
+        plugin_prompt="eceld found, remove it and reinstall?"
+        if [ -d $ECEL_NETSYS_DIR/eceld ]; then
+           if prompt_accepted_Yn "$plugin_prompt"; then
+              rm $ECEL_NETSYS_DIR/eceld -rf
+   	      git clone https://github.com/ARL-UTEP-OC/eceld "$ECEL_NETSYS_DIR"/eceld
+   	      pushd "$ECEL_NETSYS_DIR"/eceld
+	      chmod +x install.sh
+	      ./install.sh
+	      popd
+           fi
+    	else
+	   git clone https://github.com/ARL-UTEP-OC/eceld "$ECEL_NETSYS_DIR"/eceld
+   	   pushd "$ECEL_NETSYS_DIR"/eceld
+	   chmod +x install.sh
+	   ./install.sh
+	   popd
+       fi
+
+    if [ ! -d $ECEL_NETSYS_DIR/eceld ]; then
+	echo "Download and installation of $plugin not successful (can't execute program) quitting..."
 	exit 1
     fi 
-done
 
 echo "$OUTPUT_PREFIX Installing Additional Dependecies"
 if [ -x "/usr/bin/apt-get" ]; then
@@ -82,14 +89,13 @@ cat > "$ECEL_NETSYS_DIR"/eceld-netsys-gui <<-'EOFeceld-netsys-gui'
 		echo "ECELD-NETSYS must be run as root"
 		exit 1
 	fi
-    # ECELD_SERVICE should be started elsewhere 
-    # eceld_service &
-
     cd "$ECEL_NETSYS_DIR"
 	venv/bin/python3 main.py
 EOFeceld-netsys-gui
 
 chmod +x "$ECEL_NETSYS_DIR"/eceld-netsys-gui
 echo "$OUTPUT_PREFIX Installation Complete"
-echo "To run the GUI, first start eceld_service (as superuser)"
-echo "and then invoke ./eceld-netsys-gui "
+echo "To run the GUI, start the service (takes roughly 10 seconds):"
+echo "sudo eceld/eceld_service"
+echo "Afterwards, invoke:"
+echo "sudo ./eceld-netsys-gui "
