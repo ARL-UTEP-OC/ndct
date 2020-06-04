@@ -20,6 +20,7 @@ This will install all dependecies, including [eceld](https://github.com/ARL-UTEP
 sudo eceld/eceld_service
 ```
 Allow some time for the service to instantiate (this usually takes 5-10 seconds)
+
 2. Instantiate the GUI
 ```
 sudo ./eceld-netsys-gui
