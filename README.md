@@ -2,34 +2,25 @@
 
 ## System Requirements
 ECEL should run from a variety of Linux Distros, but it has been primarily tested on:
-* Kali Linux 2019.2 64-bit
-* [Python 3.6.9](https://www.python.org/downloads/release/python-369/)
+* Kali Linux 2020.2 64-bit
+* Ubuntu 20.04 LTS
+* [Python 3 >= 3.5](https://www.python.org/downloads/release/python-369/)
 
 ## Setting up from source
 
-1. Ensure that [eceld](https://github.com/ARL-UTEP-OC/eceld) is installed and running on your system.
-2. Download the code and install python3 venv
+1. Clone the repository and run the installer as superuser
 ```
-git clone https://github.com/ARL-UTEP-OC/eceld-netsys
-cd eceld-netsys
-sudo apt-get install python3-venv
+sudo ./install.sh
 ```
-1. Set up the venv environment
-```
-python3 -m venv venv
-source venv/bin/activate
-```
-4. Install python dependencies
-```
-pip install -r requirements.txt
-```
+This will install all dependecies, including [eceld] (https://github.com/ARL-UTEP-OC/eceld)
 
 ## Run the GUI
-1. Instantiate the venv container
+1. Open a separate terminal and start the eceld service
 ```
-source venv/bin/activate
+sudo eceld/eceld_service
 ```
+Allow some time for the service to instantiate (this usually takes 5-10 seconds)
 2. Instantiate the GUI
 ```
-fbs run
+sudo ./eceld-netsys-gui
 ```
