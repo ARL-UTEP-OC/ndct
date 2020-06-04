@@ -12,7 +12,7 @@ ECEL should run from a variety of Linux Distros, but it has been primarily teste
 ```
 sudo ./install.sh
 ```
-This will install all dependecies, including [eceld] (https://github.com/ARL-UTEP-OC/eceld)
+This will install all dependecies, including [eceld](https://github.com/ARL-UTEP-OC/eceld)
 
 ## Run the GUI
 1. Open a separate terminal and start the eceld service
