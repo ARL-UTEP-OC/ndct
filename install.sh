@@ -91,3 +91,5 @@ EOFeceld-netsys-gui
 
 chmod +x "$ECEL_NETSYS_DIR"/eceld-netsys-gui
 echo "$OUTPUT_PREFIX Installation Complete"
+echo "To run the GUI, first start eceld_service (as superuser)"
+echo "and then invoke ./eceld-netsys-gui "
