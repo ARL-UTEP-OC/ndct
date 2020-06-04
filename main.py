@@ -2,10 +2,9 @@ import logging
 import sys
 import os, traceback
 import shutil
-from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5 import QtGui
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, QSpinBox, QAction, qApp
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, QSpinBox, QAction, qApp
 
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
 
@@ -35,11 +34,11 @@ if __name__ == '__main__':
     logging.debug("MainApp(): Instantiated")
     logging.basicConfig(format='%(levelname)s:%(message)s', level = logging.DEBUG)
 
-    appctxt = ApplicationContext()
+    appctxt = QApplication(sys.argv)
     gui = MainGUI(logman, comment_mgr, validator)
     gui.setGeometry(500, 300, 500, 100)
     gui.show()
-    exit_code = appctxt.app.exec_()
+    exit_code = appctxt.exec_()
     sys.exit(exit_code)
     logging.debug("MainApp(): Complete")
 
