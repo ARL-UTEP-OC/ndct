@@ -6,8 +6,6 @@ ECEL_NETSYS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 OUTPUT_PREFIX="ECELD_NETSYS INSTALLER:"
 OUTPUT_ERROR_PREFIX="$OUTPUT_PREFIX ERROR:"
 
-PYTHON_EXEC="python3"
-
 ### Helper functions
 #
 prompt_accepted_Yn() {
@@ -17,6 +15,45 @@ prompt_accepted_Yn() {
         *) return 0 ;;
     esac
 }
+
+#Install platform specific dependencies
+PYTHON_EXEC="python3"
+OS_VERSION="UNKNOWN"
+if lsb_release -c | grep -iq 'ubuntu'; then
+   OS_VERSION="ubuntu"
+fi
+if lsb_release -c | grep -iq 'focal'; then
+   OS_VERSION="ubuntu_focal"
+   add-apt-repository ppa:oisf/suricata-stable
+   apt-get update -y
+   apt-get install suricata python3-tk -y
+fi
+# if lsb_release -c | grep -q 'bionic'; then
+#    OS_VERSION="ubuntu_bionic" 
+# fi
+if lsb_release -c | grep -iq 'xenial'; then
+   OS_VERSION="ubuntu_xenial"
+   apt-get install libxcb-xinerama0 -y
+fi
+
+if lsb_release -c | grep -iq 'kali'; then
+    if lsb_release -c | grep -q '2020'; then
+        OS_VERSION="kali_2020"
+        #works out of the box
+    fi
+    if lsb_release -c | grep -q '2019.2'; then
+        OS_VERSION="kali_2019.2"
+        if apt cache policy libgcc-8-dev | grep -q ''; then
+            echo "Kali 2019 does not work out of the box."
+            echo "You need to remove libgcc-8-dev and install libgcc-10-dev."
+            if prompt_accepted_Yn "Run upgrade command? (May take a while)"; then
+                apt-get -y update
+                apt-get remove libgcc-8
+                apt-get install libgcc-10-dev
+            fi
+        fi
+    fi
+fi
 
 # Updates
 #echo "Running apt-get update"
@@ -36,33 +73,35 @@ fi
 REQUIRED_PROGRAMS="wireshark suricata python3-pip python3-venv git"
 REQUIRED_PYTHON_PACKAGES="PyQt5 Pyro4 Pillow jinja2"
 
-        plugin_prompt="eceld found, remove it and reinstall?"
-        if [ -d $ECEL_NETSYS_DIR/eceld ]; then
-           if prompt_accepted_Yn "$plugin_prompt"; then
-              rm $ECEL_NETSYS_DIR/eceld -rf
-   	      git clone https://github.com/ARL-UTEP-OC/eceld "$ECEL_NETSYS_DIR"/eceld
-   	      pushd "$ECEL_NETSYS_DIR"/eceld
-	      chmod +x install.sh
-	      ./install.sh
-	      popd
-           fi
-    	else
-	   git clone https://github.com/ARL-UTEP-OC/eceld "$ECEL_NETSYS_DIR"/eceld
-   	   pushd "$ECEL_NETSYS_DIR"/eceld
-	   chmod +x install.sh
-	   ./install.sh
-	   popd
-       fi
+plugin_prompt="eceld found, remove it and reinstall?"
+if [ -d $ECEL_NETSYS_DIR/eceld ]; then
+    if prompt_accepted_Yn "$plugin_prompt"; then
+        rm $ECEL_NETSYS_DIR/eceld -rf
+    git clone https://github.com/ARL-UTEP-OC/eceld "$ECEL_NETSYS_DIR"/eceld
+    pushd "$ECEL_NETSYS_DIR"/eceld
+    chmod +x install.sh
+    ./install.sh
+    popd
+    fi
+else
+    git clone https://github.com/ARL-UTEP-OC/eceld "$ECEL_NETSYS_DIR"/eceld
+    pushd "$ECEL_NETSYS_DIR"/eceld
+    chmod +x install.sh
+    ./install.sh
+    popd
+fi
 
-    if [ ! -d $ECEL_NETSYS_DIR/eceld ]; then
-	echo "Download and installation of $plugin not successful (can't execute program) quitting..."
-	exit 1
-    fi 
+if [ ! -d $ECEL_NETSYS_DIR/eceld ]; then
+    echo "Download and installation of $plugin not successful (can't execute program) quitting..."
+    exit 1
+fi 
 
 echo "$OUTPUT_PREFIX Installing Additional Dependecies"
 if [ -x "/usr/bin/apt-get" ]; then
+    OS_VERSION="Debian"
     apt-get -y install $REQUIRED_PROGRAMS
 elif [ -x "/usr/bin/yum" ]; then
+    OS_VERSION="CentOS"
     yum install -y $REQUIRED_PROGRAMS
 else
     echo "$OUTPUT_ERROR_PREFIX Distribution not supported"
@@ -74,10 +113,10 @@ echo "$OUTPUT_PREFIX Installing python dependencies"
 if [ ! -d "venv" ]; then
     $PYTHON_EXEC -m venv venv
 fi
+
 source venv/bin/activate
 pip install pip --upgrade
 pip install $REQUIRED_PYTHON_PACKAGES
-
 
 ### Creating executable
 #
