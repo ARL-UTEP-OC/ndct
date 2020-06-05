@@ -36,23 +36,34 @@ if lsb_release -c | grep -iq 'xenial'; then
    apt-get install libxcb-xinerama0 -y
 fi
 
-if lsb_release -c | grep -iq 'kali'; then
-    if lsb_release -c | grep -q '2020'; then
+if lsb_release -d | grep -iq 'kali'; then
+    if lsb_release -r | grep -q '2020'; then
         OS_VERSION="kali_2020"
         #works out of the box
     fi
-    if lsb_release -c | grep -q '2019.2'; then
+    if lsb_release -r | grep -q '2019.2'; then
         OS_VERSION="kali_2019.2"
-        if apt cache policy libgcc-8-dev | grep -q 'Installed: 8'; then
-            echo "Kali 2019 does not work out of the box."
+        if apt-cache policy libgcc-8-dev | grep -q 'Installed: 8'; then
+            echo "Kali 2019 does not work out of the box. Many dependent packages require updated libgcc."
             echo "You need to remove libgcc-8-dev and install libgcc-10-dev."
             if prompt_accepted_Yn "Run upgrade command? (May take a while)"; then
                 apt-get -y update
-                apt-get remove libgcc-8
+                apt-get remove libgcc-8-dev
                 apt-get install libgcc-10-dev
+            else
+                echo "Cannot install due to old version of libgcc"
+                exit 1
             fi
         fi
     fi
+fi
+
+if $OS_VERSION | grep -q "UNKNOWN"; then
+    echo "This version of Linux is currently not support."
+    echo "Currently Supported:"
+    echo "Ubuntu: Focal, Xenial"
+    echo "Kali: 2019.2, 2020"
+    exit 1
 fi
 
 # Updates
