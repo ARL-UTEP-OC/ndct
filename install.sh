@@ -43,7 +43,7 @@ if lsb_release -c | grep -iq 'kali'; then
     fi
     if lsb_release -c | grep -q '2019.2'; then
         OS_VERSION="kali_2019.2"
-        if apt cache policy libgcc-8-dev | grep -q ''; then
+        if apt cache policy libgcc-8-dev | grep -q 'Installed: 8'; then
             echo "Kali 2019 does not work out of the box."
             echo "You need to remove libgcc-8-dev and install libgcc-10-dev."
             if prompt_accepted_Yn "Run upgrade command? (May take a while)"; then
