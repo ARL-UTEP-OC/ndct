@@ -103,10 +103,10 @@ class LogManager():
 
         try:
             #cp all JSON files to out dir
-            snoopyFile = os.path.join(latestlogdir,"parsed","snoopy","snoopyData.JSON")
+            auditdFile = os.path.join(latestlogdir,"parsed","auditd","auditdData.JSON")
             keystrokesFile = os.path.join(latestlogdir,"parsed","pykeylogger","keypressData.JSON")
-            if os.path.exists(snoopyFile):
-                shutil.copy(snoopyFile,os.path.join(self.export_data_path_latest,"SystemCalls.JSON"))
+            if os.path.exists(auditdFile):
+                shutil.copy(auditdFile,os.path.join(self.export_data_path_latest,"SystemCalls.JSON"))
             if os.path.exists(keystrokesFile):
                 shutil.copy(keystrokesFile,os.path.join(self.export_data_path_latest,"Keypresses.JSON"))
             #cp merged pcap to dir
