@@ -19,20 +19,23 @@ prompt_accepted_Yn() {
 #Install platform specific dependencies
 PYTHON_EXEC="python3"
 OS_VERSION="UNKNOWN"
-if lsb_release -c | grep -iq 'ubuntu'; then
-   OS_VERSION="ubuntu"
-fi
 if lsb_release -c | grep -iq 'focal'; then
    OS_VERSION="ubuntu_focal"
+   echo "Ubuntu Focal detected; adding repository for suricata"
    add-apt-repository ppa:oisf/suricata-stable
    apt-get update -y
    apt-get install suricata python3-tk -y
 fi
-# if lsb_release -c | grep -q 'bionic'; then
-#    OS_VERSION="ubuntu_bionic" 
-# fi
+if lsb_release -c | grep -q 'bionic'; then
+   OS_VERSION="ubuntu_bionic" 
+   echo "Ubuntu Bionic detected; adding repository for gcc-9"
+   add-apt-repository ppa:ubuntu-toolchain-r/test
+   apt-get update -y
+   apt-get install gcc-9 python3-tk -y
+fi
 if lsb_release -c | grep -iq 'xenial'; then
    OS_VERSION="ubuntu_xenial"
+   echo "Ubuntu Xenial detected; installing dependencies specific to OS"
    apt-get install libxcb-xinerama0 -y
 fi
 
@@ -43,6 +46,7 @@ if lsb_release -d | grep -iq 'kali'; then
     fi
     if lsb_release -r | grep -q '2019.2'; then
         OS_VERSION="kali_2019.2"
+        echo "Kali 2019.2 detected; checking for OS specific dependencies"
         if apt-cache policy libgcc-8-dev | grep -q 'Installed: 8'; then
             echo "Kali 2019 does not work out of the box. Many dependent packages require updated libgcc."
             echo "You need to remove libgcc-8-dev and install libgcc-10-dev."
@@ -58,7 +62,7 @@ if lsb_release -d | grep -iq 'kali'; then
     fi
 fi
 
-if $OS_VERSION | grep -q "UNKNOWN"; then
+if echo $OS_VERSION | grep -q "UNKNOWN"; then
     echo "This version of Linux is currently not support."
     echo "Currently Supported:"
     echo "Ubuntu: Focal, Xenial"
@@ -149,3 +153,5 @@ echo "To run the GUI, start the service (takes roughly 10 seconds):"
 echo "sudo eceld/eceld_service"
 echo "Afterwards, invoke:"
 echo "sudo ./eceld-netsys-gui "
+echo "Additionally, you may have to modify your Wireshark init.lua to allow super user to load lua scripts"
+echo "Otherwise, annotations will not appear in packet capture view!"
