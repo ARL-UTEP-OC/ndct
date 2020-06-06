@@ -22,9 +22,9 @@ class WiresharkRunner(QThread):
         logging.debug('WiresharkRunner.run(): Instantiated')
         if sys.platform == "linux" or sys.platform == "linux2":
             logging.debug('WiresharkRunner.run(): Running command: ' + str(self.cmd))
-            output = subprocess.check_output(shlex.split(self.cmd), encoding="utf-8")
+            output = subprocess.check_output(shlex.split(self.cmd))
         else: 
-            output = subprocess.check_output(self.cmd, encoding="utf-8")
+            output = subprocess.check_output(self.cmd)
 
         logging.debug('WiresharkRunner.run(): Complete')
 

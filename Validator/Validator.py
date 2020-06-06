@@ -97,9 +97,9 @@ class Validator():
         self.cmd+= " -k none"
 
         if sys.platform == "linux" or sys.platform == "linux2":
-            output = subprocess.check_output(shlex.split(self.cmd), encoding="utf-8")
+            output = subprocess.check_output(shlex.split(self.cmd))
         else: 
-            output = subprocess.check_output(self.cmd, encoding="utf-8")
+            output = subprocess.check_output(self.cmd)
         logging.debug('run_suricata_with_rules(): Complete')
 
     def generate_score_report(self, suricata_soln_alerts_json=None, suricata_alert_path=None):
