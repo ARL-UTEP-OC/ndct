@@ -36,7 +36,12 @@ fi
 if lsb_release -c | grep -iq 'xenial'; then
    OS_VERSION="ubuntu_xenial"
    echo "Ubuntu Xenial detected; installing dependencies specific to OS"
+   echo "adding repository for gcc-9"
    apt-get install libxcb-xinerama0 -y
+   add-apt-repository ppa:ubuntu-toolchain-r/test
+   apt-get update -y
+   apt-get install gcc-9 python3-tk -y
+
 fi
 
 if lsb_release -d | grep -iq 'kali'; then
