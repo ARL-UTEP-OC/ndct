@@ -153,7 +153,9 @@ cat > "$ECEL_NETSYS_DIR"/eceld-netsys-gui <<-'EOFeceld-netsys-gui'
 EOFeceld-netsys-gui
 
 chmod +x "$ECEL_NETSYS_DIR"/eceld-netsys-gui
-echo "$OUTPUT_PREFIX Installation Complete"
+echo
+echo
+echo "$OUTPUT_PREFIX *********************Installation Complete**************"
 echo "To run the GUI, start the service (takes roughly 10 seconds):"
 echo "sudo eceld/eceld_service"
 echo "Afterwards, invoke:"
