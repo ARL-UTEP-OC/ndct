@@ -154,11 +154,12 @@ EOFeceld-netsys-gui
 
 chmod +x "$ECEL_NETSYS_DIR"/eceld-netsys-gui
 echo
-echo
-echo "$OUTPUT_PREFIX *********************Installation Complete**************"
+echo "***************************************************"
+echo "$OUTPUT_PREFIX Installation Complete"
+echo "You may have to modify your Wireshark (usually in /etc/wireshark/init.lua) to allow super user to load lua scripts"
+echo "Otherwise, annotations will not appear in packet capture view!"
+echo 
 echo "To run the GUI, start the service (takes roughly 10 seconds):"
 echo "sudo eceld/eceld_service"
 echo "Afterwards, invoke:"
 echo "sudo ./eceld-netsys-gui "
-echo "Additionally, you may have to modify your Wireshark (usually in /etc/wireshark/init.lua) to allow super user to load lua scripts"
-echo "Otherwise, annotations will not appear in packet capture view!"
