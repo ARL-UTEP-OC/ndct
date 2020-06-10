@@ -227,7 +227,7 @@ class MainGUI(QMainWindow):
         self.batch_thread.add_function( self.val.extract_rules)
         self.batch_thread.add_function( self.val.write_rules_to_file)
 
-        self.batch_thread.add_function( self.val.run_suricata_with_rules)
+        self.batch_thread.add_function( self.val.run_suricata_with_rules, validate_pcap_filename=self.wireshark_file_lineedit.text())
         self.batch_thread.add_function( self.val.generate_score_report)
         #self.val.write_score_file()
 
