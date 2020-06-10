@@ -143,15 +143,37 @@ pip install $REQUIRED_PYTHON_PACKAGES
 echo "$OUTPUT_PREFIX Creating executables"
 cat > "$ECEL_NETSYS_DIR"/eceld-netsys-gui <<-'EOFeceld-netsys-gui'
 #!/bin/bash
+
+prompt_accepted_Yn() {
+    read -r -p "$1 [Y/n] " yn
+    case $yn in
+        [nN]*) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
 ECEL_NETSYS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 if [ "$EUID" -ne 0 ]; then
 	echo "ECELD-NETSYS must be run as root"
 	exit 1
 fi
+
 cd "$ECEL_NETSYS_DIR"
-echo *****Starting Service, roughly ~5 seconds
-./eceld/eceld_service
-sleep 5
+if pyro4-nsc list | grep -iq 'ecel.service'; then
+   if prompt_accepted_Yn "ECELd service already running, restart the service?"; then
+      echo ***** Removing Service *****
+      pyro4-nsc remove ecel.service
+      pkill -f eceld_service
+      echo ***** Starting Service, roughly ~5 seconds *****
+     ./eceld/eceld_service &
+     sleep 5
+   fi
+else
+   echo *****Starting Service, roughly ~5 seconds
+   ./eceld/eceld_service &
+   sleep 5
+fi
+
 venv/bin/python3 main.py
 EOFeceld-netsys-gui
 
