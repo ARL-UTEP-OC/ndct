@@ -142,14 +142,17 @@ pip install $REQUIRED_PYTHON_PACKAGES
 #
 echo "$OUTPUT_PREFIX Creating executables"
 cat > "$ECEL_NETSYS_DIR"/eceld-netsys-gui <<-'EOFeceld-netsys-gui'
-	#!/bin/bash
-	ECEL_NETSYS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-	if [ "$EUID" -ne 0 ]; then
-		echo "ECELD-NETSYS must be run as root"
-		exit 1
-	fi
-    cd "$ECEL_NETSYS_DIR"
-	venv/bin/python3 main.py
+#!/bin/bash
+ECEL_NETSYS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+if [ "$EUID" -ne 0 ]; then
+	echo "ECELD-NETSYS must be run as root"
+	exit 1
+fi
+cd "$ECEL_NETSYS_DIR"
+echo *****Starting Service (~5 seconds)
+./eceld/eceld_service
+sleep 5
+venv/bin/python3 main.py
 EOFeceld-netsys-gui
 
 chmod +x "$ECEL_NETSYS_DIR"/eceld-netsys-gui
@@ -159,7 +162,5 @@ echo "$OUTPUT_PREFIX Installation Complete"
 echo "You may have to modify your Wireshark (usually in /etc/wireshark/init.lua) to allow super user to load lua scripts"
 echo "Otherwise, annotations will not appear in packet capture view!"
 echo 
-echo "To run the GUI, start the service (takes roughly 10 seconds):"
-echo "sudo eceld/eceld_service"
-echo "Afterwards, invoke:"
+echo "To run the GUI, invoke:"
 echo "sudo ./eceld-netsys-gui "
