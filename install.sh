@@ -163,7 +163,8 @@ if pyro4-nsc list | grep -iq 'ecel.service'; then
    if prompt_accepted_Yn "ECELd service already running, restart the service?"; then
       echo ***** Removing Service *****
       pyro4-nsc remove ecel.service
-      pkill -f eceld_service
+      pkill eceld_service -f
+      pkill pyro4 -f
       echo ***** Starting Service, roughly ~5 seconds *****
      ./eceld/eceld_service &
      sleep 5
