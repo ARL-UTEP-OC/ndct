@@ -149,7 +149,7 @@ if [ "$EUID" -ne 0 ]; then
 	exit 1
 fi
 cd "$ECEL_NETSYS_DIR"
-echo *****Starting Service (~5 seconds)
+echo *****Starting Service, roughly ~5 seconds
 ./eceld/eceld_service
 sleep 5
 venv/bin/python3 main.py
