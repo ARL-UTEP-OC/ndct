@@ -14,5 +14,5 @@ class ScoreMessageBox(QMessageBox):
       for line in displaytext.splitlines():
          lay.addWidget(QLabel(line, self))
       self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())
-      self.setStyleSheet("QScrollArea{min-width:300 px; min-height: 400px}")
+      self.setStyleSheet("QScrollArea{min-width:1280 px; min-height: 800px}")
       self.showMaximized()
