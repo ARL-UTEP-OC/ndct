@@ -119,7 +119,7 @@ for eceld_dep in $ECELD_DEPS; do
 done
 
 for eceld_dep in $ECELD_DEPS; do
-    if [ ! -d $ECEL_NETSYS_DIR/eceld ]; then
+    if [ ! -d $ECEL_NETSYS_DIR/$eceld_dep ]; then
         echo "Download and installation of $eceld_dep not successful (can't execute program) quitting..."
         exit 1
     fi
