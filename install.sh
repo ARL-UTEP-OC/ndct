@@ -90,33 +90,42 @@ fi
 
 ### Install dependencies
 #
-REQUIRED_PROGRAMS="wireshark suricata python3-pip python3-venv git"
+REQUIRED_PROGRAMS="suricata python3-pip python3-venv git"
 REQUIRED_PYTHON_PACKAGES="PyQt5 Pyro4 Pillow jinja2"
+ECELD_DEPS="eceld eceld-wireshark"
 
-plugin_prompt="eceld found, remove it and reinstall?"
-if [ -d $ECEL_NETSYS_DIR/eceld ]; then
-    if prompt_accepted_Yn "$plugin_prompt"; then
-        rm $ECEL_NETSYS_DIR/eceld -rf
-    git clone https://github.com/ARL-UTEP-OC/eceld "$ECEL_NETSYS_DIR"/eceld
-    pushd "$ECEL_NETSYS_DIR"/eceld
-    chmod +x install.sh
-    ./install.sh
-    popd
+for eceld_dep in $ECELD_DEPS; do
+    eceld_prompt="$eceld_dep found, remove it and reinstall?"
+    if [ -d $ECEL_NETSYS_DIR/$eceld_dep ]; then
+        if prompt_accepted_Yn "$eceld_prompt"; then
+            rm $ECEL_NETSYS_DIR/$eceld_dep -rf
+        git clone https://github.com/ARL-UTEP-OC/$eceld_dep "$ECEL_NETSYS_DIR"/$eceld_dep
+        pushd "$ECEL_NETSYS_DIR"/$eceld_dep
+        chmod +x install.sh
+        ./install.sh
+        popd
+        fi
+    else
+        eceld_prompt="$eceld_dep not found, download and install?"
+        if prompt_accepted_Yn "$eceld_prompt"; then
+            rm $ECEL_NETSYS_DIR/$eceld_dep -rf
+        git clone https://github.com/ARL-UTEP-OC/$eceld_dep "$ECEL_NETSYS_DIR"/$eceld_dep
+        pushd "$ECEL_NETSYS_DIR"/$eceld_dep
+        chmod +x install.sh
+        ./install.sh
+        popd
+        fi
     fi
-else
-    git clone https://github.com/ARL-UTEP-OC/eceld "$ECEL_NETSYS_DIR"/eceld
-    pushd "$ECEL_NETSYS_DIR"/eceld
-    chmod +x install.sh
-    ./install.sh
-    popd
-fi
+done
 
-if [ ! -d $ECEL_NETSYS_DIR/eceld ]; then
-    echo "Download and installation of $plugin not successful (can't execute program) quitting..."
-    exit 1
-fi 
+for eceld_dep in $ECELD_DEPS; do
+    if [ ! -d $ECEL_NETSYS_DIR/eceld ]; then
+        echo "Download and installation of $eceld_dep not successful (can't execute program) quitting..."
+        exit 1
+    fi
+done 
 
-echo "$OUTPUT_PREFIX Installing Additional Dependecies"
+echo "$OUTPUT_PREFIX Installing Additional Dependencies"
 if [ -x "/usr/bin/apt-get" ]; then
     OS_VERSION="Debian"
     apt-get -y install $REQUIRED_PROGRAMS
