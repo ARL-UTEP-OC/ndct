@@ -94,6 +94,18 @@ REQUIRED_PROGRAMS="suricata python3-pip python3-venv git"
 REQUIRED_PYTHON_PACKAGES="PyQt5 Pyro4 Pillow jinja2"
 ECELD_DEPS="eceld eceld-wireshark"
 
+echo "$OUTPUT_PREFIX Installing Additional Dependencies"
+if [ -x "/usr/bin/apt-get" ]; then
+    OS_VERSION="Debian"
+    apt-get -y install $REQUIRED_PROGRAMS
+elif [ -x "/usr/bin/yum" ]; then
+    OS_VERSION="CentOS"
+    yum install -y $REQUIRED_PROGRAMS
+else
+    echo "$OUTPUT_ERROR_PREFIX Distribution not supported"
+    exit 1
+fi
+
 for eceld_dep in $ECELD_DEPS; do
     eceld_prompt="$eceld_dep found, remove it and reinstall?"
     if [ -d $ECEL_NETSYS_DIR/$eceld_dep ]; then
@@ -124,18 +136,6 @@ for eceld_dep in $ECELD_DEPS; do
         exit 1
     fi
 done 
-
-echo "$OUTPUT_PREFIX Installing Additional Dependencies"
-if [ -x "/usr/bin/apt-get" ]; then
-    OS_VERSION="Debian"
-    apt-get -y install $REQUIRED_PROGRAMS
-elif [ -x "/usr/bin/yum" ]; then
-    OS_VERSION="CentOS"
-    yum install -y $REQUIRED_PROGRAMS
-else
-    echo "$OUTPUT_ERROR_PREFIX Distribution not supported"
-    exit 1
-fi
 
 ### Create virtualenv if it doesn't currently exist
 echo "$OUTPUT_PREFIX Installing python dependencies"
