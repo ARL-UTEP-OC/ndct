@@ -39,7 +39,7 @@ class MainGUI(QMainWindow):
         ## Collect Tab Items
         self.logOutPathButton.clicked.connect(self.on_log_out_path_button_clicked)
         self.logOutPathButton.setEnabled(True)
-        self.logOutViewButton.clicked.connect(lambda x: self.on_log_out_view_button_clicked(x, self.logOutPathEdit))
+        self.logOutViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.logOutPathEdit))
         self.logOutViewButton.setEnabled(False)
 
         self.logOutStartButton.clicked.connect(self.on_log_start_button_clicked)
@@ -48,9 +48,14 @@ class MainGUI(QMainWindow):
         self.logOutStopButton.setEnabled(False)
         
         ## Annotate Tab Items
+        self.logInPathButton.clicked.connect(self.on_log_in_path_button_clicked)
+        self.logInPathButton.setEnabled(True)
+        self.logInViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.logInPathEdit))
+
         self.annotateOutStartButton.clicked.connect(self.on_wireshark_annotate_button_clicked)
         self.annotateOutStartButton.setEnabled(False)
 
+        ## Gen Rules Tab Items
         self.pcapInPathButton.clicked.connect(self.on_wireshark_file_button_clicked)
         self.pcapInPathButton.setEnabled(False)
 
@@ -69,11 +74,19 @@ class MainGUI(QMainWindow):
 
         logging.debug("MainWindow(): Complete")
 
+###### Non-specific Events
+    def on_view_button_clicked(self, x, folder_path=None):
+        if isinstance(folder_path, QTextEdit):
+            folder_path = folder_path.toPlainText()
+        self.file_explore_thread = FileExplorerRunner(folder_location=folder_path)
+        self.file_explore_thread.start()
+
+###### Collect Tab Events
     def on_log_out_path_button_clicked(self):
         logging.debug('on_log_out_path_button_clicked(): Instantiated')
-        folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+        folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Directory to Store Data"))
         if folder_chosen == "":
-            logging.debug("File choose canceled")
+            logging.debug("File choose cancelled")
             return
         self.logOutPathEdit.setText(folder_chosen)
 
@@ -85,12 +98,6 @@ class MainGUI(QMainWindow):
             self.pcapInEdit.setEnabled(True)
             self.logOutViewButton.setEnabled(True)
         logging.debug('on_log_out_path_button_clicked(): Complete')
-
-    def on_log_out_view_button_clicked(self, x, folder_path=None):
-        if isinstance(folder_path, QTextEdit):
-            folder_path = folder_path.toPlainText()
-        self.file_explore_thread = FileExplorerRunner(folder_location=folder_path)
-        self.file_explore_thread.start()
 
     def on_log_start_button_clicked(self):
         logging.debug('on_log_start_button_clicked(): Instantiated')
@@ -121,7 +128,7 @@ class MainGUI(QMainWindow):
         self.batch_thread.add_function(self.logman.parse_data_all)
         self.batch_thread.add_function(self.logman.export_data, self.logOutPathEdit.toPlainText())
         self.batch_thread.add_function(self.logman.copy_latest_data)
-        self.batch_thread.add_function(self.logman.generate_dissectors)
+        self.batch_thread.add_function(self.logman.generate_dissectors, None, self.logInPathEdit.toPlainText(), None)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()
@@ -153,19 +160,30 @@ class MainGUI(QMainWindow):
             self.pcapInPathButton.setEnabled(False)
             self.pcapInEdit.setEnabled(False)
             self.logInPathEdit.setText(self.logOutPathEdit.toPlainText())
-            # self.validate_button.setEnabled(False)
+            self.annotateOutStartButton.setEnabled(True)
         logging.debug('thread_finish(): Completed')
+
+##### Annotate Tab Events
+    def on_log_in_path_button_clicked(self):
+        logging.debug('on_log_in_path_button_clicked(): Instantiated')
+        folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Directory with Collected Data"))
+        if folder_chosen == "":
+            logging.debug("File choose cancelled")
+            return
+        self.logInPathEdit.setText(folder_chosen)
+
+        if self.logInPathEdit.toPlainText() != "":
+            self.logInViewButton.setEnabled(True)
+            self.annotateOutStartButton.setEnabled(True)
+        logging.debug('on_log_in_path_button_clicked(): Complete')
 
     def on_wireshark_annotate_button_clicked(self):
         logging.debug('on_activate_wireshark_button_clicked(): Instantiated')
         #open wireshark using the captured pcap and the generated lua files
         self.comment_mgr.run_wireshark_with_dissectors()
-        self.logOutStartButton.setEnabled(True)
-        self.logOutStopButton.setEnabled(False)
         self.annotateOutStartButton.setEnabled(True)
         self.pcapInPathButton.setEnabled(True)
         self.pcapInEdit.setEnabled(True)
-        # self.validate_button.setEnabled(False)
         logging.debug('on_activate_wireshark_button_clicked(): Complete')
 
     def on_wireshark_file_button_clicked(self):
