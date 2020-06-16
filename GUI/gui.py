@@ -119,7 +119,7 @@ class MainGUI(QMainWindow):
         
         self.batch_thread.add_function(self.logman.stop_collectors)
         self.batch_thread.add_function(self.logman.parse_data_all)
-        self.batch_thread.add_function(self.logman.export_data)
+        self.batch_thread.add_function(self.logman.export_data, self.logOutPathEdit.toPlainText())
         self.batch_thread.add_function(self.logman.copy_latest_data)
         self.batch_thread.add_function(self.logman.generate_dissectors)
 
@@ -139,7 +139,7 @@ class MainGUI(QMainWindow):
         self.progress_dialog_overall.update_progress()
         self.progress_dialog_overall.hide()
 
-        output_dissected = "Processed Network Capture. \r\nIncludes:\r\n"
+        output_dissected = "Saved Logs. \r\n\r\nCreated:\r\n"
         for dissected in self.logman.get_generated_dissector_filenames():
             output_dissected += str(os.path.basename(dissected)) +"\r\n"
 
@@ -152,6 +152,7 @@ class MainGUI(QMainWindow):
             self.annotateOutStartButton.setEnabled(True)
             self.pcapInPathButton.setEnabled(False)
             self.pcapInEdit.setEnabled(False)
+            self.logInPathEdit.setText(self.logOutPathEdit.toPlainText())
             # self.validate_button.setEnabled(False)
         logging.debug('thread_finish(): Completed')
 

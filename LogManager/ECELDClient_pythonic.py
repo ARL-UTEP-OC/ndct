@@ -31,7 +31,7 @@ class ECELDClient():
 
     def export_data(self, path=None):
         logging.debug("export_data(): requesting to export data to " + str(path))
-        if path == None:
+        if path == None or path.strip() == "":
             path = "/tmp/"
         try:
             if os.path.exists(path) == False:
