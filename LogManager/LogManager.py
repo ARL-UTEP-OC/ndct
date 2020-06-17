@@ -64,7 +64,7 @@ class LogManager():
         logging.debug("export_data(): Completed requesting to export data")
 
     def copy_latest_data(self, export_data_path_temp=None, export_data_path_latest=None, user_pcap_filename=None):
-        logging.debug('copyData(): Instantiated')
+        logging.debug('copy_latest_data(): Instantiated')
         #get the directory with all of the exported data:
         self.export_data_path_temp = export_data_path_temp
         if self.export_data_path_temp == None:
@@ -76,7 +76,7 @@ class LogManager():
         if self.export_data_path_latest == None:
             #read from config file
             self.export_data_path_latest = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "EXPORT_DATA_PATH_LATEST")
-
+        
         self.user_pcap_filename = user_pcap_filename
         if self.user_pcap_filename == None:
             #read from config file
@@ -97,10 +97,9 @@ class LogManager():
             if os.path.exists(pcapbase) == False:
                 os.makedirs(pcapbase)
         except:
-            logging.error("on_log_stop_button_clicked(): An error occured when trying create directory")
+            logging.error("copy_latest_data(): An error occured when trying create directory")
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback)
-
         try:
             #cp all JSON files to out dir
             auditdFile = os.path.join(latestlogdir,"parsed","auditd","auditdData.JSON")
@@ -114,7 +113,7 @@ class LogManager():
             if os.path.exists(pcapFile):
                 shutil.copy(pcapFile,self.user_pcap_filename)
         except:
-            logging.error("on_log_stop_button_clicked(): An error occured when trying to copy log files")
+            logging.error("copy_latest_data(): An error occured when trying to copy log files")
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback)
     
@@ -142,7 +141,6 @@ class LogManager():
         if self.export_data_path_latest == None:
             #read from config file
             self.export_data_path_latest = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "EXPORT_DATA_PATH_LATEST")
-        logging.error('generate_dissectors(): path: ' + str(dissector_path))
 
         #this is where the dissectors will be placed
         self.dissector_path = dissector_path

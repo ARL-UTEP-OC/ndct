@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>624</width>
-    <height>317</height>
+    <width>605</width>
+    <height>301</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -77,7 +77,7 @@
                  <item>
                   <widget class="QTextEdit" name="logOutPathEdit">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -85,7 +85,7 @@
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>25</height>
+                     <height>27</height>
                     </size>
                    </property>
                    <property name="baseSize">
@@ -230,7 +230,7 @@
                  <item>
                   <widget class="QTextEdit" name="logInPathEdit">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -238,7 +238,7 @@
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>25</height>
+                     <height>27</height>
                     </size>
                    </property>
                    <property name="baseSize">
@@ -372,7 +372,7 @@
              <item>
               <widget class="QTextEdit" name="annotateInEdit">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -380,7 +380,7 @@
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
-                 <height>25</height>
+                 <height>27</height>
                 </size>
                </property>
                <property name="baseSize">
@@ -477,7 +477,7 @@
              <item>
               <widget class="QTextEdit" name="genRulesOutEdit">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -485,7 +485,7 @@
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
-                 <height>25</height>
+                 <height>27</height>
                 </size>
                </property>
                <property name="baseSize">
@@ -609,7 +609,7 @@
              <item>
               <widget class="QTextEdit" name="genrulesInEdit">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -617,7 +617,7 @@
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
-                 <height>25</height>
+                 <height>27</height>
                 </size>
                </property>
                <property name="baseSize">
@@ -707,7 +707,7 @@
              <item>
               <widget class="QTextEdit" name="pcapInEdit">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -715,7 +715,7 @@
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
-                 <height>25</height>
+                 <height>27</height>
                 </size>
                </property>
                <property name="baseSize">
@@ -812,7 +812,7 @@
              <item>
               <widget class="QTextEdit" name="alertOutEdit">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -820,7 +820,7 @@
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
-                 <height>25</height>
+                 <height>27</height>
                 </size>
                </property>
                <property name="baseSize">
@@ -924,8 +924,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>624</width>
-     <height>20</height>
+     <width>605</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

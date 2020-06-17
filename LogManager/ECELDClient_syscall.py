@@ -39,7 +39,7 @@ class ECELDaemon(object):
         logging.debug("Instantiating parse_data_all()")
         collectors = self.engine.get_all_collectors()
         for i, collector in enumerate(collectors):
-            logging.error("PARSER: " + str(collector.name))
+            logging.debug("PARSER: " + str(collector.name))
             self.engine.parser(collector)
         logging.debug("Completed parse_data_all()")
 

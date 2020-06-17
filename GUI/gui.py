@@ -51,13 +51,15 @@ class MainGUI(QMainWindow):
         self.logInPathButton.clicked.connect(self.on_log_in_path_button_clicked)
         self.logInPathButton.setEnabled(True)
         self.logInViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.logInPathEdit))
+        self.logInViewButton.setEnabled(False)
 
         self.annotateOutStartButton.clicked.connect(self.on_wireshark_annotate_button_clicked)
         self.annotateOutStartButton.setEnabled(False)
 
         ## Gen Rules Tab Items
         self.pcapInPathButton.clicked.connect(self.on_wireshark_file_button_clicked)
-        self.pcapInPathButton.setEnabled(False)
+        self.pcapInPathButton.setEnabled(True)
+        self.pcapInViewButton.setEnabled(True)
 
         # self.analyzeOutStartButton.clicked.connect(self.on_validate_button_clicked)
         self.analyzeOutStartButton.setEnabled(False)
@@ -109,11 +111,14 @@ class MainGUI(QMainWindow):
         self.logger_started_once = True
         self.logman.remove_data_all()
         self.logman.start_collectors()
+        self.annotateTab.setEnabled(False)
+        self.generateRulesTab.setEnabled(False)
+        self.analyzeTab.setEnabled(False)
+
+        self.logOutPathButton.setEnabled(False)
+        self.logOutViewButton.setEnabled(False)
         self.logOutStartButton.setEnabled(False)
         self.logOutStopButton.setEnabled(True)
-        self.annotateOutStartButton.setEnabled(False)
-        self.pcapInPathButton.setEnabled(False)
-        self.pcapInEdit.setEnabled(False)
         # self.validate_button.setEnabled(False)
         logging.debug('on_log_start_button_clicked(): Complete')
 
@@ -126,9 +131,9 @@ class MainGUI(QMainWindow):
         
         self.batch_thread.add_function(self.logman.stop_collectors)
         self.batch_thread.add_function(self.logman.parse_data_all)
-        self.batch_thread.add_function(self.logman.export_data, self.logOutPathEdit.toPlainText())
-        self.batch_thread.add_function(self.logman.copy_latest_data)
-        self.batch_thread.add_function(self.logman.generate_dissectors, None, self.logOutPathEdit.toPlainText(), None)
+        self.batch_thread.add_function(self.logman.export_data)
+        self.batch_thread.add_function(self.logman.copy_latest_data, self.logOutPathEdit.toPlainText(), self.logOutPathEdit.toPlainText(), self.logOutPathEdit.toPlainText())
+        self.batch_thread.add_function(self.logman.generate_dissectors, self.logOutPathEdit.toPlainText(), self.logOutPathEdit.toPlainText(), None)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()
@@ -154,13 +159,18 @@ class MainGUI(QMainWindow):
             QMessageBox.alert(self, "Processing Complete", "No files processed")
         else: 
             QMessageBox.about(self, "Processing Complete", output_dissected)
+            self.annotateTab.setEnabled(True)
+            self.generateRulesTab.setEnabled(True)
+            self.analyzeTab.setEnabled(True)
             self.logOutStartButton.setEnabled(True)
             self.logOutStopButton.setEnabled(False)
-            self.annotateOutStartButton.setEnabled(True)
-            self.pcapInPathButton.setEnabled(False)
-            self.pcapInEdit.setEnabled(False)
+            self.logOutPathButton.setEnabled(True)
+            self.logOutViewButton.setEnabled(True)
+
             self.logInPathEdit.setText(self.logOutPathEdit.toPlainText())
+            self.logInViewButton.setEnabled(True)
             self.annotateOutStartButton.setEnabled(True)
+            
         logging.debug('thread_finish(): Completed')
 
 ##### Annotate Tab Events
@@ -180,10 +190,12 @@ class MainGUI(QMainWindow):
     def on_wireshark_annotate_button_clicked(self):
         logging.debug('on_activate_wireshark_button_clicked(): Instantiated')
         #open wireshark using the captured pcap and the generated lua files
-        self.comment_mgr.run_wireshark_with_dissectors()
+        user_pcap_filename=os.path.join(self.logInPathEdit.toPlainText(),"merged.pcapng")
+        self.comment_mgr.run_wireshark_with_dissectors(self.logInPathEdit.toPlainText(), user_pcap_filename)
         self.annotateOutStartButton.setEnabled(True)
-        self.pcapInPathButton.setEnabled(True)
-        self.pcapInEdit.setEnabled(True)
+
+        self.annotateInEdit.setText(user_pcap_filename)
+
         logging.debug('on_activate_wireshark_button_clicked(): Complete')
 
     def on_wireshark_file_button_clicked(self):
@@ -199,7 +211,6 @@ class MainGUI(QMainWindow):
             self.annotateOutStartButton.setEnabled(True)
             self.pcapInPathButton.setEnabled(True)
             self.pcapInEdit.setEnabled(True)
-            # self.validate_button.setEnabled(True)
         logging.debug('on_wireshark_file_button_clicked(): Complete')
     
     def on_validate_button_clicked(self):
@@ -209,7 +220,6 @@ class MainGUI(QMainWindow):
         self.batch_thread.progress_signal.connect(self.update_progress_bar)
         # self.batch_thread.completion_signal.connect(self.validate_button_batch_completed)
         
-        self.batch_thread.add_function( self.comment_mgr.extract_json)
         self.batch_thread.add_function( self.comment_mgr.extract_json)
         self.batch_thread.add_function( self.comment_mgr.write_comment_json_to_file)
 
@@ -248,9 +258,9 @@ class MainGUI(QMainWindow):
     def closeEvent(self, event):
         logging.debug("closeEvent(): instantiated")
         self.quit_event = event
-        if self.logOutStartButton.isEnabled() == True:
+        if self.logOutStopButton.isEnabled() == False:
             self.quit_app()
-        if self.logOutStartButton.isEnabled() == False:
+        if self.logOutStopButton.isEnabled() == True:
             close = QMessageBox.question(self,
                                             "QUIT",
                                             "Logger is running. Stop and Quit?",
@@ -269,7 +279,6 @@ class MainGUI(QMainWindow):
         logging.debug("closeEvent(): returning ignore")
         event.ignore()
         return
-
 
     def quit_app(self):
         logging.debug("quit_app(): Instantiated()")
