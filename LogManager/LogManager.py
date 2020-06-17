@@ -142,6 +142,7 @@ class LogManager():
         if self.export_data_path_latest == None:
             #read from config file
             self.export_data_path_latest = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "EXPORT_DATA_PATH_LATEST")
+        logging.error('generate_dissectors(): path: ' + str(dissector_path))
 
         #this is where the dissectors will be placed
         self.dissector_path = dissector_path
@@ -162,9 +163,8 @@ class LogManager():
         
         try:
             #remove directory if it exists and then create it
-            if os.path.exists(self.dissector_path) == True:
-                shutil.rmtree(self.dissector_path, ignore_errors=True)
-            os.makedirs(self.dissector_path)
+            if os.path.exists(self.dissector_path) == False:
+                os.makedirs(self.dissector_path)
         except:
             logging.error("generate_dissectors(): An error occured when trying to copy log files")
             exc_type, exc_value, exc_traceback = sys.exc_info()

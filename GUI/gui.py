@@ -128,7 +128,7 @@ class MainGUI(QMainWindow):
         self.batch_thread.add_function(self.logman.parse_data_all)
         self.batch_thread.add_function(self.logman.export_data, self.logOutPathEdit.toPlainText())
         self.batch_thread.add_function(self.logman.copy_latest_data)
-        self.batch_thread.add_function(self.logman.generate_dissectors, None, self.logInPathEdit.toPlainText(), None)
+        self.batch_thread.add_function(self.logman.generate_dissectors, None, self.logOutPathEdit.toPlainText(), None)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()
