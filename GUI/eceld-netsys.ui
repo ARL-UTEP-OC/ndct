@@ -69,8 +69,14 @@
                 <layout class="QHBoxLayout" name="logOutPathHBox">
                  <item>
                   <widget class="QLabel" name="logOutLabel">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                    <property name="text">
-                    <string>Log Output Folder</string>
+                    <string>Logs Out Base Folder</string>
                    </property>
                   </widget>
                  </item>
@@ -222,13 +228,19 @@
                 <layout class="QHBoxLayout" name="logInPathHBox">
                  <item>
                   <widget class="QLabel" name="logInPathLabel">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                    <property name="text">
-                    <string>Log Folder</string>
+                    <string>Network Capture</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QTextEdit" name="logInPathEdit">
+                  <widget class="QTextEdit" name="logInEdit">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -260,7 +272,7 @@
                     <bool>true</bool>
                    </property>
                    <property name="placeholderText">
-                    <string>Path to ECELd data</string>
+                    <string>Path to PCAP to Annotate</string>
                    </property>
                   </widget>
                  </item>
@@ -360,7 +372,7 @@
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>85</width>
+                 <width>130</width>
                  <height>0</height>
                 </size>
                </property>
@@ -372,7 +384,7 @@
              <item>
               <widget class="QTextEdit" name="annotateInEdit">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -465,19 +477,19 @@
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>85</width>
+                 <width>130</width>
                  <height>0</height>
                 </size>
                </property>
                <property name="text">
-                <string>Rules Output Path</string>
+                <string>Rules Out Base Folder</string>
                </property>
               </widget>
              </item>
              <item>
               <widget class="QTextEdit" name="genRulesOutEdit">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -507,7 +519,7 @@
                 <bool>true</bool>
                </property>
                <property name="placeholderText">
-                <string>Location for Storing Rules</string>
+                <string>Base Path for Storing Rules</string>
                </property>
               </widget>
              </item>
@@ -586,9 +598,9 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_6">
            <item>
-            <layout class="QHBoxLayout" name="genrulesInHBox">
+            <layout class="QHBoxLayout" name="genRulesInHBox">
              <item>
-              <widget class="QLabel" name="genrulesInLabel">
+              <widget class="QLabel" name="genRulesInLabel">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -597,19 +609,19 @@
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>85</width>
+                 <width>135</width>
                  <height>0</height>
                 </size>
                </property>
                <property name="text">
-                <string>Rules Path</string>
+                <string>Rules Input FIle</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QTextEdit" name="genrulesInEdit">
+              <widget class="QTextEdit" name="genRulesInEdit">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -639,12 +651,12 @@
                 <bool>true</bool>
                </property>
                <property name="placeholderText">
-                <string>Path to Intrusion Rules</string>
+                <string>Suricata IDS Rules File</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="genrulesInPathButton">
+              <widget class="QPushButton" name="genRulesInPathButton">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -663,7 +675,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="genrulesInViewButton">
+              <widget class="QPushButton" name="genRulesInViewButton">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -695,7 +707,7 @@
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>85</width>
+                 <width>135</width>
                  <height>0</height>
                 </size>
                </property>
@@ -707,7 +719,7 @@
              <item>
               <widget class="QTextEdit" name="pcapInEdit">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -800,19 +812,19 @@
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>85</width>
+                 <width>135</width>
                  <height>0</height>
                 </size>
                </property>
                <property name="text">
-                <string>Alert Output Path</string>
+                <string>OutAlert Base Path</string>
                </property>
               </widget>
              </item>
              <item>
               <widget class="QTextEdit" name="alertOutEdit">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -842,7 +854,7 @@
                 <bool>true</bool>
                </property>
                <property name="placeholderText">
-                <string>Location to Store Alerts</string>
+                <string>Base Path to Store Alerts</string>
                </property>
               </widget>
              </item>

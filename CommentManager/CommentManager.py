@@ -20,8 +20,11 @@ class CommentManager():
         self.ce = CommentExtractor()
         logging.debug('CommentManager(): Complete')
 
-    def extract_json(self):
+    def extract_json(self, commented_pcap_filename = None):
         logging.debug('extract_json(): Instantiated')
+        self.commented_pcap_filename = commented_pcap_filename
+        if commented_pcap_filename == None:
+            self.commented_pcap_filename = ConfigurationManager.get_instance().read_config_abspath("COMMENT_MANAGER", "USER_PCAP_FILENAME")
         self.jsondata = self.ce.comment_to_json(self.commented_pcap_filename)
         logging.debug('extract_json(): Completed')
     
