@@ -84,7 +84,7 @@ class CommentExtractor():
 			if "eth:ethertype:ip" in protocols: 
 				#hard coded keep values for now
 				ip_src_dict = {"val": ip_src, "keep": "false"}
-				ip_dest_dict = {"val": ip_dst, "keep": "true"}
+				ip_dest_dict = {"val": ip_dst, "keep": "false"}
 				comm_mode_dict = None
 
 				if scope == "single":

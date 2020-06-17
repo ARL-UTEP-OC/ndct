@@ -1,10 +1,11 @@
-import logging
 import sys
+import logging
 import os, traceback
 import shutil
-from PyQt5 import QtGui
+import platform
+from PyQt5 import QtGui, uic
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, QSpinBox, QAction, qApp
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, QSpinBox, QTextEdit, QAction, qApp, QFileDialog, QMessageBox
 
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
 
@@ -12,116 +13,113 @@ from LogManager import LogManager
 from CommentManager.CommentManager import CommentManager
 from Validator.Validator import Validator
 
+from ConfigurationManager.FileExplorerRunner import FileExplorerRunner
 from GUI.Dialogs.JSONFolderDialog import JSONFolderDialog
 from GUI.Dialogs.WiresharkFileDialog import WiresharkFileDialog
+from GUI.Dialogs.RulesFileDialog import RulesFileDialog
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 from GUI.Threading.BatchThread import BatchThread
 from GUI.MessageBoxes.ScoreMessageBox import ScoreMessageBox
 
 import time
 
-from PyQt5.QtWidgets import QMessageBox
-
 class MainGUI(QMainWindow):
-
     def __init__(self, logman, comment_mgr, val):
         logging.debug("MainGUI(): Instantiated")
         super(MainGUI, self).__init__()
 
+        uic.loadUi('GUI/eceld-netsys.ui', self)
+        
         self.start_module = ConfigurationManager.get_instance().read_config_value("GUI","START_MODULE")
 
         self.logger_started_once = False
-        self.setWindowTitle('Traffic Annotation Workflow')
-
-        mainwidget = QWidget()
-        self.setCentralWidget(mainwidget)
-        mainlayout = QVBoxLayout()
-        log_start_layout = QHBoxLayout()
-        log_stop_layout = QHBoxLayout()
-        wireshark_annotate_layout = QHBoxLayout()
-        validate_layout = QHBoxLayout()
 
         quit = QAction("Quit", self)
         quit.triggered.connect(self.closeEvent)
 
-        log_start_label = QLabel('Start Logging Network Data and Actions')
-        log_start_label.setFont(QtGui.QFont("Times",weight=QtGui.QFont.Bold))
-        log_start_label.setAlignment(Qt.AlignCenter)
+        ## Collect Tab Items
+        self.logOutPathButton.clicked.connect(self.on_log_out_path_button_clicked)
+        self.logOutPathButton.setEnabled(True)
+        self.logOutViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.logOutPathEdit))
+        self.logOutViewButton.setEnabled(False)
+        self.logOutStartButton.clicked.connect(self.on_log_start_button_clicked)
+        self.logOutStartButton.setEnabled(False)
+        self.logOutStopButton.clicked.connect(self.on_log_stop_button_clicked)
+        self.logOutStopButton.setEnabled(False)
+        
+        ## Annotate Tab Items
+        self.logInPathButton.clicked.connect(self.on_log_in_path_button_clicked)
+        self.logInPathButton.setEnabled(True)
+        self.logInViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.logInEdit))
+        self.logInViewButton.setEnabled(False)
+        self.annotateOutStartButton.clicked.connect(self.on_select_annotate_file_button_clicked)
+        self.annotateOutStartButton.setEnabled(False)
 
-        self.log_start_button = QPushButton('Logger Start')
-        self.log_start_button.clicked.connect(self.on_log_start_button_clicked)
+        
+        ## Gen Rules Tab Items
+        self.annotateInPathButton.clicked.connect(self.on_annotate_in_path_button_clicked)
+        self.annotateInViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.annotateInEdit))
+        self.annotateInViewButton.setEnabled(False)
+        self.genRulesOutPathButton.clicked.connect(self.on_genrules_out_path_button_clicked)
+        self.genRulesOutViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.genRulesOutEdit))
+        self.genRulesOutViewButton.setEnabled(False)
+        self.genRulesOutStartButton.clicked.connect(self.on_genrules_out_start_button_clicked)
+        self.genRulesOutStartButton.setEnabled(False)
 
-        log_stop_label = QLabel('Stop Logging Network Data and Actions')
-        log_stop_label.setFont(QtGui.QFont("Times",weight=QtGui.QFont.Bold))
-        log_stop_label.setAlignment(Qt.AlignCenter)
 
-        self.log_stop_button = QPushButton('Logger Stop and Process')
-        self.log_stop_button.clicked.connect(self.on_log_stop_button_clicked)
-        self.log_stop_button.setEnabled(False)
+        ## Analyze Tab Items
+        self.genRulesInPathButton.clicked.connect(self.on_genrules_in_path_button_clicked)
+        self.genRulesInViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.genRulesInEdit))
+        self.genRulesInViewButton.setEnabled(False)
+        self.pcapInPathButton.clicked.connect(self.on_pcap_in_path_button_clicked)
+        self.pcapInViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.pcapInEdit))
+        self.pcapInViewButton.setEnabled(False)      
+        self.alertOutPathButton.clicked.connect(self.on_alert_out_path_button_clicked)
+        self.alertOutViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.alertOutEdit))
+        self.alertOutViewButton.setEnabled(False)
+        self.analyzeOutStartButton.clicked.connect(self.on_analyze_out_start_button_clicked)
+        self.analyzeOutStartButton.setEnabled(False)
+        
 
-        wireshark_annotate_label = QLabel('Use Wireshark to Add Comments to Logs')
-        wireshark_annotate_label.setFont(QtGui.QFont("Times",weight=QtGui.QFont.Bold))
-        wireshark_annotate_label.setAlignment(Qt.AlignCenter)
-
-        self.wireshark_annotate_button = QPushButton('Run Wireshark')
-        self.wireshark_annotate_button.clicked.connect(self.on_wireshark_annotate_button_clicked)
-        self.wireshark_annotate_button.setEnabled(False)
-
-        validate_label = QLabel('Find Incidents in Another Network File Based on Comments')
-        validate_label.setFont(QtGui.QFont("Times",weight=QtGui.QFont.Bold))
-        validate_label.setAlignment(Qt.AlignCenter)
-
-        self.wireshark_file_button = QPushButton('Select File')
-        self.wireshark_file_button.clicked.connect(self.on_wireshark_file_button_clicked)
-        self.wireshark_file_button.setEnabled(False)
-
-        self.wireshark_file_lineedit = QLineEdit()
-        self.wireshark_file_lineedit.setText('Please select a pcap or pcapng file')
-        self.wireshark_file_lineedit.setAlignment(Qt.AlignLeft)
-        self.wireshark_file_lineedit.setReadOnly(True)
-        self.wireshark_file_lineedit.setEnabled(False)
-
-        self.validate_button = QPushButton('Find Incidents')
-        self.validate_button.clicked.connect(self.on_validate_button_clicked)
-        self.validate_button.setEnabled(False)
-
-        log_start_layout.addWidget(self.log_start_button)
-        log_stop_layout.addWidget(self.log_stop_button)
-        wireshark_annotate_layout.addWidget(self.wireshark_annotate_button)
-
-        validate_layout.addWidget(self.wireshark_file_button)
-        validate_layout.addWidget(self.wireshark_file_lineedit)
-        if self.start_module == "LOG_MANAGER":
-            mainlayout.addWidget(log_start_label)
-            mainlayout.addLayout(log_start_layout)
-            mainlayout.addStretch()
-            mainlayout.addWidget(log_stop_label)
-            mainlayout.addLayout(log_stop_layout)
-            mainlayout.addStretch()
-        if self.start_module == "LOG_MANAGER" or self.start_module == "COMMENT_MANAGER":
-            mainlayout.addWidget(wireshark_annotate_label)
-            mainlayout.addLayout(wireshark_annotate_layout)
-            mainlayout.addStretch()
-            if self.start_module == "COMMENT_MANAGER":
-                self.wireshark_annotate_button.setEnabled(True)
-
+        ## Enable certain tabs based on configuration
+        if self.start_module == "COMMENT_MANAGER":
+            self.collectTab.setEnabled(False)
         if self.start_module == "VALIDATOR":
-            #For now we always want the validator here
-            self.wireshark_file_button.setEnabled(True)
-            self.validate_button.setEnabled(True)
-            self.validate_button.setEnabled(True)
-        mainlayout.addWidget(validate_label)
-        mainlayout.addLayout(validate_layout)
-        mainlayout.addWidget(self.validate_button)
-        mainlayout.addStretch()
-        mainwidget.setLayout(mainlayout)
+            self.collectTab.setEnabled(False)
+            self.annotateOutStartButton.setEnabled(False)
 
+        ## Instantiate managers
         self.logman = logman
         self.comment_mgr = comment_mgr
         self.val = val
 
         logging.debug("MainWindow(): Complete")
-    
+
+###### Non-specific Events
+    def on_view_button_clicked(self, x, folder_path=None):
+        if isinstance(folder_path, QTextEdit):
+            folder_path = folder_path.toPlainText()
+        self.file_explore_thread = FileExplorerRunner(folder_location=folder_path)
+        self.file_explore_thread.start()
+
+###### Collect Tab Events
+    def on_log_out_path_button_clicked(self):
+        logging.debug('on_log_out_path_button_clicked(): Instantiated')
+        folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Directory to Store Data"))
+        if folder_chosen == "":
+            logging.debug("File choose cancelled")
+            return
+        self.logOutPathEdit.setText(folder_chosen)
+
+        if self.logOutPathEdit.toPlainText() != "":
+            self.logOutStartButton.setEnabled(True)
+            self.logOutStopButton.setEnabled(False)
+            self.annotateOutStartButton.setEnabled(True)
+            self.pcapInPathButton.setEnabled(True)
+            self.pcapInEdit.setEnabled(True)
+            self.logOutViewButton.setEnabled(True)
+        logging.debug('on_log_out_path_button_clicked(): Complete')
+
     def on_log_start_button_clicked(self):
         logging.debug('on_log_start_button_clicked(): Instantiated')
         if self.logger_started_once == True:
@@ -132,12 +130,15 @@ class MainGUI(QMainWindow):
         self.logger_started_once = True
         self.logman.remove_data_all()
         self.logman.start_collectors()
-        self.log_start_button.setEnabled(False)
-        self.log_stop_button.setEnabled(True)
-        self.wireshark_annotate_button.setEnabled(False)
-        self.wireshark_file_button.setEnabled(False)
-        self.wireshark_file_lineedit.setEnabled(False)
-        self.validate_button.setEnabled(False)
+        self.annotateTab.setEnabled(False)
+        self.generateRulesTab.setEnabled(False)
+        self.analyzeTab.setEnabled(False)
+
+        self.logOutPathButton.setEnabled(False)
+        self.logOutViewButton.setEnabled(False)
+        self.logOutStartButton.setEnabled(False)
+        self.logOutStopButton.setEnabled(True)
+        # self.validate_button.setEnabled(False)
         logging.debug('on_log_start_button_clicked(): Complete')
 
     def on_log_stop_button_clicked(self):
@@ -149,9 +150,12 @@ class MainGUI(QMainWindow):
         
         self.batch_thread.add_function(self.logman.stop_collectors)
         self.batch_thread.add_function(self.logman.parse_data_all)
-        self.batch_thread.add_function(self.logman.export_data)
-        self.batch_thread.add_function(self.logman.copy_latest_data)
-        self.batch_thread.add_function(self.logman.generate_dissectors)
+        self.batch_thread.add_function(self.logman.export_data, self.logOutPathEdit.toPlainText())
+        parsedLogs = os.path.join(self.logOutPathEdit.toPlainText(),ConfigurationManager.STRUCTURE_PARSED_PATH)
+        annotatedPCAP = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+        self.batch_thread.add_function(self.logman.copy_latest_data, self.logOutPathEdit.toPlainText(), parsedLogs, annotatedPCAP)
+        dissectorsPath = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
+        self.batch_thread.add_function(self.logman.generate_dissectors, parsedLogs, dissectorsPath, None)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()
@@ -169,7 +173,7 @@ class MainGUI(QMainWindow):
         self.progress_dialog_overall.update_progress()
         self.progress_dialog_overall.hide()
 
-        output_dissected = "Processed Network Capture. \r\nIncludes:\r\n"
+        output_dissected = "Saved Logs. \r\n\r\nCreated:\r\n"
         for dissected in self.logman.get_generated_dissector_filenames():
             output_dissected += str(os.path.basename(dissected)) +"\r\n"
 
@@ -177,91 +181,232 @@ class MainGUI(QMainWindow):
             QMessageBox.alert(self, "Processing Complete", "No files processed")
         else: 
             QMessageBox.about(self, "Processing Complete", output_dissected)
-            self.log_start_button.setEnabled(True)
-            self.log_stop_button.setEnabled(False)
-            self.wireshark_annotate_button.setEnabled(True)
-            self.wireshark_file_button.setEnabled(False)
-            self.wireshark_file_lineedit.setEnabled(False)
-            self.validate_button.setEnabled(False)
+            self.annotateTab.setEnabled(True)
+            self.generateRulesTab.setEnabled(True)
+            self.analyzeTab.setEnabled(True)
+            self.logOutStartButton.setEnabled(True)
+            self.logOutStopButton.setEnabled(False)
+            self.logOutPathButton.setEnabled(True)
+            self.logOutViewButton.setEnabled(True)
+            annotatedPCAP = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+            self.logInEdit.setText(annotatedPCAP)
+            self.logInViewButton.setEnabled(True)
+            self.annotateOutStartButton.setEnabled(True)
+            
         logging.debug('thread_finish(): Completed')
 
-    def on_wireshark_annotate_button_clicked(self):
-        logging.debug('on_activate_wireshark_button_clicked(): Instantiated')
-        #open wireshark using the captured pcap and the generated lua files
-        self.comment_mgr.run_wireshark_with_dissectors()
-        self.log_start_button.setEnabled(True)
-        self.log_stop_button.setEnabled(False)
-        self.wireshark_annotate_button.setEnabled(True)
-        self.wireshark_file_button.setEnabled(True)
-        self.wireshark_file_lineedit.setEnabled(True)
-        self.validate_button.setEnabled(False)
-        logging.debug('on_activate_wireshark_button_clicked(): Complete')
-
-    def on_wireshark_file_button_clicked(self):
-        logging.debug('on_wireshark_file_button_clicked(): Instantiated')
+##### Annotate Tab Events
+    def on_log_in_path_button_clicked(self):
+        logging.debug('on_log_in_path_button_clicked(): Instantiated')
         file_chosen = WiresharkFileDialog().wireshark_dialog()
         if file_chosen == "":
             logging.debug("File choose canceled")
             return
-        self.wireshark_file_lineedit.setText(file_chosen)
-        if self.wireshark_file_lineedit.text() != "Please select a pcap or pcapng file":
-            self.log_start_button.setEnabled(True)
-            self.log_stop_button.setEnabled(False)
-            self.wireshark_annotate_button.setEnabled(True)
-            self.wireshark_file_button.setEnabled(True)
-            self.wireshark_file_lineedit.setEnabled(True)
-            self.validate_button.setEnabled(True)
-        logging.debug('on_wireshark_file_button_clicked(): Complete')
-    
-    def on_validate_button_clicked(self):
-        logging.debug('on_validate_button_clicked(): Instantiated')
+        self.logInEdit.setText(file_chosen)
+        if self.logInEdit.toPlainText() != "":
+            self.logInViewButton.setEnabled(True)
+        self.annotateOutStartButton.setEnabled(True)
+        logging.debug('on_log_in_path_button_clicked(): Complete')
+
+    def on_select_annotate_file_button_clicked(self):
+        logging.debug('on_select_annotate_file_button_clicked(): Instantiated')
+        #open wireshark using pcap and provide base so that the dissectors can be found
+        user_pcap_filename = self.logInEdit.toPlainText()
+        pcapBasepath = os.path.dirname(os.path.dirname(self.logInEdit.toPlainText()))
+        dissectorsPath = os.path.join(pcapBasepath, ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
+        if os.path.exists(dissectorsPath):
+            self.comment_mgr.run_wireshark_with_dissectors(pcapBasepath, user_pcap_filename)
+        else:
+            self.comment_mgr.run_wireshark_with_dissectors([], self.logInEdit.toPlainText())
+        self.annotateOutStartButton.setEnabled(True)
+        self.annotateInEdit.setText(user_pcap_filename)
+        self.annotateInViewButton.setEnabled(True)
+        if self.genRulesOutViewButton.isEnabled():
+            self.genRulesOutStartButton.setEnabled(True)
+        logging.debug('on_select_annotate_file_button_clicked(): Complete')
+
+##### GenRules Tab Events
+    def on_annotate_in_path_button_clicked(self):
+        logging.debug('on_annotate_in_path_button_clicked(): Instantiated')
+        file_chosen = WiresharkFileDialog().wireshark_dialog()
+        if file_chosen == "":
+            logging.debug("File choose canceled")
+            return
+        self.annotateInEdit.setText(file_chosen)
+        if self.annotateInEdit.toPlainText() != "":
+            self.annotateInViewButton.setEnabled(True)
+        if self.genRulesOutViewButton.isEnabled():
+            self.genRulesOutStartButton.setEnabled(True)
+        logging.debug('on_log_in_path_button_clicked(): Complete')
+
+    def on_genrules_out_path_button_clicked(self):
+        logging.debug('on_genrules_out_path_button_clicked(): Instantiated')
+        folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Folder to Save IDS Rules"))
+        if folder_chosen == "":
+            logging.debug("File choose cancelled")
+            return
+        self.genRulesOutEdit.setText(folder_chosen)
+
+        if self.genRulesOutEdit.toPlainText() != "":
+            self.genRulesOutViewButton.setEnabled(True)
+        if self.annotateInViewButton.isEnabled():
+            self.genRulesOutStartButton.setEnabled(True)
+        logging.debug('on_log_in_path_button_clicked(): Complete')
+
+    def on_genrules_out_start_button_clicked(self):
+        logging.debug('on_genrules_out_start_button_clicked(): Instantiated')
         
         self.batch_thread = BatchThread()
         self.batch_thread.progress_signal.connect(self.update_progress_bar)
-        self.batch_thread.completion_signal.connect(self.validate_button_batch_completed)
-        
-        self.batch_thread.add_function( self.comment_mgr.extract_json)
-        self.batch_thread.add_function( self.comment_mgr.extract_json)
-        self.batch_thread.add_function( self.comment_mgr.write_comment_json_to_file)
+        self.batch_thread.completion_signal.connect(self.genrules_button_batch_completed)
 
-        self.batch_thread.add_function( self.val.extract_rules)
-        self.batch_thread.add_function( self.val.write_rules_to_file)
+        self.batch_thread.add_function( self.comment_mgr.extract_json, self.annotateInEdit.toPlainText())
+        comment_filename = os.path.join(self.genRulesOutEdit.toPlainText(), ConfigurationManager.STRUCTURE_JSON_COMMENTS)
+        self.batch_thread.add_function( self.comment_mgr.write_comment_json_to_file, comment_filename)
 
-        self.batch_thread.add_function( self.val.run_suricata_with_rules, None, None, None, None, self.wireshark_file_lineedit.text())
-        self.batch_thread.add_function( self.val.generate_score_report)
-        #self.val.write_score_file()
+        self.batch_thread.add_function( self.val.extract_rules, comment_filename)
+        rules_filename = os.path.join(self.genRulesOutEdit.toPlainText(), ConfigurationManager.STRUCTURE_RULES_GEN_FILE)
+        self.batch_thread.add_function( self.val.write_rules_to_file, rules_filename)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()
         self.progress_dialog_overall.show()
 
-        logging.debug('on_validate_button_clicked(): Complete')
+        logging.debug('on_genrules_out_start_button_clicked(): Complete')
 
-    def validate_button_batch_completed(self):
+    def genrules_button_batch_completed(self):
         logging.debug('thread_finish(): Instantiated')
 
         self.progress_dialog_overall.update_progress()
         self.progress_dialog_overall.hide()
-        #get score report
+        rules_filename = os.path.join(self.genRulesOutEdit.toPlainText(), ConfigurationManager.STRUCTURE_RULES_GEN_FILE)
+        self.genRulesInEdit.setText(rules_filename)
+        self.genRulesInViewButton.setEnabled(True)
         
-        smb = ScoreMessageBox(self.val.get_score_report())
-        smb.exec_()
-
-        self.log_start_button.setEnabled(True)
-        self.log_stop_button.setEnabled(False)
-        self.wireshark_annotate_button.setEnabled(True)
-        self.wireshark_file_button.setEnabled(True)
-        self.wireshark_file_lineedit.setEnabled(True)
-        self.validate_button.setEnabled(True)
-
         logging.debug('thread_finish(): Completed')
+
+##### Analyze Tab Events
+    def on_genrules_in_path_button_clicked(self):
+        logging.debug('on_genrules_in_path_button_clicked(): Instantiated')
+        file_chosen = RulesFileDialog().rules_dialog()
+        if file_chosen == "":
+            logging.debug("File choose canceled")
+            return
+        self.genRulesInEdit.setText(file_chosen)
+
+        if self.genRulesInEdit.toPlainText() != "":
+            self.genRulesInViewButton.setEnabled(True)
+        if self.pcapInViewButton.isEnabled() and self.alertOutViewButton.isEnabled():
+            self.analyzeOutStartButton.setEnabled(True)
+        logging.debug('on_genrules_in_path_button_clicked(): Complete')
+
+    def on_pcap_in_path_button_clicked(self):
+        logging.debug('on_pcap_in_path_button_clicked(): Instantiated')
+        file_chosen = WiresharkFileDialog().wireshark_dialog()
+        if file_chosen == "":
+            logging.debug("File choose cancelled")
+            return
+        self.pcapInEdit.setText(file_chosen)
+        if self.pcapInEdit.toPlainText() != "":
+            self.pcapInViewButton.setEnabled(True)
+        if self.genRulesInViewButton.isEnabled() and self.alertOutViewButton.isEnabled():
+            self.analyzeOutStartButton.setEnabled(True)
+        logging.debug('on_pcap_in_path_button_clicked(): Complete')
+
+    def on_alert_out_path_button_clicked(self):
+        logging.debug('on_alert_out_path_button_clicked(): Instantiated')
+        folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Folder to Save IDS Output/Alerts"))
+        if folder_chosen == "":
+            logging.debug("File choose cancelled")
+            return
+        self.alertOutEdit.setText(folder_chosen)
+
+        if self.alertOutEdit.toPlainText() != "":
+            self.alertOutViewButton.setEnabled(True)
+        if self.genRulesInViewButton.isEnabled() and self.pcapInViewButton.isEnabled():
+            self.analyzeOutStartButton.setEnabled(True)
+        logging.debug('on_alert_out_path_button_clicked(): Complete')
+
+    def on_analyze_out_start_button_clicked(self):
+        logging.debug('on_analyze_out_start_button_clicked(): Instantiated')
+        
+        self.batch_thread = BatchThread()
+        self.batch_thread.progress_signal.connect(self.update_progress_bar)
+        self.batch_thread.completion_signal.connect(self.analyze_button_batch_completed)
+#run_suricata_with_rules(self, suricata_executable_filename=None, suricata_config_filename=None, suricata_alert_path=None, suricata_rules_filename=None, validate_pcap_filename=None):
+        alertOutPath = os.path.join(self.alertOutEdit.toPlainText(), ConfigurationManager.STRUCTURE_ALERT_GEN_PATH)
+        self.batch_thread.add_function( self.val.run_suricata_with_rules, None, None, alertOutPath, self.genRulesInEdit.toPlainText(), self.pcapInEdit.toPlainText())
+        #self.batch_thread.add_function( self.val.generate_score_report)
+
+        self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
+        self.batch_thread.start()
+        self.progress_dialog_overall.show()
+
+        logging.debug('on_analyze_out_start_button_clicked(): Complete')
+
+    def analyze_button_batch_completed(self):
+        logging.debug('thread_finish(): Instantiated')
+
+        self.progress_dialog_overall.update_progress()
+        self.progress_dialog_overall.hide()
+        
+        res = QMessageBox.question(self,
+                                        "Alerts written.\r\n",
+                                        "Open File?",
+                                        QMessageBox.Yes | QMessageBox.No)
+        alertOutFile = os.path.join(self.alertOutEdit.toPlainText(), ConfigurationManager.STRUCTURE_ALERT_GEN_FILE)
+        if res == QMessageBox.Yes:
+            logging.debug("analyze_button_batch_completed(): Opening Alerts File")
+            self.on_view_button_clicked(None, alertOutFile)
+    
+    # def on_validate_button_clicked(self):
+    #     logging.debug('on_validate_button_clicked(): Instantiated')
+        
+    #     self.batch_thread = BatchThread()
+    #     self.batch_thread.progress_signal.connect(self.update_progress_bar)
+    #     # self.batch_thread.completion_signal.connect(self.validate_button_batch_completed)
+        
+    #     self.batch_thread.add_function( self.comment_mgr.extract_json)
+    #     self.batch_thread.add_function( self.comment_mgr.write_comment_json_to_file)
+
+    #     self.batch_thread.add_function( self.val.extract_rules)
+    #     self.batch_thread.add_function( self.val.write_rules_to_file)
+
+    #     self.batch_thread.add_function( self.val.run_suricata_with_rules, None, None, None, None, self.pcapInEdit.text())
+    #     self.batch_thread.add_function( self.val.generate_score_report)
+    #     #self.val.write_score_file()
+
+    #     self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
+    #     self.batch_thread.start()
+    #     self.progress_dialog_overall.show()
+
+    #     logging.debug('on_validate_button_clicked(): Complete')
+
+    # def validate_button_batch_completed(self):
+    #     logging.debug('thread_finish(): Instantiated')
+
+    #     self.progress_dialog_overall.update_progress()
+    #     self.progress_dialog_overall.hide()
+    #     #get score report
+        
+    #     smb = ScoreMessageBox(self.val.get_score_report())
+    #     smb.exec_()
+
+    #     self.logOutStartButton.setEnabled(True)
+    #     self.logOutStopButton.setEnabled(False)
+    #     self.annotateOutStartButton.setEnabled(True)
+    #     self.pcapInPathButton.setEnabled(True)
+    #     self.pcapInEdit.setEnabled(True)
+    #     # self.validate_button.setEnabled(True)
+
+    #     logging.debug('thread_finish(): Completed')
 
     def closeEvent(self, event):
         logging.debug("closeEvent(): instantiated")
         self.quit_event = event
-        if self.log_start_button.isEnabled() == True:
+        if self.logOutStopButton.isEnabled() == False:
             self.quit_app()
-        if self.log_start_button.isEnabled() == False:
+        if self.logOutStopButton.isEnabled() == True:
             close = QMessageBox.question(self,
                                             "QUIT",
                                             "Logger is running. Stop and Quit?",
@@ -280,7 +425,7 @@ class MainGUI(QMainWindow):
         logging.debug("closeEvent(): returning ignore")
         event.ignore()
         return
-    
+
     def quit_app(self):
         logging.debug("quit_app(): Instantiated()")
         self.destroy()
