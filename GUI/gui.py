@@ -178,7 +178,7 @@ class MainGUI(QMainWindow):
             output_dissected += str(os.path.basename(dissected)) +"\r\n"
 
         if output_dissected == "":
-            QMessageBox.alert(self, "Processing Complete", "No files processed")
+            QMessageBox.about(self, "Processing Complete", "No files processed")
         else: 
             QMessageBox.about(self, "Processing Complete", output_dissected)
             self.annotateTab.setEnabled(True)
@@ -350,15 +350,19 @@ class MainGUI(QMainWindow):
 
         self.progress_dialog_overall.update_progress()
         self.progress_dialog_overall.hide()
-        
-        res = QMessageBox.question(self,
-                                        "Alerts written.\r\n",
-                                        "Open File?",
-                                        QMessageBox.Yes | QMessageBox.No)
+
         alertOutFile = os.path.join(self.alertOutEdit.toPlainText(), ConfigurationManager.STRUCTURE_ALERT_GEN_FILE)
-        if res == QMessageBox.Yes:
-            logging.debug("analyze_button_batch_completed(): Opening Alerts File")
-            self.on_view_button_clicked(None, alertOutFile)
+        if os.path.exists(alertOutFile) == False or os.stat(alertOutFile).st_size < 10:
+            QMessageBox.about(self, "IDS Alerts", "No alerts generated")
+        else:
+            res = QMessageBox.question(self,
+                                            "Alerts written.\r\n",
+                                            "Open File?",
+                                            QMessageBox.Yes | QMessageBox.No)
+            
+            if res == QMessageBox.Yes:
+                logging.debug("analyze_button_batch_completed(): Opening Alerts File")
+                self.on_view_button_clicked(None, alertOutFile)
     
     # def on_validate_button_clicked(self):
     #     logging.debug('on_validate_button_clicked(): Instantiated')
