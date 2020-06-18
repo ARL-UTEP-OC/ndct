@@ -4,7 +4,9 @@ import os, traceback
 import shutil
 from PyQt5 import QtGui
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, QSpinBox, QAction, qApp
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
+                    QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, QSpinBox, 
+                    QAction, qApp)
 
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
 

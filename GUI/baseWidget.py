@@ -5,10 +5,11 @@ import shutil
 import time
 from PyQt5 import QtGui
 from PyQt5.QtCore import *
+from PyQt5.QtCore import QDateTime, Qt, QTimer
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, 
                 QHBoxLayout, QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, 
-                QSpinBox, QAction, qApp, QStackedWidget, QMenuBar)
+                QSpinBox, QAction, qApp, QStackedWidget, QMenuBar, QMessageBox)
 
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
 
@@ -263,6 +264,6 @@ class BaseWidget(QtWidgets.QWidget):
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    ui = BaseWidget()
+    ui = self.BaseWidget()
     ui.show()
     sys.exit(app.exec_())

@@ -8,7 +8,7 @@ from PyQt5.QtCore import *
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, 
                 QHBoxLayout, QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, 
-                QSpinBox, QAction, qApp, QStackedWidget, QMenuBar, QInputDialog)
+                QSpinBox, QAction, qApp, QStackedWidget, QMenuBar, QInputDialog,QFileDialog)
 
 import time
 
@@ -143,6 +143,7 @@ class MainGUI(QMainWindow):
         self.importProjectMenuButton = QAction(QIcon(), "Import Project", self)
         self.importProjectMenuButton.setShortcut("Ctrl+I")
         self.importProjectMenuButton.setStatusTip("Import folder")
+        self.importProjectMenuButton.triggered.connect(self.importActionEvent)
         self.fileMenu.addAction(self.importProjectMenuButton)
 
         self.saveProjectMenuButton = QAction(QIcon(), "Save Project", self)
@@ -203,6 +204,39 @@ class MainGUI(QMainWindow):
         configTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.projectTree)
         configTreeWidgetItem.setText(0,configname)
         configTreeWidgetItem.setText(1,"Unknown")
+
+    #A combination of RES Methods
+    def importActionEvent(self):
+        logging.debug("MainApp:importActionEvent() instantiated") 
+
+        fdialog = QFileDialog()
+        #Is there another way to get the files?
+        #Would want to get a whole folder instead of just one file
+        fdialog.setFileMode(QFileDialog.Directory)
+        filenames = ""
+        filenames, _ = QFileDialog.getOpenFileNames(fdialog, "Choose capture file to Import")
+        if len(filenames) > 0:
+            #check if experiment already exists
+            filename = filenames[0]
+            logging.debug("packageImportDialog(): files chosen: " + str(filename))
+            baseNoExt = os.path.basename(filename)
+            baseNoExt = os.path.splitext(baseNoExt)[0]
+            self.configname = ''.join(e for e in baseNoExt if e.isalnum())
+            #check to make sure the name doesn't already exist
+            """ if self.configname in existingconfignames:
+                QMessageBox.warning(self.parent,
+                                        "Import Error",
+                                        "An experiment with the same name already exists. Skipping...",
+                                        QMessageBox.Ok)            
+                return []           
+            successfilenames = self.importData(filename)
+            if len(successfilenames) > 0:
+                logging.debug("packageImportDialog(): success files: " + str(successfilenames))
+                successfilename = successfilenames[0]
+                sbaseNoExt = os.path.basename(successfilename)
+                sbaseNoExt = os.path.splitext(sbaseNoExt)[0]
+                return sbaseNoExt """
+        return []
     
     def quit_app(self):
         logging.debug("quit_app(): Instantiated()")
