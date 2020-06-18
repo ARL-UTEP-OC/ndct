@@ -192,6 +192,7 @@ class MainGUI(QMainWindow):
             self.logInEdit.setText(annotatedPCAP)
             self.logInViewButton.setEnabled(True)
             self.annotateOutStartButton.setEnabled(True)
+            self.tabWidget.setCurrentIndex(1)
             
         logging.debug('thread_finish(): Completed')
 
@@ -282,7 +283,7 @@ class MainGUI(QMainWindow):
         rules_filename = os.path.join(self.genRulesOutEdit.toPlainText(), ConfigurationManager.STRUCTURE_RULES_GEN_FILE)
         self.genRulesInEdit.setText(rules_filename)
         self.genRulesInViewButton.setEnabled(True)
-        
+        self.tabWidget.setCurrentIndex(3)
         logging.debug('thread_finish(): Completed')
 
 ##### Analyze Tab Events
