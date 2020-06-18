@@ -15,7 +15,7 @@ function {{jinja_dissector_name}}_proto.dissector(buffer,pinfo,tree)
     {%- for event in range(0, jinja_eventlist_thresh|length) %}
     if pinfo.abs_ts >= {{jinja_eventlist_thresh[event][0]}} and pinfo.abs_ts <= {{jinja_eventlist_thresh[event][1]}} then
        local subtree = tree:add({{jinja_dissector_name}}_proto,"{{jinja_dissector_name}} Log")
-       local mycomplientstr = tostring("{{jinja_eventlist_thresh[event][3] | replace("\\","") }}")
+       local mycomplientstr = tostring("{{jinja_eventlist_thresh[event][3] | replace("\\","") | replace("\"","'")}}")
 
        subtree:add(tostring("Original Timestamp: "),tostring("{{jinja_eventlist_thresh[event][2]}}"))
        subtree:add(tostring("Log Data: "), mycomplientstr)
