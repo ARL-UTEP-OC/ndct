@@ -3,258 +3,154 @@ import sys
 import os, traceback
 import shutil
 from PyQt5 import QtGui
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, QSpinBox, QAction, qApp
-
-from ConfigurationManager.ConfigurationManager import ConfigurationManager
-
-from LogManager import LogManager
-from CommentManager.CommentManager import CommentManager
-from Validator.Validator import Validator
-
-from GUI.Dialogs.JSONFolderDialog import JSONFolderDialog
-from GUI.Dialogs.WiresharkFileDialog import WiresharkFileDialog
-from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
-from GUI.Threading.BatchThread import BatchThread
-from GUI.MessageBoxes.ScoreMessageBox import ScoreMessageBox
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, 
+                QHBoxLayout, QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, 
+                QSpinBox, QAction, qApp, QStackedWidget, QMenuBar, QInputDialog)
 
 import time
 
 from PyQt5.QtWidgets import QMessageBox
+
+from GUI.baseWidget import BaseWidget
+from GUI.Threading.BatchThread import BatchThread
+from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 
 class MainGUI(QMainWindow):
 
     def __init__(self, logman, comment_mgr, val):
         logging.debug("MainGUI(): Instantiated")
         super(MainGUI, self).__init__()
-
-        self.start_module = ConfigurationManager.get_instance().read_config_value("GUI","START_MODULE")
-
-        self.logger_started_once = False
         self.setWindowTitle('Traffic Annotation Workflow')
 
-        mainwidget = QWidget()
-        self.setCentralWidget(mainwidget)
+        self.mainWidget = QWidget()
+        self.setCentralWidget(self.mainWidget)
         mainlayout = QVBoxLayout()
-        log_start_layout = QHBoxLayout()
-        log_stop_layout = QHBoxLayout()
-        wireshark_annotate_layout = QHBoxLayout()
-        validate_layout = QHBoxLayout()
-
+        self.baseWidget = BaseWidget(logman, comment_mgr, val)
+        self.projectTree = QtWidgets.QTreeWidget()
+        self.configname = ""
+        self.baseWidgets = {}
+        self.blankTreeContextMenu = {}
+        
         quit = QAction("Quit", self)
         quit.triggered.connect(self.closeEvent)
 
-        log_start_label = QLabel('Start Logging Network Data and Actions')
-        log_start_label.setFont(QtGui.QFont("Times",weight=QtGui.QFont.Bold))
-        log_start_label.setAlignment(Qt.AlignCenter)
+        #Add tab widget - RES
+        tabWidget = QtWidgets.QTabWidget()
+        tabWidget.setGeometry(QtCore.QRect(0, 15, 668, 565))
+        tabWidget.setObjectName("tabWidget")
 
-        self.log_start_button = QPushButton('Logger Start')
-        self.log_start_button.clicked.connect(self.on_log_start_button_clicked)
+        #Configuration window - RES
+        windowWidget = QtWidgets.QWidget()
+        windowWidget.setObjectName("windowWidget")
+        windowBoxHLayout = QtWidgets.QHBoxLayout()
+        windowBoxHLayout.setObjectName("windowBoxHLayout")
+        windowWidget.setLayout(windowBoxHLayout)
 
-        log_stop_label = QLabel('Stop Logging Network Data and Actions')
-        log_stop_label.setFont(QtGui.QFont("Times",weight=QtGui.QFont.Bold))
-        log_stop_label.setAlignment(Qt.AlignCenter)
+        self.projectTree.itemSelectionChanged.connect(self.onItemSelected)
+        self.projectTree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.projectTree.customContextMenuRequested.connect(self.showContextMenu)
+        self.projectTree.setEnabled(True)
+        self.projectTree.setMaximumSize(200,521)
+        self.projectTree.setObjectName("projectTree")
+        self.projectTree.headerItem().setText(0, "Projects")
+        self.projectTree.setSortingEnabled(False)
+        windowBoxHLayout.addWidget(self.projectTree)
 
-        self.log_stop_button = QPushButton('Logger Stop and Process')
-        self.log_stop_button.clicked.connect(self.on_log_stop_button_clicked)
-        self.log_stop_button.setEnabled(False)
+        basedataStackedWidget = QStackedWidget()
+        basedataStackedWidget.setObjectName("basedataStackedWidget")
+        windowBoxHLayout.addWidget(basedataStackedWidget)
+        tabWidget.addTab(windowWidget, "Configuration")
 
-        wireshark_annotate_label = QLabel('Use Wireshark to Add Comments to Logs')
-        wireshark_annotate_label.setFont(QtGui.QFont("Times",weight=QtGui.QFont.Bold))
-        wireshark_annotate_label.setAlignment(Qt.AlignCenter)
+        #Add base info
+        self.baseWidgets[self.configname] = {"BaseWidget": {}}
+        self.baseWidgets[self.configname]["BaseWidget"] = self.baseWidget
+        basedataStackedWidget.addWidget(self.baseWidget)
 
-        self.wireshark_annotate_button = QPushButton('Run Wireshark')
-        self.wireshark_annotate_button.clicked.connect(self.on_wireshark_annotate_button_clicked)
-        self.wireshark_annotate_button.setEnabled(False)
+        #Set up context menu
+        self.setupContextMenus()
 
-        validate_label = QLabel('Find Incidents in Another Network File Based on Comments')
-        validate_label.setFont(QtGui.QFont("Times",weight=QtGui.QFont.Bold))
-        validate_label.setAlignment(Qt.AlignCenter)
-
-        self.wireshark_file_button = QPushButton('Select File')
-        self.wireshark_file_button.clicked.connect(self.on_wireshark_file_button_clicked)
-        self.wireshark_file_button.setEnabled(False)
-
-        self.wireshark_file_lineedit = QLineEdit()
-        self.wireshark_file_lineedit.setText('Please select a pcap or pcapng file')
-        self.wireshark_file_lineedit.setAlignment(Qt.AlignLeft)
-        self.wireshark_file_lineedit.setReadOnly(True)
-        self.wireshark_file_lineedit.setEnabled(False)
-
-        self.validate_button = QPushButton('Find Incidents')
-        self.validate_button.clicked.connect(self.on_validate_button_clicked)
-        self.validate_button.setEnabled(False)
-
-        log_start_layout.addWidget(self.log_start_button)
-        log_stop_layout.addWidget(self.log_stop_button)
-        wireshark_annotate_layout.addWidget(self.wireshark_annotate_button)
-
-        validate_layout.addWidget(self.wireshark_file_button)
-        validate_layout.addWidget(self.wireshark_file_lineedit)
-        if self.start_module == "LOG_MANAGER":
-            mainlayout.addWidget(log_start_label)
-            mainlayout.addLayout(log_start_layout)
-            mainlayout.addStretch()
-            mainlayout.addWidget(log_stop_label)
-            mainlayout.addLayout(log_stop_layout)
-            mainlayout.addStretch()
-        if self.start_module == "LOG_MANAGER" or self.start_module == "COMMENT_MANAGER":
-            mainlayout.addWidget(wireshark_annotate_label)
-            mainlayout.addLayout(wireshark_annotate_layout)
-            mainlayout.addStretch()
-            if self.start_module == "COMMENT_MANAGER":
-                self.wireshark_annotate_button.setEnabled(True)
-
-        if self.start_module == "VALIDATOR":
-            #For now we always want the validator here
-            self.wireshark_file_button.setEnabled(True)
-            self.validate_button.setEnabled(True)
-            self.validate_button.setEnabled(True)
-        mainlayout.addWidget(validate_label)
-        mainlayout.addLayout(validate_layout)
-        mainlayout.addWidget(self.validate_button)
-        mainlayout.addStretch()
-        mainwidget.setLayout(mainlayout)
-
-        self.logman = logman
-        self.comment_mgr = comment_mgr
-        self.val = val
+        #ADD TAB WIDGET - RES
+        self.initMenu()
+        mainlayout = QVBoxLayout()
+        mainlayout.addWidget(self.mainMenu)
+        mainlayout.addWidget(tabWidget)
+        self.mainWidget.setLayout(mainlayout)
 
         logging.debug("MainWindow(): Complete")
-    
-    def on_log_start_button_clicked(self):
-        logging.debug('on_log_start_button_clicked(): Instantiated')
-        if self.logger_started_once == True:
-            buttonReply = QMessageBox.question(self, 'Confirmation', "Restarting the Logger will Remove any Previous Data. \r\n Continue?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if buttonReply != QMessageBox.Yes:
-                logging.debug('on_log_start_button_clicked(): Cancelled')
-                return
-        self.logger_started_once = True
-        self.logman.remove_data_all()
-        self.logman.start_collectors()
-        self.log_start_button.setEnabled(False)
-        self.log_stop_button.setEnabled(True)
-        self.wireshark_annotate_button.setEnabled(False)
-        self.wireshark_file_button.setEnabled(False)
-        self.wireshark_file_lineedit.setEnabled(False)
-        self.validate_button.setEnabled(False)
-        logging.debug('on_log_start_button_clicked(): Complete')
 
-    def on_log_stop_button_clicked(self):
-        logging.debug('on_log_stop_button_clicked(): Instantiated')
-
-        self.batch_thread = BatchThread()
-        self.batch_thread.progress_signal.connect(self.update_progress_bar)
-        self.batch_thread.completion_signal.connect(self.stop_button_batch_completed)
-        
-        self.batch_thread.add_function(self.logman.stop_collectors)
-        self.batch_thread.add_function(self.logman.parse_data_all)
-        self.batch_thread.add_function(self.logman.export_data)
-        self.batch_thread.add_function(self.logman.copy_latest_data)
-        self.batch_thread.add_function(self.logman.generate_dissectors)
-
-        self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
-        self.batch_thread.start()
-        self.progress_dialog_overall.show()
-        
-        logging.debug('on_log_stop_button_clicked(): Complete')
-
-    def update_progress_bar(self):
-        logging.debug('update_progress_bar(): Instantiated')
-        self.progress_dialog_overall.update_progress()
-        logging.debug('update_progress_bar(): Complete')
-
-    def stop_button_batch_completed(self):
-        logging.debug('thread_finish(): Instantiated')
-        self.progress_dialog_overall.update_progress()
-        self.progress_dialog_overall.hide()
-
-        output_dissected = "Processed Network Capture. \r\nIncludes:\r\n"
-        for dissected in self.logman.get_generated_dissector_filenames():
-            output_dissected += str(os.path.basename(dissected)) +"\r\n"
-
-        if output_dissected == "":
-            QMessageBox.alert(self, "Processing Complete", "No files processed")
-        else: 
-            QMessageBox.about(self, "Processing Complete", output_dissected)
-            self.log_start_button.setEnabled(True)
-            self.log_stop_button.setEnabled(False)
-            self.wireshark_annotate_button.setEnabled(True)
-            self.wireshark_file_button.setEnabled(False)
-            self.wireshark_file_lineedit.setEnabled(False)
-            self.validate_button.setEnabled(False)
-        logging.debug('thread_finish(): Completed')
-
-    def on_wireshark_annotate_button_clicked(self):
-        logging.debug('on_activate_wireshark_button_clicked(): Instantiated')
-        #open wireshark using the captured pcap and the generated lua files
-        self.comment_mgr.run_wireshark_with_dissectors()
-        self.log_start_button.setEnabled(True)
-        self.log_stop_button.setEnabled(False)
-        self.wireshark_annotate_button.setEnabled(True)
-        self.wireshark_file_button.setEnabled(True)
-        self.wireshark_file_lineedit.setEnabled(True)
-        self.validate_button.setEnabled(False)
-        logging.debug('on_activate_wireshark_button_clicked(): Complete')
-
-    def on_wireshark_file_button_clicked(self):
-        logging.debug('on_wireshark_file_button_clicked(): Instantiated')
-        file_chosen = WiresharkFileDialog().wireshark_dialog()
-        if file_chosen == "":
-            logging.debug("File choose canceled")
+    #RES Method
+    def onItemSelected(self):
+        logging.debug("MainApp:onItemSelected instantiated")
+    	# Get the selected item
+        selectedItem = self.projectTree.currentItem()
+        if selectedItem == None:
+            logging.debug("MainApp:onItemSelected no configurations left")
+            self.statusBar.showMessage("No configuration items selected or available.")
             return
-        self.wireshark_file_lineedit.setText(file_chosen)
-        if self.wireshark_file_lineedit.text() != "Please select a pcap or pcapng file":
-            self.log_start_button.setEnabled(True)
-            self.log_stop_button.setEnabled(False)
-            self.wireshark_annotate_button.setEnabled(True)
-            self.wireshark_file_button.setEnabled(True)
-            self.wireshark_file_lineedit.setEnabled(True)
-            self.validate_button.setEnabled(True)
-        logging.debug('on_wireshark_file_button_clicked(): Complete')
-    
-    def on_validate_button_clicked(self):
-        logging.debug('on_validate_button_clicked(): Instantiated')
+        # Now enable the save button
+        self.saveButton.setEnabled(True)
+        self.saveProjectMenuButton.setEnabled(True)
+        #Check if it's the case that an project name was selected
+        parentSelectedItem = selectedItem.parent()
+        if(parentSelectedItem == None):
+            #A base widget was selected
+            self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[selectedItem.text(0)]["BaseWidget"])
+        else:
+            #Check if it's the case that a VM Name was selected
+            if(selectedItem.text(0)[0] == "V"):
+                logging.debug("Setting right widget: " + str(self.baseWidgets[parentSelectedItem.text(0)]["VMWidgets"][selectedItem.text(0)]))
+                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentSelectedItem.text(0)]["VMWidgets"][selectedItem.text(0)])
+            #Check if it's the case that a Material Name was selected
+            elif(selectedItem.text(0)[0] == "M"):
+                logging.debug("Setting right widget: " + str(self.baseWidgets[parentSelectedItem.text(0)]["MaterialWidgets"][selectedItem.text(0)]))
+                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentSelectedItem.text(0)]["MaterialWidgets"][selectedItem.text(0)])
+
+    #RES METHOD
+    def setupContextMenus(self):
+        logging.debug("MainApp:setupContextMenus() instantiated")
+    # Context menu for blank space
+        self.blankTreeContextMenu = QtWidgets.QMenu()
+       	self.addproject = self.blankTreeContextMenu.addAction("New project")
+       	#self.addproject.triggered.connect(self.addprojectActionEvent)
+        self.importproject = self.blankTreeContextMenu.addAction("Import project folder")
+        #self.importproject.triggered.connect(self.importActionEvent)
+
+    #RES METHOD
+    def showContextMenu(self, position):
+    	logging.debug("MainApp:showContextMenu() instantiated: " + str(position))
+    	if(self.projectTree.itemAt(position) == None):
+    		self.blankTreeContextMenu.popup(self.projectTree.mapToGlobal(position))
+    	elif(self.projectTree.itemAt(position).parent() == None):
+    		self.projectContextMenu.popup(self.projectTree.mapToGlobal(position))
+    	else:
+    		self.itemContextMenu.popup(self.projectTree.mapToGlobal(position))
+
+    #RES METHOD
+    def initMenu(self):               
         
-        self.batch_thread = BatchThread()
-        self.batch_thread.progress_signal.connect(self.update_progress_bar)
-        self.batch_thread.completion_signal.connect(self.validate_button_batch_completed)
-        
-        self.batch_thread.add_function( self.comment_mgr.extract_json)
-        self.batch_thread.add_function( self.comment_mgr.extract_json)
-        self.batch_thread.add_function( self.comment_mgr.write_comment_json_to_file)
+        self.mainMenu = QMenuBar()
+        self.fileMenu = self.mainMenu.addMenu("File")
 
-        self.batch_thread.add_function( self.val.extract_rules)
-        self.batch_thread.add_function( self.val.write_rules_to_file)
+        self.newProjectMenuButton = QAction(QIcon(), "New Project", self)
+        self.newProjectMenuButton.setShortcut("Ctrl+N")
+        self.newProjectMenuButton.setStatusTip("Create New Project")
+        self.newProjectMenuButton.triggered.connect(self.newProject)
+        self.fileMenu.addAction(self.newProjectMenuButton)
 
-        self.batch_thread.add_function( self.val.run_suricata_with_rules, None, None, None, None, self.wireshark_file_lineedit.text())
-        self.batch_thread.add_function( self.val.generate_score_report)
-        #self.val.write_score_file()
+        self.importProjectMenuButton = QAction(QIcon(), "Import Project", self)
+        self.importProjectMenuButton.setShortcut("Ctrl+I")
+        self.importProjectMenuButton.setStatusTip("Import folder")
+        self.fileMenu.addAction(self.importProjectMenuButton)
 
-        self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
-        self.batch_thread.start()
-        self.progress_dialog_overall.show()
-
-        logging.debug('on_validate_button_clicked(): Complete')
-
-    def validate_button_batch_completed(self):
-        logging.debug('thread_finish(): Instantiated')
-
-        self.progress_dialog_overall.update_progress()
-        self.progress_dialog_overall.hide()
-        #get score report
-        
-        smb = ScoreMessageBox(self.val.get_score_report())
-        smb.exec_()
-
-        self.log_start_button.setEnabled(True)
-        self.log_stop_button.setEnabled(False)
-        self.wireshark_annotate_button.setEnabled(True)
-        self.wireshark_file_button.setEnabled(True)
-        self.wireshark_file_lineedit.setEnabled(True)
-        self.validate_button.setEnabled(True)
-
-        logging.debug('thread_finish(): Completed')
+        self.saveProjectMenuButton = QAction(QIcon(), "Save Project", self)
+        self.saveProjectMenuButton.setShortcut("Ctrl+S")
+        self.saveProjectMenuButton.setStatusTip("Save currently selected project")
+        #self.saveProjectMenuButton.triggered.connect(self.saveProjectButton)
+        self.saveProjectMenuButton.setEnabled(False)
+        self.fileMenu.addAction(self.saveProjectMenuButton)
 
     def closeEvent(self, event):
         logging.debug("closeEvent(): instantiated")
@@ -280,6 +176,33 @@ class MainGUI(QMainWindow):
         logging.debug("closeEvent(): returning ignore")
         event.ignore()
         return
+    
+    #This method was added by:
+    #Stephanie Medina
+    #Used to create a new project, this is where the prompt to write a name for the project is taken.
+    def newProject(self):
+        configname = QInputDialog.getText(self, 'Project', 'Enter new project name \r\n(non alphanumeric characters will be removed)')
+        #if ok:
+            #standardize and remove invalid characters
+            #self.configname = ''.join(e for e in self.configname if e.isalnum())
+            #check to make sure the name doesn't already exist
+            # if self.configname in existingconfignames:
+            #     QMessageBox.warning(self.parent,
+            #                             "Name Exists",
+            #                             "The project name specified already exists",
+            #                             QMessageBox.Ok)            
+            #     return None
+        
+        #Call add project
+        self.addProject(configname)
+
+    #This method was added by:
+    #Stephanie Medina
+    #Used to create a new project, and this is where the project will actually be populated
+    def addProject(self, configname):
+        configTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.projectTree)
+        configTreeWidgetItem.setText(0,configname)
+        configTreeWidgetItem.setText(1,"Unknown")
     
     def quit_app(self):
         logging.debug("quit_app(): Instantiated()")
