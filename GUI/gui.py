@@ -39,7 +39,7 @@ class MainGUI(QMainWindow):
         self.blankTreeContextMenu = {}
         
         quit = QAction("Quit", self)
-        quit.triggered.connect(self.closeEvent)
+        quit.triggered.connect(self.baseWidget.closeEvent)
 
         #Add tab widget - RES
         tabWidget = QtWidgets.QTabWidget()
@@ -69,7 +69,7 @@ class MainGUI(QMainWindow):
         tabWidget.addTab(windowWidget, "Configuration")
 
         #Add base info
-        self.baseWidgets[self.configname] = {"BaseWidget": {}}
+        self.baseWidgets[self.configname] = {"BaseWidget": {}, "ProjectWidget": {} }
         self.baseWidgets[self.configname]["BaseWidget"] = self.baseWidget
         self.basedataStackedWidget.addWidget(self.baseWidget)
 
@@ -95,13 +95,13 @@ class MainGUI(QMainWindow):
             self.statusBar.showMessage("No configuration items selected or available.")
             return
         # Now enable the save button
-        self.saveButton.setEnabled(True)
+        #self.saveButton.setEnabled(True)
         self.saveProjectMenuButton.setEnabled(True)
         #Check if it's the case that an project name was selected
         parentSelectedItem = selectedItem.parent()
         if(parentSelectedItem == None):
             #A base widget was selected
-            self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[selectedItem.text(0)]["BaseWidget"])
+            self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[selectedItem.text(0)]["ProjectWidget"])
         else:
             #Check if it's the case that a VM Name was selected
             if(selectedItem.text(0)[0] == "V"):
@@ -156,31 +156,6 @@ class MainGUI(QMainWindow):
         #self.saveProjectMenuButton.triggered.connect(self.saveProjectButton)
         self.saveProjectMenuButton.setEnabled(False)
         self.fileMenu.addAction(self.saveProjectMenuButton)
-
-    def closeEvent(self, event):
-        logging.debug("closeEvent(): instantiated")
-        self.quit_event = event
-        if self.log_start_button.isEnabled() == True:
-            self.quit_app()
-        if self.log_start_button.isEnabled() == False:
-            close = QMessageBox.question(self,
-                                            "QUIT",
-                                            "Logger is running. Stop and Quit?",
-                                            QMessageBox.Yes | QMessageBox.No)
-            if close == QMessageBox.Yes:
-                logging.debug("closeEvent(): Creating Quit Command Load")
-                self.batch_thread = BatchThread()
-                self.batch_thread.progress_signal.connect(self.update_progress_bar)
-                self.batch_thread.completion_signal.connect(self.quit_app)
-                
-                self.batch_thread.add_function(self.logman.stop_collectors)
-                self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
-                self.batch_thread.start()
-                self.progress_dialog_overall.show()
-                return
-        logging.debug("closeEvent(): returning ignore")
-        event.ignore()
-        return
     
     #This method was added by:
     #Stephanie Medina
@@ -203,9 +178,11 @@ class MainGUI(QMainWindow):
         else:
             logging.debug("newProject(): Cancel was pressed")
             return
-        
+
         #Call add project
         self.addProject(configname, destinationPath)
+
+        return None
 
     #This method was added by:
     #Stephanie Medina
@@ -228,8 +205,13 @@ class MainGUI(QMainWindow):
         
         configTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.projectTree)
         configTreeWidgetItem.setText(0,filename)
-        #add project widget
+        self.projectWidget.addProjectItem(filename)
+            
+        #add project widget and its contents
+        self.baseWidgets[self.configname]["ProjectWidget"][filename] = self.projectWidget
+
         self.basedataStackedWidget.addWidget(self.projectWidget)
+        self.basedataStackedWidget.addWidget(self.baseWidget)
 
     #A combination of RES Methods
     def importActionEvent(self):

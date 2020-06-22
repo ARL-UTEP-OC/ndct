@@ -11,28 +11,45 @@ class ProjectWidget(QtWidgets.QWidget):
         self.outerVertBox = QtWidgets.QVBoxLayout()
         self.outerVertBox.setObjectName("outerVertBox")
 
+        self.setWindowTitle("ProjectWidget")
         self.setObjectName("ProjectWidget")
-        self.treeWidget = QtWidgets.QTreeWidget(self)
-        self.treeWidget.setObjectName("treeWidget")
-        self.treeWidget.header().resizeSection(0, 150)
-        self.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.treeWidget.customContextMenuRequested.connect(self.showContextMenu)
-        self.outerVertBox.addWidget(self.treeWidget)
+
+        #material widget - res
+        self.nameHorBox = QtWidgets.QHBoxLayout()
+        self.nameHorBox.setObjectName("nameHorBox")
+        self.nameLabel = QtWidgets.QLabel()
+        self.nameLabel.setObjectName("nameLabel")
+        self.nameLabel.setText("Name:")
+        self.nameHorBox.addWidget(self.nameLabel)
+
+        self.nameLineEdit = QtWidgets.QLineEdit()
+        self.nameLineEdit.setAcceptDrops(False)
+        self.nameLineEdit.setReadOnly(True)
+        self.nameLineEdit.setObjectName("nameLineEdit")      
+        self.nameHorBox.addWidget(self.nameLineEdit)
+
+        self.outerVertBox.addLayout(self.nameHorBox)
+        self.outerVertBox.addStretch()
+
+        self.setLayout(self.outerVertBox)
+
+        # Context menu for blank space
+        self.projectMenu = QtWidgets.QMenu()
+        self.startupContextMenu = QtWidgets.QMenu("Startup")
+        self.shutdownContextMenu = QtWidgets.QMenu("Shutdown")
+        self.stateContextMenu = QtWidgets.QMenu("State")
+        self.projectMenu.addMenu(self.startupContextMenu)
+        self.projectMenu.addMenu(self.shutdownContextMenu)
+        self.projectMenu.addMenu(self.stateContextMenu)
 
     def addProjectItem(self, configname):
         logging.debug("addProjectItem(): retranslateUi(): instantiated")
         if configname in self.projectItemNames:
-            logging.error("addrojectItem(): Item already exists in tree: " + str(configname))
+            logging.error("addprojectItem(): Item already exists in tree: " + str(configname))
             return
-        configTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.treeWidget)
-        configTreeWidgetItem.setText(0,configname)
-        configTreeWidgetItem.setText(1,"Unknown")
-        self.rojectItemNames[configname] = configTreeWidgetItem
-        logging.debug("addrojectItem(): retranslateUi(): Completed")
-    
-    def showContextMenu(self, position):
-        logging.debug("removeExperimentItem(): showContextMenu(): instantiated")
-        self.experimentMenu.popup(self.treeWidget.mapToGlobal(position))
+
+        #self.projectItemNames[configname] = configTreeWidgetItem
+        logging.debug("addprojectItem(): retranslateUi(): Completed")
 
 if __name__ == "__main__":
     import sys

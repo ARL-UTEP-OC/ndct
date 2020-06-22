@@ -31,19 +31,37 @@ class BaseWidget(QtWidgets.QWidget):
 
         QtWidgets.QWidget.__init__(self, parent=None)
         
-        log_start_layout = QVBoxLayout()
-        log_stop_layout = QVBoxLayout()
-        wireshark_annotate_layout = QVBoxLayout()
-        validate_layout = QHBoxLayout()
+        self.log_start_layout = QVBoxLayout()
+        self.log_stop_layout = QVBoxLayout()
+        self.wireshark_annotate_layout = QVBoxLayout()
+        self.validate_layout = QHBoxLayout()
+        self.project_info_layout = QHBoxLayout()
 
         self.setWindowTitle("BaseWidget")
         self.setObjectName("BaseWidget")
         layoutWidget = QtWidgets.QWidget()
         layoutWidget.setObjectName("layoutWidget")
-        outerVertBox = QtWidgets.QVBoxLayout()
-        outerVertBox.setObjectName("outerVertBox")
-        layoutWidget.setLayout(outerVertBox)
+        self.outerVertBox = QtWidgets.QVBoxLayout()
+        self.outerVertBox.setObjectName("outerVertBox")
+        layoutWidget.setLayout(self.outerVertBox)
 
+        paddingWidget1 = QtWidgets.QWidget()
+        paddingWidget1.setObjectName("paddingWidget1")
+        self.outerVertBox.addWidget(paddingWidget1)
+        paddingWidget2 = QtWidgets.QWidget()
+        paddingWidget2.setObjectName("paddingWidget2")
+        self.outerVertBox.addWidget(paddingWidget2)
+        paddingWidget3 = QtWidgets.QWidget()
+        paddingWidget3.setObjectName("paddingWidget3")
+        self.outerVertBox.addWidget(paddingWidget3)
+
+        self.setLayout(self.outerVertBox)
+
+        self.logman = logman
+        self.comment_mgr = comment_mgr
+        self.val = val
+
+    """ def collectSubMenu(self):
         log_start_label = QLabel()
         log_start_label.setFont(QtGui.QFont("Times",weight=QtGui.QFont.Bold))
         log_start_label.setAlignment(Qt.AlignCenter)
@@ -65,7 +83,7 @@ class BaseWidget(QtWidgets.QWidget):
         self.log_stop_button.clicked.connect(self.on_log_stop_button_clicked)
         self.log_stop_button.setEnabled(False)
 
-        outerVertBox.addLayout(log_stop_layout)
+        outerVertBox.addLayout(log_stop_layout) 
 
         wireshark_annotate_label = QLabel()
         wireshark_annotate_label.setFont(QtGui.QFont("Times",weight=QtGui.QFont.Bold))
@@ -109,23 +127,7 @@ class BaseWidget(QtWidgets.QWidget):
 
         outerVertBox.addLayout(validate_layout)
         outerVertBox.addWidget(self.validate_button)
-        outerVertBox.addStretch()
-
-        paddingWidget1 = QtWidgets.QWidget()
-        paddingWidget1.setObjectName("paddingWidget1")
-        outerVertBox.addWidget(paddingWidget1)
-        paddingWidget2 = QtWidgets.QWidget()
-        paddingWidget2.setObjectName("paddingWidget2")
-        outerVertBox.addWidget(paddingWidget2)
-        paddingWidget3 = QtWidgets.QWidget()
-        paddingWidget3.setObjectName("paddingWidget3")
-        outerVertBox.addWidget(paddingWidget3)
-
-        self.setLayout(outerVertBox)
-
-        self.logman = logman
-        self.comment_mgr = comment_mgr
-        self.val = val
+        outerVertBox.addStretch() """
 
     def on_log_start_button_clicked(self):
         logging.debug('on_log_start_button_clicked(): Instantiated')
@@ -260,6 +262,31 @@ class BaseWidget(QtWidgets.QWidget):
         self.validate_button.setEnabled(True)
 
         logging.debug('thread_finish(): Completed')
+    
+    def closeEvent(self, event):
+        logging.debug("closeEvent(): instantiated")
+        self.quit_event = event
+        if self.log_start_button.isEnabled() == True:
+            self.quit_app()
+        if self.log_start_button.isEnabled() == False:
+            close = QMessageBox.question(self,
+                                            "QUIT",
+                                            "Logger is running. Stop and Quit?",
+                                            QMessageBox.Yes | QMessageBox.No)
+            if close == QMessageBox.Yes:
+                logging.debug("closeEvent(): Creating Quit Command Load")
+                self.batch_thread = BatchThread()
+                self.batch_thread.progress_signal.connect(self.update_progress_bar)
+                self.batch_thread.completion_signal.connect(self.quit_app)
+                
+                self.batch_thread.add_function(self.logman.stop_collectors)
+                self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
+                self.batch_thread.start()
+                self.progress_dialog_overall.show()
+                return
+        logging.debug("closeEvent(): returning ignore")
+        event.ignore()
+        return
 
 if __name__ == "__main__":
     import sys
