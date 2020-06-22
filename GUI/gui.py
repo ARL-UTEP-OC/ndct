@@ -14,8 +14,8 @@ import time
 
 from PyQt5.QtWidgets import QMessageBox
 
-from GUI.baseWidget import BaseWidget
-from GUI.ProjectWidget import ProjectWidget
+from GUI.Widgets.BaseWidget import BaseWidget
+from GUI.Widgets.ProjectWidget import ProjectWidget
 from GUI.Threading.BatchThread import BatchThread
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 

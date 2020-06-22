@@ -33,22 +33,12 @@ class ProjectWidget(QtWidgets.QWidget):
 
         self.setLayout(self.outerVertBox)
 
-        # Context menu for blank space
-        self.projectMenu = QtWidgets.QMenu()
-        self.startupContextMenu = QtWidgets.QMenu("Startup")
-        self.shutdownContextMenu = QtWidgets.QMenu("Shutdown")
-        self.stateContextMenu = QtWidgets.QMenu("State")
-        self.projectMenu.addMenu(self.startupContextMenu)
-        self.projectMenu.addMenu(self.shutdownContextMenu)
-        self.projectMenu.addMenu(self.stateContextMenu)
-
     def addProjectItem(self, configname):
         logging.debug("addProjectItem(): retranslateUi(): instantiated")
         if configname in self.projectItemNames:
             logging.error("addprojectItem(): Item already exists in tree: " + str(configname))
             return
 
-        #self.projectItemNames[configname] = configTreeWidgetItem
         logging.debug("addprojectItem(): retranslateUi(): Completed")
 
 if __name__ == "__main__":
