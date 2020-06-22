@@ -15,6 +15,7 @@ import time
 from PyQt5.QtWidgets import QMessageBox
 
 from GUI.baseWidget import BaseWidget
+from GUI.ProjectWidget import ProjectWidget
 from GUI.Threading.BatchThread import BatchThread
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 
@@ -29,8 +30,11 @@ class MainGUI(QMainWindow):
         self.setCentralWidget(self.mainWidget)
         mainlayout = QVBoxLayout()
         self.baseWidget = BaseWidget(logman, comment_mgr, val)
+        self.projectWidget  = ProjectWidget()
         self.projectTree = QtWidgets.QTreeWidget()
         self.configname = ""
+        #Temp - will change later
+        self.existingconfignames = []
         self.baseWidgets = {}
         self.blankTreeContextMenu = {}
         
@@ -59,15 +63,15 @@ class MainGUI(QMainWindow):
         self.projectTree.setSortingEnabled(False)
         windowBoxHLayout.addWidget(self.projectTree)
 
-        basedataStackedWidget = QStackedWidget()
-        basedataStackedWidget.setObjectName("basedataStackedWidget")
-        windowBoxHLayout.addWidget(basedataStackedWidget)
+        self.basedataStackedWidget = QStackedWidget()
+        self.basedataStackedWidget.setObjectName("basedataStackedWidget")
+        windowBoxHLayout.addWidget(self.basedataStackedWidget)
         tabWidget.addTab(windowWidget, "Configuration")
 
         #Add base info
         self.baseWidgets[self.configname] = {"BaseWidget": {}}
         self.baseWidgets[self.configname]["BaseWidget"] = self.baseWidget
-        basedataStackedWidget.addWidget(self.baseWidget)
+        self.basedataStackedWidget.addWidget(self.baseWidget)
 
         #Set up context menu
         self.setupContextMenus()
@@ -114,9 +118,9 @@ class MainGUI(QMainWindow):
     # Context menu for blank space
         self.blankTreeContextMenu = QtWidgets.QMenu()
        	self.addproject = self.blankTreeContextMenu.addAction("New project")
-       	#self.addproject.triggered.connect(self.addprojectActionEvent)
+       	self.addproject.triggered.connect(self.newProject)
         self.importproject = self.blankTreeContextMenu.addAction("Import project folder")
-        #self.importproject.triggered.connect(self.importActionEvent)
+        self.importproject.triggered.connect(self.importActionEvent)
 
     #RES METHOD
     def showContextMenu(self, position):
@@ -182,28 +186,50 @@ class MainGUI(QMainWindow):
     #Stephanie Medina
     #Used to create a new project, this is where the prompt to write a name for the project is taken.
     def newProject(self):
-        configname = QInputDialog.getText(self, 'Project', 'Enter new project name \r\n(non alphanumeric characters will be removed)')
-        #if ok:
+        #This path will be hardcoded temporaily. Will be changed later
+        destinationPath = "data/"
+        configname, ok = QInputDialog.getText(self, 'Project', 'Enter new project name \r\n(non alphanumeric characters will be removed)')
+        if ok:
             #standardize and remove invalid characters
-            #self.configname = ''.join(e for e in self.configname if e.isalnum())
+            self.configname = ''.join(e for e in self.configname if e.isalnum())
+            self.existingconfignames += [configname]
             #check to make sure the name doesn't already exist
-            # if self.configname in existingconfignames:
-            #     QMessageBox.warning(self.parent,
-            #                             "Name Exists",
-            #                             "The project name specified already exists",
-            #                             QMessageBox.Ok)            
-            #     return None
+            if self.configname in self.existingconfignames:
+                QMessageBox.warning(self.parent,
+                                        "Name Exists",
+                                        "The project name specified already exists",
+                                        QMessageBox.Ok)            
+                return None
+        else:
+            logging.debug("newProject(): Cancel was pressed")
+            return
         
         #Call add project
-        self.addProject(configname)
+        self.addProject(configname, destinationPath)
 
     #This method was added by:
     #Stephanie Medina
     #Used to create a new project, and this is where the project will actually be populated
-    def addProject(self, configname):
+    def addProject(self, filename, destinationPath):
+        #create the folders and files for new project:
+        self.filename = filename
+        self.successfilenames = []
+        self.successfoldernames = []
+        self.destinationPath = destinationPath
+        self.foldersToCreate = []
+        self.filesToCreate = []
+        basePath = os.path.join(destinationPath,filename)
+        self.foldersToCreate.append(basePath)
+        self.foldersToCreate.append(os.path.join(basePath, "Materials"))
+        self.foldersToCreate.append(os.path.join(basePath, "Logs"))
+
+        if filename != None:
+            logging.debug("addProject(): OK pressed and valid configname entered: " + str(filename))
+        
         configTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.projectTree)
-        configTreeWidgetItem.setText(0,configname)
-        configTreeWidgetItem.setText(1,"Unknown")
+        configTreeWidgetItem.setText(0,filename)
+        #add project widget
+        self.basedataStackedWidget.addWidget(self.projectWidget)
 
     #A combination of RES Methods
     def importActionEvent(self):

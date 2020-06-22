@@ -1,32 +1,38 @@
+#from ExperimentActionsWidget - RES
 from PyQt5 import QtCore, QtGui, QtWidgets
 import logging
 
 class ProjectWidget(QtWidgets.QWidget):
 
     def __init__(self):
-        logging.debug("MaterialWidget instantiated")
         QtWidgets.QWidget.__init__(self, parent=None)
-
-        self.setWindowTitle("ProjectWidget")
-        self.setObjectName("ProjectWidget")
-
+        #self.statusBar = statusBar
+        self.projectItemNames = {}
         self.outerVertBox = QtWidgets.QVBoxLayout()
         self.outerVertBox.setObjectName("outerVertBox")
-        self.nameHorBox = QtWidgets.QHBoxLayout()
-        self.nameHorBox.setObjectName("nameHorBox")
-        self.nameLabel = QtWidgets.QLabel()
-        self.nameLabel.setObjectName("nameLabel")
-        self.nameLabel.setText("Name:")
-        self.nameHorBox.addWidget(self.nameLabel)
 
-        self.nameLineEdit = QtWidgets.QLineEdit()
-        self.nameLineEdit.setAcceptDrops(False)
-        self.nameLineEdit.setReadOnly(True)
-        self.nameLineEdit.setObjectName("nameLineEdit")      
-        self.nameHorBox.addWidget(self.nameLineEdit)
+        self.setObjectName("ProjectWidget")
+        self.treeWidget = QtWidgets.QTreeWidget(self)
+        self.treeWidget.setObjectName("treeWidget")
+        self.treeWidget.header().resizeSection(0, 150)
+        self.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.treeWidget.customContextMenuRequested.connect(self.showContextMenu)
+        self.outerVertBox.addWidget(self.treeWidget)
 
-        self.outerVertBox.addLayout(self.nameHorBox)
-        self.outerVertBox.addStretch()
+    def addProjectItem(self, configname):
+        logging.debug("addProjectItem(): retranslateUi(): instantiated")
+        if configname in self.projectItemNames:
+            logging.error("addrojectItem(): Item already exists in tree: " + str(configname))
+            return
+        configTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.treeWidget)
+        configTreeWidgetItem.setText(0,configname)
+        configTreeWidgetItem.setText(1,"Unknown")
+        self.rojectItemNames[configname] = configTreeWidgetItem
+        logging.debug("addrojectItem(): retranslateUi(): Completed")
+    
+    def showContextMenu(self, position):
+        logging.debug("removeExperimentItem(): showContextMenu(): instantiated")
+        self.experimentMenu.popup(self.treeWidget.mapToGlobal(position))
 
 if __name__ == "__main__":
     import sys
