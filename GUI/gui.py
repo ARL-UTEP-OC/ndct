@@ -29,15 +29,16 @@ class MainGUI(QMainWindow):
         self.setWindowTitle('Traffic Annotation Workflow')
         self.setFixedSize(670,565)
 
+        self.logman = logman
+        self.comment_mgr = comment_mgr
+        self.val = val
+
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
         mainlayout = QVBoxLayout()
         self.baseWidget = BaseWidget(logman, comment_mgr, val)
         self.projectWidget  = ProjectWidget()
         self.projectTree = QtWidgets.QTreeWidget()
-        #self.configname = ""
-        #Temp - will change later
-        self.existingconfignames = []
         self.baseWidgets = {}
         self.blankTreeContextMenu = {}
         
@@ -163,29 +164,8 @@ class MainGUI(QMainWindow):
     #Used to create a new project, this is where the prompt to write a name for the project is taken.
     def newProject(self):
         #Creating a custom widget to display what is needed for creating a new project:
-        self.newPro = NewProjectDialog()
+        self.newPro = NewProjectDialog(self.logman)
         self.newPro.show()
-
-        #This path will be hardcoded temporaily. Will be changed later
-        #logOutPathEdit = "data/"
-        
-        """ self.configname, save = QInputDialog.getText(self, 'Project', 'Enter new project name \r\n(non alphanumeric characters will be removed)')
-        if save:
-            #standardize and remove invalid characters
-            self.configname = ''.join(e for e in self.configname if e.isalnum())
-            #check to make sure the name doesn't already exist
-            if self.configname in self.existingconfignames:
-                QMessageBox.warning(self,
-                                        "Name Exists",
-                                        "The project name specified already exists",
-                                        QMessageBox.Ok)            
-                return None
-            else:
-                #if all good, add to existing file names list
-                self.existingconfignames += [self.configname]
-        else:
-            logging.debug("newProject(): Cancel was pressed")
-            return """
 
         #Call add project
         #self.addProject(self.configname, logOutPathEdit)

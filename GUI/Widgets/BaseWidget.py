@@ -287,10 +287,3 @@ class BaseWidget(QtWidgets.QWidget):
         logging.debug("closeEvent(): returning ignore")
         event.ignore()
         return
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    ui = self.BaseWidget()
-    ui.show()
-    sys.exit(app.exec_())
