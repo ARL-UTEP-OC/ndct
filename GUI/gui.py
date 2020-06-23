@@ -8,7 +8,8 @@ from PyQt5.QtCore import *
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, 
                 QHBoxLayout, QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, 
-                QSpinBox, QAction, qApp, QStackedWidget, QMenuBar, QInputDialog,QFileDialog)
+                QSpinBox, QAction, qApp, QStackedWidget, QMenuBar, QInputDialog, QFileDialog,
+                QPlainTextEdit)
 
 import time
 
@@ -18,6 +19,7 @@ from GUI.Widgets.BaseWidget import BaseWidget
 from GUI.Widgets.ProjectWidget import ProjectWidget
 from GUI.Threading.BatchThread import BatchThread
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
+from GUI.Dialogs.NewProjectDialog import NewProjectDialog
 
 class MainGUI(QMainWindow):
 
@@ -25,6 +27,7 @@ class MainGUI(QMainWindow):
         logging.debug("MainGUI(): Instantiated")
         super(MainGUI, self).__init__()
         self.setWindowTitle('Traffic Annotation Workflow')
+        self.setFixedSize(670,565)
 
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
@@ -32,7 +35,7 @@ class MainGUI(QMainWindow):
         self.baseWidget = BaseWidget(logman, comment_mgr, val)
         self.projectWidget  = ProjectWidget()
         self.projectTree = QtWidgets.QTreeWidget()
-        self.configname = ""
+        #self.configname = ""
         #Temp - will change later
         self.existingconfignames = []
         self.baseWidgets = {}
@@ -47,6 +50,9 @@ class MainGUI(QMainWindow):
         tabWidget.setObjectName("tabWidget")
 
         #Configuration window - RES
+        ## windowBoxHLayout contains:
+        ###projectTree (Left)
+        ###basedataStackedWidget (Right)
         windowWidget = QtWidgets.QWidget()
         windowWidget.setObjectName("windowWidget")
         windowBoxHLayout = QtWidgets.QHBoxLayout()
@@ -67,11 +73,6 @@ class MainGUI(QMainWindow):
         self.basedataStackedWidget.setObjectName("basedataStackedWidget")
         windowBoxHLayout.addWidget(self.basedataStackedWidget)
         tabWidget.addTab(windowWidget, "Configuration")
-
-        #Add base info
-        self.baseWidgets[self.configname] = {"BaseWidget": {}, "ProjectWidget": {} }
-        self.baseWidgets[self.configname]["BaseWidget"] = self.baseWidget
-        self.basedataStackedWidget.addWidget(self.baseWidget)
 
         #Set up context menu
         self.setupContextMenus()
@@ -161,26 +162,33 @@ class MainGUI(QMainWindow):
     #Stephanie Medina
     #Used to create a new project, this is where the prompt to write a name for the project is taken.
     def newProject(self):
+        #Creating a custom widget to display what is needed for creating a new project:
+        self.newPro = NewProjectDialog()
+        self.newPro.show()
+
         #This path will be hardcoded temporaily. Will be changed later
-        destinationPath = "data/"
-        configname, ok = QInputDialog.getText(self, 'Project', 'Enter new project name \r\n(non alphanumeric characters will be removed)')
-        if ok:
+        #logOutPathEdit = "data/"
+        
+        """ self.configname, save = QInputDialog.getText(self, 'Project', 'Enter new project name \r\n(non alphanumeric characters will be removed)')
+        if save:
             #standardize and remove invalid characters
             self.configname = ''.join(e for e in self.configname if e.isalnum())
-            self.existingconfignames += [configname]
             #check to make sure the name doesn't already exist
             if self.configname in self.existingconfignames:
-                QMessageBox.warning(self.parent,
+                QMessageBox.warning(self,
                                         "Name Exists",
                                         "The project name specified already exists",
                                         QMessageBox.Ok)            
                 return None
+            else:
+                #if all good, add to existing file names list
+                self.existingconfignames += [self.configname]
         else:
             logging.debug("newProject(): Cancel was pressed")
-            return
+            return """
 
         #Call add project
-        self.addProject(configname, destinationPath)
+        #self.addProject(self.configname, logOutPathEdit)
 
         return None
 
@@ -190,6 +198,7 @@ class MainGUI(QMainWindow):
     def addProject(self, filename, destinationPath):
         #create the folders and files for new project:
         self.filename = filename
+        self.configname = filename
         self.successfilenames = []
         self.successfoldernames = []
         self.destinationPath = destinationPath
@@ -206,6 +215,11 @@ class MainGUI(QMainWindow):
         configTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.projectTree)
         configTreeWidgetItem.setText(0,filename)
         self.projectWidget.addProjectItem(filename)
+
+        #Add base info
+        self.baseWidgets[self.configname] = {"BaseWidget": {}, "ProjectWidget": {} }
+        self.baseWidgets[self.configname]["BaseWidget"] = self.baseWidget
+        self.basedataStackedWidget.addWidget(self.baseWidget)
             
         #add project widget and its contents
         self.baseWidgets[self.configname]["ProjectWidget"][filename] = self.projectWidget
@@ -221,11 +235,15 @@ class MainGUI(QMainWindow):
         #Is there another way to get the files?
         #Would want to get a whole folder instead of just one file
         fdialog.setFileMode(QFileDialog.Directory)
-        filenames = ""
-        filenames, _ = QFileDialog.getOpenFileNames(fdialog, "Choose capture file to Import")
-        if len(filenames) > 0:
+        folder_chosen = ""
+        folder_chosen, _ = str(QFileDialog.getExistingDirectory(self, "Select Directory to Store Data"))
+        if folder_chosen == "":
+            logging.debug("File choose cancelled")
+            return
+        
+        if len(folder_chosen) > 0:
             #check if experiment already exists
-            filename = filenames[0]
+            filename = folder_chosen[0]
             logging.debug("packageImportDialog(): files chosen: " + str(filename))
             baseNoExt = os.path.basename(filename)
             baseNoExt = os.path.splitext(baseNoExt)[0]
@@ -237,10 +255,10 @@ class MainGUI(QMainWindow):
                                         "An experiment with the same name already exists. Skipping...",
                                         QMessageBox.Ok)            
                 return []           
-            successfilenames = self.importData(filename)
-            if len(successfilenames) > 0:
-                logging.debug("packageImportDialog(): success files: " + str(successfilenames))
-                successfilename = successfilenames[0]
+            successfolder_chosen = self.importData(filename)
+            if len(successfolder_chosen) > 0:
+                logging.debug("packageImportDialog(): success files: " + str(successfolder_chosen))
+                successfilename = successfolder_chosen[0]
                 sbaseNoExt = os.path.basename(successfilename)
                 sbaseNoExt = os.path.splitext(sbaseNoExt)[0]
                 return sbaseNoExt """
