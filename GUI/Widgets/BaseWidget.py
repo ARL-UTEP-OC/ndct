@@ -13,15 +13,9 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QTabWidget, QVB
 
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
 
-from LogManager import LogManager
-from CommentManager.CommentManager import CommentManager
-from Validator.Validator import Validator
-
-from GUI.Dialogs.JSONFolderDialog import JSONFolderDialog
-from GUI.Dialogs.WiresharkFileDialog import WiresharkFileDialog
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 from GUI.Threading.BatchThread import BatchThread
-from GUI.MessageBoxes.ScoreMessageBox import ScoreMessageBox
+
 
 class BaseWidget(QtWidgets.QWidget):
     def __init__(self):
@@ -38,16 +32,6 @@ class BaseWidget(QtWidgets.QWidget):
         self.outerVertBox = QtWidgets.QVBoxLayout()
         self.outerVertBox.setObjectName("outerVertBox")
         layoutWidget.setLayout(self.outerVertBox)
-
-        paddingWidget1 = QtWidgets.QWidget()
-        paddingWidget1.setObjectName("paddingWidget1")
-        self.outerVertBox.addWidget(paddingWidget1)
-        paddingWidget2 = QtWidgets.QWidget()
-        paddingWidget2.setObjectName("paddingWidget2")
-        self.outerVertBox.addWidget(paddingWidget2)
-        paddingWidget3 = QtWidgets.QWidget()
-        paddingWidget3.setObjectName("paddingWidget3")
-        self.outerVertBox.addWidget(paddingWidget3)
 
         self.setLayout(self.outerVertBox)
     

@@ -11,14 +11,14 @@ from GUI.Threading.BatchThread import BatchThread
 
 class NewProjectDialog(QtWidgets.QWidget):
     #Signal for when the user is done creating the new project
-    created = QtCore.pyqtSignal(str, str)
+    created = QtCore.pyqtSignal(str, str, list)
 
-    def __init__(self, logman):
+    def __init__(self, logman, existingProjects):
         QtWidgets.QWidget.__init__(self, parent=None)
 
         self.logger_started_once = False
 
-        self.existingconfignames = []
+        self.existingconfignames = existingProjects
 
         #Title of window
         self.outerVertBoxPro = QtWidgets.QVBoxLayout()
@@ -185,7 +185,7 @@ class NewProjectDialog(QtWidgets.QWidget):
     def on_log_save_button_clicked(self):
         logging.debug('on_log_save_button_clicked(): Instantiated')
 
-        if self.configname != '':
+        if self.configname.toPlainText() != '':
             if self.configname in self.existingconfignames:
                 QMessageBox.warning(self,
                                         "Name Exists",
@@ -194,7 +194,7 @@ class NewProjectDialog(QtWidgets.QWidget):
                 return None
             else:
                 #if all good, add to existing file names list
-                self.existingconfignames += [self.configname]
+                self.existingconfignames += [self.configname.toPlainText()]
                 saveComplete = QMessageBox.warning(self,
                                                     "Creation Successful!",
                                                     "Closing window...",
@@ -204,7 +204,7 @@ class NewProjectDialog(QtWidgets.QWidget):
                     #let main window know everything is ready:
                     config = self.configname.toPlainText()
                     path = self.logOutPathEdit.toPlainText()
-                    self.created.emit(config, path)
+                    self.created.emit(config, path, self.existingconfignames)
                     self.close()
         else:
              QMessageBox.warning(self,
@@ -221,8 +221,7 @@ class NewProjectDialog(QtWidgets.QWidget):
         cancel = QMessageBox.question(
             self, "Close New Project",
             "Are you sure you want to quit? Any unsaved work will be lost.",
-            QMessageBox.Save | QMessageBox.Close | QMessageBox.Cancel,
-            QMessageBox.Save)
+            QMessageBox.Close | QMessageBox.Cancel)
 
         if cancel == QMessageBox.Close:
             self.close()

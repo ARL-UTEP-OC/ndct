@@ -33,14 +33,15 @@ class MainGUI(QMainWindow):
         self.comment_mgr = comment_mgr
         self.val = val
 
+        #shared data between widgets
         self.configname = ''
         self.path = ''
+        self.existingconfignames = []
 
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
         mainlayout = QVBoxLayout()
         self.baseWidget = BaseWidget()
-        self.projectWidget  = ProjectWidget()
         self.projectTree = QtWidgets.QTreeWidget()
         self.baseWidgets = {}
         self.blankTreeContextMenu = {}
@@ -167,22 +168,24 @@ class MainGUI(QMainWindow):
     #Used to create a new project, this is where the prompt to write a name for the project is taken.
     def newProject(self):
         #Creating a custom widget to display what is needed for creating a new project:
-        self.newPro = NewProjectDialog(self.logman)
+        self.newPro = NewProjectDialog(self.logman, self.existingconfignames)
         self.newPro.created.connect(self.project_created)
         self.newPro.show()
 
-        self.addProject()
-
     #Slot for when the user created the new project, path and configname
-    @QtCore.pyqtSlot(str, str)
-    def project_created(self, configname, path):
+    @QtCore.pyqtSlot(str, str, list)
+    def project_created(self, configname, path, existingconfignames):
         self.configname = configname
         self.path = path
+        self.existingconfignames = existingconfignames
+
+        self.addProject()
 
     #This method was added by:
     #Stephanie Medina
     #Used to create a new project, and this is where the project will actually be populated
     def addProject(self):
+        self.projectWidget  = ProjectWidget(self.configname, self.path)
         #create the folders and files for new project:
         self.filename = self.configname
         self.successfilenames = []
