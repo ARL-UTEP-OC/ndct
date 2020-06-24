@@ -5,8 +5,16 @@ import sys, traceback
 
 class ConfigurationManager():
     __instance = None
-    CONFIG_FILENAME = "config.ini"
     
+    CONFIG_FILENAME = "config.ini"
+    STRUCTURE_PARSED_PATH="ParsedLogs"
+    STRUCTURE_ANNOTATED_PCAP_FILE=os.path.join("PCAP", "AnnotatedPCAP.pcapng")
+    STRUCTURE_GEN_DISSECTORS_PATH="GeneratedDissectors"
+    STRUCTURE_JSON_COMMENTS=os.path.join("tmp", "comments.JSON")
+    STRUCTURE_RULES_GEN_FILE=os.path.join("GeneratedRules","generated.rules")
+    STRUCTURE_ALERT_GEN_PATH=os.path.join("IDS-ALERTS")
+    STRUCTURE_ALERT_GEN_FILE=os.path.join("IDS-ALERTS","fast.log")
+
     @staticmethod 
     def get_instance():
         logging.debug('ConfigurationManager(): Singleton Instantiated')
@@ -67,6 +75,5 @@ if __name__ == '__main__':
     logging.debug(cm2.read_config_abspath("GUI", "NOT_HERE"))
     logging.debug(cm2.read_config_abspath("NOT_HERE", "NOT_HERE"))
     logging.debug("Completed ConfigurationManager()") 
-
 
 

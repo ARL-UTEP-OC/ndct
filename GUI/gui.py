@@ -33,10 +33,13 @@ class MainGUI(QMainWindow):
         self.comment_mgr = comment_mgr
         self.val = val
 
+        self.configname = ''
+        self.path = ''
+
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
         mainlayout = QVBoxLayout()
-        self.baseWidget = BaseWidget(logman, comment_mgr, val)
+        self.baseWidget = BaseWidget()
         self.projectWidget  = ProjectWidget()
         self.projectTree = QtWidgets.QTreeWidget()
         self.baseWidgets = {}
@@ -165,36 +168,39 @@ class MainGUI(QMainWindow):
     def newProject(self):
         #Creating a custom widget to display what is needed for creating a new project:
         self.newPro = NewProjectDialog(self.logman)
+        self.newPro.created.connect(self.project_created)
         self.newPro.show()
 
-        #Call add project
-        #self.addProject(self.configname, logOutPathEdit)
+        self.addProject()
 
-        return None
+    #Slot for when the user created the new project, path and configname
+    @QtCore.pyqtSlot(str, str)
+    def project_created(self, configname, path):
+        self.configname = configname
+        self.path = path
 
     #This method was added by:
     #Stephanie Medina
     #Used to create a new project, and this is where the project will actually be populated
-    def addProject(self, filename, destinationPath):
+    def addProject(self):
         #create the folders and files for new project:
-        self.filename = filename
-        self.configname = filename
+        self.filename = self.configname
         self.successfilenames = []
         self.successfoldernames = []
-        self.destinationPath = destinationPath
+        self.destinationPath = self.path
         self.foldersToCreate = []
         self.filesToCreate = []
-        basePath = os.path.join(destinationPath,filename)
+        basePath = os.path.join(self.path,self.filename)
         self.foldersToCreate.append(basePath)
         self.foldersToCreate.append(os.path.join(basePath, "Materials"))
         self.foldersToCreate.append(os.path.join(basePath, "Logs"))
 
-        if filename != None:
-            logging.debug("addProject(): OK pressed and valid configname entered: " + str(filename))
+        if self.filename != None:
+            logging.debug("addProject(): OK pressed and valid configname entered: " + str(self.filename))
         
         configTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.projectTree)
-        configTreeWidgetItem.setText(0,filename)
-        self.projectWidget.addProjectItem(filename)
+        configTreeWidgetItem.setText(0,self.filename)
+        self.projectWidget.addProjectItem(self.filename)
 
         #Add base info
         self.baseWidgets[self.configname] = {"BaseWidget": {}, "ProjectWidget": {} }
@@ -202,7 +208,7 @@ class MainGUI(QMainWindow):
         self.basedataStackedWidget.addWidget(self.baseWidget)
             
         #add project widget and its contents
-        self.baseWidgets[self.configname]["ProjectWidget"][filename] = self.projectWidget
+        self.baseWidgets[self.configname]["ProjectWidget"][self.filename] = self.projectWidget
 
         self.basedataStackedWidget.addWidget(self.projectWidget)
         self.basedataStackedWidget.addWidget(self.baseWidget)

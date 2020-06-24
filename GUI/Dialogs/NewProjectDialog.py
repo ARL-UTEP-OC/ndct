@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QFileDialog, QWidget, QPushButton, QTextEdit, QMessageBox
+from PyQt5.QtWidgets import QFileDialog, QWidget, QPushButton, QTextEdit, QMessageBox, QSizePolicy
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 import logging
@@ -10,6 +10,9 @@ from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 from GUI.Threading.BatchThread import BatchThread
 
 class NewProjectDialog(QtWidgets.QWidget):
+    #Signal for when the user is done creating the new project
+    created = QtCore.pyqtSignal(str, str)
+
     def __init__(self, logman):
         QtWidgets.QWidget.__init__(self, parent=None)
 
@@ -29,7 +32,9 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.nameLabel.setObjectName("nameLabel")
         self.nameLabel.setText("Type in New Project Name:")
         self.nameVerBoxPro.addWidget(self.nameLabel)
-        self.configname = QtWidgets.QLineEdit()
+        self.configname = QTextEdit()
+        ###### Fixed Height for project name text box
+        self.configname.setFixedHeight(27)
 
         #Create buttons for creating new file
         self.pathLabel = QtWidgets.QLabel()
@@ -37,9 +42,8 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.pathLabel.setText("Select Directory to Save Project:")
         self.logOutPathEdit = QTextEdit()
         self.logOutPathEdit.setObjectName("logOutPathEdit")
-        self.logOutPathEdit.setAlignment(Qt.AlignLeft)
-        ######
-        self.logOutPathEdit.setGeometry(QtCore.QRect(169,20,256,27))
+        ###### Fixed Height for path text box
+        self.logOutPathEdit.setFixedHeight(27)
         ######
         self.logOutPathButton = QPushButton("...")
         self.logOutViewButton = QPushButton("View")
@@ -59,6 +63,7 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.logOutStopButton.setEnabled(False)
         self.logOutSaveButton.clicked.connect(self.on_log_save_button_clicked)
         self.logOutSaveButton.setEnabled(False)
+        self.logOutCancelButton.clicked.connect(self.on_cancel_button_clicked)
 
         #Set the button layouts
         self.pathLabel_layout = QtWidgets.QVBoxLayout()
@@ -82,16 +87,6 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.outerVertBoxPro.addLayout(self.bottomButtons_layout)
 
         self.outerVertBoxPro.addStretch()
-
-        self.paddingWidget1 = QtWidgets.QWidget()
-        self.paddingWidget1.setObjectName("paddingWidget1")
-        self.outerVertBoxPro.addWidget(self.paddingWidget1)
-        self.paddingWidget2 = QtWidgets.QWidget()
-        self.paddingWidget2.setObjectName("paddingWidget2")
-        self.outerVertBoxPro.addWidget(self.paddingWidget2)
-        self.paddingWidget3 = QtWidgets.QWidget()
-        self.paddingWidget3.setObjectName("paddingWidget3")
-        self.outerVertBoxPro.addWidget(self.paddingWidget3)
 
         self.setLayout(self.outerVertBoxPro)
 
@@ -127,9 +122,6 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.logger_started_once = True
         self.logman.remove_data_all()
         self.logman.start_collectors()
-        self.annotateTab.setEnabled(False)
-        self.generateRulesTab.setEnabled(False)
-        self.analyzeTab.setEnabled(False)
 
         self.logOutPathButton.setEnabled(False)
         self.logOutViewButton.setEnabled(False)
@@ -160,12 +152,40 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.logOutSaveButton.setEnabled(True)
         
         logging.debug('on_log_stop_button_clicked(): Complete')
+    
+    def update_progress_bar(self):
+        logging.debug('update_progress_bar(): Instantiated')
+        self.progress_dialog_overall.update_progress()
+        logging.debug('update_progress_bar(): Complete')
+
+    def stop_button_batch_completed(self):
+        logging.debug('thread_finish(): Instantiated')
+        self.progress_dialog_overall.update_progress()
+        self.progress_dialog_overall.hide()
+
+        output_dissected = "Saved Logs. \r\n\r\nCreated:\r\n"
+        for dissected in self.logman.get_generated_dissector_filenames():
+            output_dissected += str(os.path.basename(dissected)) +"\r\n"
+
+        if output_dissected == "":
+            QMessageBox.about(self, "Processing Complete", "No files processed")
+        else: 
+            QMessageBox.about(self, "Processing Complete", output_dissected)
+            
+            self.logOutStartButton.setEnabled(True)
+            self.logOutStopButton.setEnabled(False)
+            self.logOutPathButton.setEnabled(True)
+            self.logOutViewButton.setEnabled(True)
+            annotatedPCAP = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+            #self.logInEdit.setText(annotatedPCAP)
+            #self.logInViewButton.setEnabled(True)
+            
+        logging.debug('thread_finish(): Completed')
 
     def on_log_save_button_clicked(self):
         logging.debug('on_log_save_button_clicked(): Instantiated')
 
         if self.configname != '':
-            self.configname = ''.join(e for e in self.configname if e.isalnum())
             if self.configname in self.existingconfignames:
                 QMessageBox.warning(self,
                                         "Name Exists",
@@ -175,10 +195,38 @@ class NewProjectDialog(QtWidgets.QWidget):
             else:
                 #if all good, add to existing file names list
                 self.existingconfignames += [self.configname]
+                saveComplete = QMessageBox.warning(self,
+                                                    "Creation Successful!",
+                                                    "Closing window...",
+                                                    QMessageBox.Ok)
+                #Once save is hit, it should close the new project pop up and return to the main window
+                if saveComplete == QMessageBox.Ok:
+                    #let main window know everything is ready:
+                    config = self.configname.toPlainText()
+                    path = self.logOutPathEdit.toPlainText()
+                    self.created.emit(config, path)
+                    self.close()
         else:
              QMessageBox.warning(self,
                                         "Name is Empty",
-                                        "Type in a name for the New Project",
+                                        "Project Name is Empty!",
                                         QMessageBox.Ok)
+              
 
         logging.debug('on_log_save_button_clicked(): Complete')
+    
+    def on_cancel_button_clicked(self, event):
+        logging.debug('on_cancel_button_clicked(): Instantiated')
+
+        cancel = QMessageBox.question(
+            self, "Close New Project",
+            "Are you sure you want to quit? Any unsaved work will be lost.",
+            QMessageBox.Save | QMessageBox.Close | QMessageBox.Cancel,
+            QMessageBox.Save)
+
+        if cancel == QMessageBox.Close:
+            self.close()
+        else:
+            pass
+
+        logging.debug('on_cancel_button_clicked(): Complete')
