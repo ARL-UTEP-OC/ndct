@@ -11,7 +11,7 @@ from GUI.Threading.BatchThread import BatchThread
 
 class NewProjectDialog(QtWidgets.QWidget):
     #Signal for when the user is done creating the new project
-    created = QtCore.pyqtSignal(str, str, list)
+    created = QtCore.pyqtSignal(str, str, list, str)
 
     def __init__(self, logman, existingProjects):
         QtWidgets.QWidget.__init__(self, parent=None)
@@ -19,6 +19,7 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.logger_started_once = False
 
         self.existingconfignames = existingProjects
+        self.annotatedPCAP = ''
 
         #Title of window
         self.outerVertBoxPro = QtWidgets.QVBoxLayout()
@@ -176,7 +177,7 @@ class NewProjectDialog(QtWidgets.QWidget):
             self.logOutStopButton.setEnabled(False)
             self.logOutPathButton.setEnabled(True)
             self.logOutViewButton.setEnabled(True)
-            annotatedPCAP = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+            self.annotatedPCAP = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
             #self.logInEdit.setText(annotatedPCAP)
             #self.logInViewButton.setEnabled(True)
             
@@ -186,7 +187,7 @@ class NewProjectDialog(QtWidgets.QWidget):
         logging.debug('on_log_save_button_clicked(): Instantiated')
 
         if self.configname.toPlainText() != '':
-            if self.configname in self.existingconfignames:
+            if self.configname.toPlainText() in self.existingconfignames:
                 QMessageBox.warning(self,
                                         "Name Exists",
                                         "The project name specified already exists",
@@ -195,6 +196,7 @@ class NewProjectDialog(QtWidgets.QWidget):
             else:
                 #if all good, add to existing file names list
                 self.existingconfignames += [self.configname.toPlainText()]
+
                 saveComplete = QMessageBox.warning(self,
                                                     "Creation Successful!",
                                                     "Closing window...",
@@ -204,14 +206,14 @@ class NewProjectDialog(QtWidgets.QWidget):
                     #let main window know everything is ready:
                     config = self.configname.toPlainText()
                     path = self.logOutPathEdit.toPlainText()
-                    self.created.emit(config, path, self.existingconfignames)
+                    #Send signal to slot
+                    self.created.emit(config, path, self.existingconfignames, self.annotatedPCAP)
                     self.close()
         else:
              QMessageBox.warning(self,
                                         "Name is Empty",
                                         "Project Name is Empty!",
-                                        QMessageBox.Ok)
-              
+                                        QMessageBox.Ok)  
 
         logging.debug('on_log_save_button_clicked(): Complete')
     

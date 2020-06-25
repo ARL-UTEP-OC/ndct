@@ -37,6 +37,7 @@ class MainGUI(QMainWindow):
         self.configname = ''
         self.path = ''
         self.existingconfignames = []
+        self.annotatedPCAP = ''
 
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
@@ -173,11 +174,12 @@ class MainGUI(QMainWindow):
         self.newPro.show()
 
     #Slot for when the user created the new project, path and configname
-    @QtCore.pyqtSlot(str, str, list)
-    def project_created(self, configname, path, existingconfignames):
+    @QtCore.pyqtSlot(str, str, list, str)
+    def project_created(self, configname, path, existingconfignames, pcap):
         self.configname = configname
         self.path = path
         self.existingconfignames = existingconfignames
+        self.annotatedPCAP = pcap
 
         self.addProject()
 
@@ -185,7 +187,7 @@ class MainGUI(QMainWindow):
     #Stephanie Medina
     #Used to create a new project, and this is where the project will actually be populated
     def addProject(self):
-        self.projectWidget  = ProjectWidget(self.configname, self.path)
+        self.projectWidget  = ProjectWidget(self.configname, self.path, self.annotatedPCAP)
         #create the folders and files for new project:
         self.filename = self.configname
         self.successfilenames = []
