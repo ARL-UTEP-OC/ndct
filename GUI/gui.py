@@ -152,10 +152,12 @@ class MainGUI(QMainWindow):
         self.batch_thread.add_function(self.logman.parse_data_all)
         self.batch_thread.add_function(self.logman.export_data, self.logOutPathEdit.toPlainText())
         parsedLogs = os.path.join(self.logOutPathEdit.toPlainText(),ConfigurationManager.STRUCTURE_PARSED_PATH)
-        annotatedPCAP = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
-        self.batch_thread.add_function(self.logman.copy_latest_data, self.logOutPathEdit.toPlainText(), parsedLogs, annotatedPCAP)
-        dissectorsPath = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
-        self.batch_thread.add_function(self.logman.generate_dissectors, parsedLogs, dissectorsPath, None)
+        annotated_PCAP = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+        click_out_path = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_CLICKS_PATH)
+        timed_out_path = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_TIMED_PATH)
+        self.batch_thread.add_function(self.logman.copy_latest_data, self.logOutPathEdit.toPlainText(), parsedLogs, annotated_PCAP, click_out_path, timed_out_path)
+        dissectors_path = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
+        self.batch_thread.add_function(self.logman.generate_dissectors, parsedLogs, dissectors_path, None)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()
@@ -188,8 +190,8 @@ class MainGUI(QMainWindow):
             self.logOutStopButton.setEnabled(False)
             self.logOutPathButton.setEnabled(True)
             self.logOutViewButton.setEnabled(True)
-            annotatedPCAP = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
-            self.logInEdit.setText(annotatedPCAP)
+            annotated_PCAP = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+            self.logInEdit.setText(annotated_PCAP)
             self.logInViewButton.setEnabled(True)
             self.annotateOutStartButton.setEnabled(True)
             self.tabWidget.setCurrentIndex(1)
@@ -214,8 +216,8 @@ class MainGUI(QMainWindow):
         #open wireshark using pcap and provide base so that the dissectors can be found
         user_pcap_filename = self.logInEdit.toPlainText()
         pcapBasepath = os.path.dirname(os.path.dirname(self.logInEdit.toPlainText()))
-        dissectorsPath = os.path.join(pcapBasepath, ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
-        if os.path.exists(dissectorsPath):
+        dissectors_path = os.path.join(pcapBasepath, ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
+        if os.path.exists(dissectors_path):
             self.comment_mgr.run_wireshark_with_dissectors(pcapBasepath, user_pcap_filename)
         else:
             self.comment_mgr.run_wireshark_with_dissectors([], self.logInEdit.toPlainText())
