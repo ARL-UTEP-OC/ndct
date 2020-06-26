@@ -63,7 +63,7 @@ class LogManager():
         self.ecel_manager.export_data(self.export_data_path)
         logging.debug("export_data(): Completed requesting to export data")
 
-    def copy_latest_data(self, export_data_path_temp=None, export_data_path_latest=None, user_pcap_filename=None):
+    def copy_latest_data(self, export_data_path_temp=None, export_data_path_latest=None, user_pcap_filename=None, out_click_path=None, out_timed_path=None):
         logging.debug('copy_latest_data(): Instantiated')
         #get the directory with all of the exported data:
         self.export_data_path_temp = export_data_path_temp
@@ -81,6 +81,16 @@ class LogManager():
         if self.user_pcap_filename == None:
             #read from config file
             self.user_pcap_filename = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "USER_PCAP_FILENAME")
+
+        self.out_click_path = out_click_path
+        if self.out_click_path == None:
+            #read from config file
+            self.out_click_path = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "OUT_CLICK_PATH")
+
+        self.out_timed_path = out_timed_path
+        if self.out_timed_path == None:
+            #read from config file
+            self.out_timed_path = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "OUT_TIMED_PATH")
 
         latestlogdirs = self.get_sorted_in_dirs(self.export_data_path_temp, dircontains="export")
         latestlogdir = ""
@@ -104,14 +114,27 @@ class LogManager():
             #cp all JSON files to out dir
             auditdFile = os.path.join(latestlogdir,"parsed","auditd","auditdData.JSON")
             keystrokesFile = os.path.join(latestlogdir,"parsed","pykeylogger","keypressData.JSON")
+            clicksFile = os.path.join(latestlogdir,"parsed","pykeylogger","click.JSON")
+            timedFile = os.path.join(latestlogdir,"parsed","pykeylogger","timed.JSON")
             if os.path.exists(auditdFile):
                 shutil.copy(auditdFile,os.path.join(self.export_data_path_latest,"SystemCalls.JSON"))
             if os.path.exists(keystrokesFile):
                 shutil.copy(keystrokesFile,os.path.join(self.export_data_path_latest,"Keypresses.JSON"))
+            if os.path.exists(keystrokesFile):
+                shutil.copy(clicksFile,os.path.join(self.export_data_path_latest,"MouseClicks.JSON"))
+            if os.path.exists(keystrokesFile):
+                shutil.copy(timedFile,os.path.join(self.export_data_path_latest,"TimedScreenshots.JSON"))
             #cp merged pcap to dir
             pcapFile = os.path.join(latestlogdir,"raw","tshark","merged.pcapng")
             if os.path.exists(pcapFile):
                 shutil.copy(pcapFile,self.user_pcap_filename)
+            clicksPath = os.path.join(latestlogdir,"raw","pykeylogger","click_images")
+            if os.path.exists(clicksPath):
+                shutil.copytree(clicksPath,self.out_click_path)
+            timedPath = os.path.join(latestlogdir,"raw","pykeylogger","timed_screenshots")
+            if os.path.exists(timedPath):
+                shutil.copytree(timedPath,self.out_timed_path)
+
         except:
             logging.error("copy_latest_data(): An error occured when trying to copy log files")
             exc_type, exc_value, exc_traceback = sys.exc_info()

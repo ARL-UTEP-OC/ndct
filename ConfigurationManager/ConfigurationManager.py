@@ -9,6 +9,8 @@ class ConfigurationManager():
     CONFIG_FILENAME = "config.ini"
     STRUCTURE_PARSED_PATH="ParsedLogs"
     STRUCTURE_ANNOTATED_PCAP_FILE=os.path.join("PCAP", "AnnotatedPCAP.pcapng")
+    STRUCTURE_CLICKS_PATH="Clicks"
+    STRUCTURE_TIMED_PATH="Timed"
     STRUCTURE_GEN_DISSECTORS_PATH="GeneratedDissectors"
     STRUCTURE_JSON_COMMENTS=os.path.join("tmp", "comments.JSON")
     STRUCTURE_RULES_GEN_FILE=os.path.join("GeneratedRules","generated.rules")
