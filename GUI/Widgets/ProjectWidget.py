@@ -5,12 +5,10 @@ import logging
 
 class ProjectWidget(QtWidgets.QWidget):
 
-    def __init__(self, projectname, projectpath, projectpcap):
+    def __init__(self, projectname, projectpcap):
         QtWidgets.QWidget.__init__(self, parent=None)
         #self.statusBar = statusBar
         self.projectItemNames = {}
-        self.existingSessionNames = []
-        self.sessionName = ''
         self.outerVertBox = QtWidgets.QVBoxLayout()
         self.outerVertBox.setObjectName("outerVertBox")
 
@@ -45,7 +43,7 @@ class ProjectWidget(QtWidgets.QWidget):
         self.pathLineEdit.setAcceptDrops(False)
         self.pathLineEdit.setReadOnly(True)
         self.pathLineEdit.setObjectName("pathLineEdit") 
-        self.pathLineEdit.setText(projectpath)     
+        #self.pathLineEdit.setText(projectpath)     
         self.pathHorBox.addWidget(self.pathLineEdit)
 
         #Project PCAP
@@ -64,19 +62,10 @@ class ProjectWidget(QtWidgets.QWidget):
         self.pcapLineEdit.setAlignment(Qt.AlignLeft)    
         self.pcapHorBox.addWidget(self.pcapLineEdit)
 
-        #Push button to begin annotating - to create a new session
-        self.projectAddSession = QPushButton("New Session")
-        self.projectAddSession.clicked.connect(self.on_new_session_button_clicked)
-        self.projectAddSession.setEnabled(True)
-        #session layout
-        self.session_button_layout = QtWidgets.QHBoxLayout()
-        self.session_button_layout.addWidget(self.projectAddSession)
-
         #put all the components together
         self.outerVertBox.addLayout(self.nameHorBox)
         self.outerVertBox.addLayout(self.pathHorBox)
         self.outerVertBox.addLayout(self.pcapHorBox)
-        self.outerVertBox.addLayout(self.session_button_layout)
 
         self.outerVertBox.addStretch()
 
@@ -89,20 +78,3 @@ class ProjectWidget(QtWidgets.QWidget):
             return
 
         logging.debug("addprojectItem(): retranslateUi(): Completed")
-    
-    def on_new_session_button_clicked(self):
-        logging.debug("on_new_session_button_clicked(): Instantiated")
-
-        ok = QInputDialog.getText(self, 'New Session', 
-            'Enter new session name \r\n(non alphanumeric characters will be removed)')
-        if ok:
-            self.sessionName = ''.join(e for e in self.sessionName if e.isalnum())
-            if self.sessionName in self.existingSessionNames:
-                if self.configname in self.existingconfignames:
-                    QMessageBox.warning(self.parent,
-                                        "Session Name Exists",
-                                        "The session name specified already exists",
-                                        QMessageBox.Ok)            
-                return None
-
-        logging.debug("on_new_session_button_clicked(): Completed")

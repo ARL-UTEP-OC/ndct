@@ -38,6 +38,8 @@ class MainGUI(QMainWindow):
         self.path = ''
         self.existingconfignames = []
         self.annotatedPCAP = ''
+        self.sessionName = ''
+        self.existingSessionNames = []
 
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
@@ -96,38 +98,63 @@ class MainGUI(QMainWindow):
     def onItemSelected(self):
         logging.debug("MainApp:onItemSelected instantiated")
     	# Get the selected item
-        selectedItem = self.projectTree.currentItem()
-        if selectedItem == None:
+        self.selectedItem = self.projectTree.currentItem()
+        if self.selectedItem == None:
             logging.debug("MainApp:onItemSelected no configurations left")
             self.statusBar.showMessage("No configuration items selected or available.")
             return
         # Now enable the save button
         #self.saveButton.setEnabled(True)
         self.saveProjectMenuButton.setEnabled(True)
+
         #Check if it's the case that an project name was selected
-        parentSelectedItem = selectedItem.parent()
+        parentSelectedItem = self.selectedItem.parent()
         if(parentSelectedItem == None):
             #A base widget was selected
-            self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[selectedItem.text(0)]["ProjectWidget"])
+            print("PROJECT_WIDGET: " + str((self.baseWidgets[self.selectedItem.text(0)]["ProjectWidget"])))
+            self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[self.selectedItem.text(0)]["ProjectWidget"])
         else:
             #Check if it's the case that a VM Name was selected
-            if(selectedItem.text(0)[0] == "V"):
-                logging.debug("Setting right widget: " + str(self.baseWidgets[parentSelectedItem.text(0)]["VMWidgets"][selectedItem.text(0)]))
-                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentSelectedItem.text(0)]["VMWidgets"][selectedItem.text(0)])
+            if(self.selectedItem.text(0)[0] == "V"):
+                logging.debug("Setting right widget: " + str(self.baseWidgets[parentSelectedItem.text(0)]["VMWidgets"][self.selectedItem.text(0)]))
+                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentSelectedItem.text(0)]["VMWidgets"][self.selectedItem.text(0)])
             #Check if it's the case that a Material Name was selected
-            elif(selectedItem.text(0)[0] == "M"):
-                logging.debug("Setting right widget: " + str(self.baseWidgets[parentSelectedItem.text(0)]["MaterialWidgets"][selectedItem.text(0)]))
-                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentSelectedItem.text(0)]["MaterialWidgets"][selectedItem.text(0)])
+            elif(self.selectedItem.text(0)[0] == "M"):
+                logging.debug("Setting right widget: " + str(self.baseWidgets[parentSelectedItem.text(0)]["MaterialWidgets"][self.selectedItem.text(0)]))
+                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentSelectedItem.text(0)]["MaterialWidgets"][self.selectedItem.text(0)])
 
     #RES METHOD
     def setupContextMenus(self):
         logging.debug("MainApp:setupContextMenus() instantiated")
-    # Context menu for blank space
+        #Context menu for blank space
         self.blankTreeContextMenu = QtWidgets.QMenu()
        	self.addproject = self.blankTreeContextMenu.addAction("New project")
        	self.addproject.triggered.connect(self.newProject)
         self.importproject = self.blankTreeContextMenu.addAction("Import project folder")
         self.importproject.triggered.connect(self.importActionEvent)
+
+        #Context menu project 
+        self.projectContextMenu = QtWidgets.QMenu()
+        self.addCuration = self.projectContextMenu.addAction("Add Curation")
+        self.addCuration.triggered.connect(self.on_add_curation_clicked)
+
+    def on_add_curation_clicked(self):
+        logging.debug("on_add_curation_clicked(): Instantiated")
+
+        ok = QInputDialog.getText(self, 'New Session', 
+            'Enter new session name \r\n(non alphanumeric characters will be removed)')
+        if ok:
+            self.sessionName = ''.join(e for e in self.sessionName if e.isalnum())
+            if self.sessionName in self.existingSessionNames:
+                QMessageBox.warning(self,
+                                        "Session Name Exists",
+                                        "The session name specified already exists",
+                                        QMessageBox.Ok)    
+            else:
+                #if all good, add session name to list
+                self.existingSessionNames += [self.sessionName]    
+
+        logging.debug("on_add_curation_clicked(): Completed")
 
     #RES METHOD
     def showContextMenu(self, position):
@@ -164,8 +191,6 @@ class MainGUI(QMainWindow):
         self.saveProjectMenuButton.setEnabled(False)
         self.fileMenu.addAction(self.saveProjectMenuButton)
     
-    #This method was added by:
-    #Stephanie Medina
     #Used to create a new project, this is where the prompt to write a name for the project is taken.
     def newProject(self):
         #Creating a custom widget to display what is needed for creating a new project:
@@ -174,31 +199,29 @@ class MainGUI(QMainWindow):
         self.newPro.show()
 
     #Slot for when the user created the new project, path and configname
-    @QtCore.pyqtSlot(str, str, list, str)
-    def project_created(self, configname, path, existingconfignames, pcap):
+    @QtCore.pyqtSlot(str, list, str)
+    def project_created(self, configname, existingconfignames, pcap):
         self.configname = configname
-        self.path = path
+        #self.path = path
         self.existingconfignames = existingconfignames
         self.annotatedPCAP = pcap
 
         self.addProject()
 
-    #This method was added by:
-    #Stephanie Medina
     #Used to create a new project, and this is where the project will actually be populated
     def addProject(self):
-        self.projectWidget  = ProjectWidget(self.configname, self.path, self.annotatedPCAP)
+        self.projectWidget  = ProjectWidget(self.configname, self.annotatedPCAP)
         #create the folders and files for new project:
         self.filename = self.configname
         self.successfilenames = []
         self.successfoldernames = []
-        self.destinationPath = self.path
+        #self.destinationPath = self.path
         self.foldersToCreate = []
         self.filesToCreate = []
-        basePath = os.path.join(self.path,self.filename)
+        """ basePath = os.path.join(self.path,self.filename)
         self.foldersToCreate.append(basePath)
         self.foldersToCreate.append(os.path.join(basePath, "Materials"))
-        self.foldersToCreate.append(os.path.join(basePath, "Logs"))
+        self.foldersToCreate.append(os.path.join(basePath, "Logs")) """
 
         if self.filename != None:
             logging.debug("addProject(): OK pressed and valid configname entered: " + str(self.filename))
@@ -211,9 +234,8 @@ class MainGUI(QMainWindow):
         self.baseWidgets[self.configname] = {"BaseWidget": {}, "ProjectWidget": {} }
         self.baseWidgets[self.configname]["BaseWidget"] = self.baseWidget
         self.basedataStackedWidget.addWidget(self.baseWidget)
-            
-        #add project widget and its contents
-        self.baseWidgets[self.configname]["ProjectWidget"][self.filename] = self.projectWidget
+        
+        self.baseWidgets[self.configname]["ProjectWidget"] = self.projectWidget
 
         self.basedataStackedWidget.addWidget(self.projectWidget)
         self.basedataStackedWidget.addWidget(self.baseWidget)
@@ -232,7 +254,7 @@ class MainGUI(QMainWindow):
             logging.debug("File choose cancelled")
             return
         
-        if len(folder_chosen) > 0:
+        """ if len(folder_chosen) > 0:
             #check if experiment already exists
             filename = folder_chosen[0]
             logging.debug("packageImportDialog(): files chosen: " + str(filename))
@@ -240,7 +262,7 @@ class MainGUI(QMainWindow):
             baseNoExt = os.path.splitext(baseNoExt)[0]
             self.configname = ''.join(e for e in baseNoExt if e.isalnum())
             #check to make sure the name doesn't already exist
-            """ if self.configname in existingconfignames:
+            if self.configname in existingconfignames:
                 QMessageBox.warning(self.parent,
                                         "Import Error",
                                         "An experiment with the same name already exists. Skipping...",
@@ -253,7 +275,6 @@ class MainGUI(QMainWindow):
                 sbaseNoExt = os.path.basename(successfilename)
                 sbaseNoExt = os.path.splitext(sbaseNoExt)[0]
                 return sbaseNoExt """
-        return []
     
     def quit_app(self):
         logging.debug("quit_app(): Instantiated()")
