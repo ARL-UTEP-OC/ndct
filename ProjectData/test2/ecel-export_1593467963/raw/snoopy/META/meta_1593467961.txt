@@ -1,0 +1,4 @@
+snoopy
+===============================
+Commands:# ./watchSnoopyFile.sh /tmp/snoopy.log /home/kali/eceld-netsys/eceld/plugins/collectors/snoopy/raw/%TIME%_snoopy.txt
+===============================

@@ -15,7 +15,6 @@ import time
 
 from PyQt5.QtWidgets import QMessageBox
 
-from GUI.Widgets.BaseWidget import BaseWidget
 from GUI.Widgets.ProjectWidget import ProjectWidget
 from GUI.Threading.BatchThread import BatchThread
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
@@ -40,22 +39,34 @@ class MainGUI(QMainWindow):
         self.annotatedPCAP = ''
         self.sessionName = ''
         self.existingSessionNames = []
+        self.logEnabled = ''
 
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
         mainlayout = QVBoxLayout()
-        self.baseWidget = BaseWidget()
+        self.baseWidget = QWidget() #BaseWidget()
         self.projectTree = QtWidgets.QTreeWidget()
         self.baseWidgets = {}
         self.blankTreeContextMenu = {}
         
         quit = QAction("Quit", self)
-        quit.triggered.connect(self.baseWidget.closeEvent)
+        quit.triggered.connect(self.closeEvent)
 
         #Add tab widget - RES
         tabWidget = QtWidgets.QTabWidget()
         tabWidget.setGeometry(QtCore.QRect(0, 15, 668, 565))
         tabWidget.setObjectName("tabWidget")
+
+        #BaseWidget
+        self.baseWidget.setWindowTitle("BaseWidget")
+        self.baseWidget.setObjectName("BaseWidget")
+        baseLayoutWidget = QtWidgets.QWidget()
+        baseLayoutWidget.setObjectName("layoutWidget")
+        self.baseOuterVertBox = QtWidgets.QVBoxLayout()
+        self.baseOuterVertBox.setObjectName("outerVertBox")
+        baseLayoutWidget.setLayout(self.baseOuterVertBox)
+
+        self.baseWidget.setLayout(self.baseOuterVertBox)
 
         #Configuration window - RES
         ## windowBoxHLayout contains:
@@ -104,14 +115,13 @@ class MainGUI(QMainWindow):
             self.statusBar.showMessage("No configuration items selected or available.")
             return
         # Now enable the save button
-        #self.saveButton.setEnabled(True)
         self.saveProjectMenuButton.setEnabled(True)
 
         #Check if it's the case that an project name was selected
         parentSelectedItem = self.selectedItem.parent()
         if(parentSelectedItem == None):
             #A base widget was selected
-            print("PROJECT_WIDGET: " + str((self.baseWidgets[self.selectedItem.text(0)]["ProjectWidget"])))
+            #print("PROJECT_WIDGET: " + str((self.baseWidgets[self.selectedItem.text(0)]["ProjectWidget"])))
             self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[self.selectedItem.text(0)]["ProjectWidget"])
         else:
             #Check if it's the case that a VM Name was selected
@@ -190,27 +200,39 @@ class MainGUI(QMainWindow):
         #self.saveProjectMenuButton.triggered.connect(self.saveProjectButton)
         self.saveProjectMenuButton.setEnabled(False)
         self.fileMenu.addAction(self.saveProjectMenuButton)
+
+        self.quitAppMenuButton = QAction(QIcon(), "Quit", self)
+        self.quitAppMenuButton.setShortcut("Ctrl+Q")
+        self.quitAppMenuButton.setStatusTip("Quit App")
+        self.quitAppMenuButton.triggered.connect(self.closeEvent)
+        self.fileMenu.addAction(self.quitAppMenuButton)
     
     #Used to create a new project, this is where the prompt to write a name for the project is taken.
     def newProject(self):
         #Creating a custom widget to display what is needed for creating a new project:
         self.newPro = NewProjectDialog(self.logman, self.existingconfignames)
+        self.newPro.logEnabled.connect(self.log_enabled)
         self.newPro.created.connect(self.project_created)
         self.newPro.show()
 
     #Slot for when the user created the new project, path and configname
-    @QtCore.pyqtSlot(str, list, str)
-    def project_created(self, configname, existingconfignames, pcap):
+    @QtCore.pyqtSlot(str, list, str, str)
+    def project_created(self, configname, existingconfignames, pcap, path):
         self.configname = configname
-        #self.path = path
+        self.path = path
         self.existingconfignames = existingconfignames
         self.annotatedPCAP = pcap
 
         self.addProject()
 
+    #Slot to let us know if the logging has started
+    @QtCore.pyqtSlot(str)
+    def log_enabled(self, status):
+        self.logEnabled = status
+
     #Used to create a new project, and this is where the project will actually be populated
     def addProject(self):
-        self.projectWidget  = ProjectWidget(self.configname, self.annotatedPCAP)
+        self.projectWidget  = ProjectWidget(self.configname, self.annotatedPCAP, self.path)
         #create the folders and files for new project:
         self.filename = self.configname
         self.successfilenames = []
@@ -244,42 +266,43 @@ class MainGUI(QMainWindow):
     def importActionEvent(self):
         logging.debug("MainApp:importActionEvent() instantiated") 
 
-        fdialog = QFileDialog()
-        #Is there another way to get the files?
-        #Would want to get a whole folder instead of just one file
-        fdialog.setFileMode(QFileDialog.Directory)
-        folder_chosen = ""
-        folder_chosen, _ = str(QFileDialog.getExistingDirectory(self, "Select Directory to Store Data"))
+        folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Directory to Store Data"))
         if folder_chosen == "":
             logging.debug("File choose cancelled")
             return
-        
-        """ if len(folder_chosen) > 0:
-            #check if experiment already exists
-            filename = folder_chosen[0]
-            logging.debug("packageImportDialog(): files chosen: " + str(filename))
-            baseNoExt = os.path.basename(filename)
-            baseNoExt = os.path.splitext(baseNoExt)[0]
-            self.configname = ''.join(e for e in baseNoExt if e.isalnum())
-            #check to make sure the name doesn't already exist
-            if self.configname in existingconfignames:
-                QMessageBox.warning(self.parent,
-                                        "Import Error",
-                                        "An experiment with the same name already exists. Skipping...",
-                                        QMessageBox.Ok)            
-                return []           
-            successfolder_chosen = self.importData(filename)
-            if len(successfolder_chosen) > 0:
-                logging.debug("packageImportDialog(): success files: " + str(successfolder_chosen))
-                successfilename = successfolder_chosen[0]
-                sbaseNoExt = os.path.basename(successfilename)
-                sbaseNoExt = os.path.splitext(sbaseNoExt)[0]
-                return sbaseNoExt """
-    
-    def quit_app(self):
-        logging.debug("quit_app(): Instantiated()")
-        self.destroy()
-        self.quit_event.accept()
-        qApp.quit()
-        logging.debug("quit_app(): Completed()")
-        return
+
+    def update_progress_bar(self):
+        logging.debug('update_progress_bar(): Instantiated')
+        self.progress_dialog_overall.update_progress()
+        logging.debug('update_progress_bar(): Complete')
+
+    def closeEvent(self, event):
+        logging.debug("closeEvent(): instantiated")
+
+        if self.logEnabled == "TRUE":
+            confirm = QMessageBox.question(self,
+                                        "QUIT",
+                                        "Logger is running. Stop and Quit? \n Any unsaved data will be lost.",
+                                        QMessageBox.Yes | QMessageBox.No)
+            if confirm == QMessageBox.Yes:
+                logging.debug("closeEvent(): Creating Quit Command Load")
+                self.batch_thread = BatchThread()
+                self.batch_thread.progress_signal.connect(self.update_progress_bar)
+                
+                self.batch_thread.add_function(self.logman.stop_collectors)
+                self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
+                self.batch_thread.completion_signal.connect(qApp.quit)
+                self.batch_thread.start()
+                self.progress_dialog_overall.show()
+                return
+        else:
+            close = QMessageBox.question(self, 
+                                "QUIT",
+                                "Are you sure you want to quit? \n Any unsaved data will be lost",
+                                QMessageBox.Yes | QMessageBox.No)
+            if close == QMessageBox.Yes:
+                qApp.quit()
+                return
+            else:
+                event.ignore()
+                return

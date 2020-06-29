@@ -1,11 +1,13 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QPushButton, QInputDialog, QMessageBox
+from PyQt5.QtWidgets import QPushButton, QInputDialog, QMessageBox, QTextEdit
 from PyQt5.QtCore import Qt
 import logging
 
+from ConfigurationManager.FileExplorerRunner import FileExplorerRunner
+
 class ProjectWidget(QtWidgets.QWidget):
 
-    def __init__(self, projectname, projectpcap):
+    def __init__(self, projectname, projectpcap, projectpath):
         QtWidgets.QWidget.__init__(self, parent=None)
         #self.statusBar = statusBar
         self.projectItemNames = {}
@@ -43,8 +45,12 @@ class ProjectWidget(QtWidgets.QWidget):
         self.pathLineEdit.setAcceptDrops(False)
         self.pathLineEdit.setReadOnly(True)
         self.pathLineEdit.setObjectName("pathLineEdit") 
-        #self.pathLineEdit.setText(projectpath)     
+        self.pathLineEdit.setText(projectpath)     
         self.pathHorBox.addWidget(self.pathLineEdit)
+
+        self.projectPathViewButton = QPushButton("View")
+        self.projectPathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, projectpath))
+        self.pathHorBox.addWidget(self.projectPathViewButton)
 
         #Project PCAP
         self.pcapHorBox = QtWidgets.QHBoxLayout()
@@ -62,6 +68,10 @@ class ProjectWidget(QtWidgets.QWidget):
         self.pcapLineEdit.setAlignment(Qt.AlignLeft)    
         self.pcapHorBox.addWidget(self.pcapLineEdit)
 
+        self.pcapPathViewButton = QPushButton("View")
+        self.pcapPathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, projectpcap))
+        self.pcapHorBox.addWidget(self.pcapPathViewButton)
+
         #put all the components together
         self.outerVertBox.addLayout(self.nameHorBox)
         self.outerVertBox.addLayout(self.pathHorBox)
@@ -70,6 +80,12 @@ class ProjectWidget(QtWidgets.QWidget):
         self.outerVertBox.addStretch()
 
         self.setLayout(self.outerVertBox)
+
+    def on_view_button_clicked(self, x, folder_path=None):
+        if isinstance(folder_path, QTextEdit):
+            folder_path = folder_path.toPlainText()
+        self.file_explore_thread = FileExplorerRunner(folder_location=folder_path)
+        self.file_explore_thread.start()
 
     def addProjectItem(self, configname):
         logging.debug("addProjectItem(): retranslateUi(): instantiated")

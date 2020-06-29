@@ -1,8 +1,9 @@
-from PyQt5.QtWidgets import QFileDialog, QWidget, QPushButton, QTextEdit, QMessageBox, QSizePolicy
+from PyQt5.QtWidgets import QFileDialog, QWidget, QPushButton, QTextEdit, QMessageBox, QSizePolicy, QAction, qApp
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 import logging
 import os
+import shutil
 
 from ConfigurationManager.FileExplorerRunner import FileExplorerRunner
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
@@ -11,7 +12,8 @@ from GUI.Threading.BatchThread import BatchThread
 
 class NewProjectDialog(QtWidgets.QWidget):
     #Signal for when the user is done creating the new project
-    created = QtCore.pyqtSignal(str, list, str)
+    created = QtCore.pyqtSignal(str, list, str, str)
+    logEnabled = QtCore.pyqtSignal(str)
 
     def __init__(self, logman, existingProjects):
         QtWidgets.QWidget.__init__(self, parent=None)
@@ -20,7 +22,10 @@ class NewProjectDialog(QtWidgets.QWidget):
 
         self.existingconfignames = existingProjects
         self.annotatedPCAP = ''
-        self.projectPath = ''
+        self.projectPath = ""
+
+        quit = QAction("Close", self)
+        quit.triggered.connect(self.closeEvent)
 
         #Title of window
         self.outerVertBoxPro = QtWidgets.QVBoxLayout()
@@ -39,26 +44,12 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.configname.setFixedHeight(27)
 
         #Create buttons for creating new file
-        """ self.pathLabel = QtWidgets.QLabel()
-        self.pathLabel.setObjectName("pathLabel")
-        self.pathLabel.setText("Select Directory to Save Project:")
-        self.logOutPathEdit = QTextEdit()
-        self.logOutPathEdit.setObjectName("logOutPathEdit")
-        ###### Fixed Height for path text box
-        self.logOutPathEdit.setFixedHeight(27)
-        ######
-        self.logOutPathButton = QPushButton("...")
-        self.logOutViewButton = QPushButton("View") """
         self.logOutStartButton = QPushButton("Start Logging")
         self.logOutStopButton = QPushButton("Stop Logging")
         self.logOutSaveButton = QPushButton("Save/Create")
         self.logOutCancelButton = QPushButton("Cancel")
 
         #Add on click event
-        #self.logOutPathButton.clicked.connect(self.on_log_out_path_button_clicked)
-        #self.logOutPathButton.setEnabled(True)
-        #self.logOutViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.logOutPathEdit))
-        #self.logOutViewButton.setEnabled(False)
         self.logOutStartButton.clicked.connect(self.on_log_start_button_clicked)
         self.logOutStartButton.setEnabled(True)
         self.logOutStopButton.clicked.connect(self.on_log_stop_button_clicked)
@@ -68,24 +59,16 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.logOutCancelButton.clicked.connect(self.on_cancel_button_clicked)
 
         #Set the button layouts
-        #self.pathLabel_layout = QtWidgets.QVBoxLayout()
-        #self.pathEdit_layout = QtWidgets.QHBoxLayout()
         self.bottomButtons_layout = QtWidgets.QHBoxLayout()
 
         #Put all the components together
         self.nameVerBoxPro.addWidget(self.configname)
-        #self.pathLabel_layout.addWidget(self.pathLabel)
-        #self.pathEdit_layout.addWidget(self.logOutPathEdit)
-        #self.pathEdit_layout.addWidget(self.logOutPathButton)
-        #self.pathEdit_layout.addWidget(self.logOutViewButton)
         self.bottomButtons_layout.addWidget(self.logOutStartButton)
         self.bottomButtons_layout.addWidget(self.logOutStopButton)
         self.bottomButtons_layout.addWidget(self.logOutSaveButton)
         self.bottomButtons_layout.addWidget(self.logOutCancelButton, alignment=QtCore.Qt.AlignRight)
         
         self.outerVertBoxPro.addLayout(self.nameVerBoxPro)
-        #self.outerVertBoxPro.addLayout(self.pathLabel_layout)
-        #self.outerVertBoxPro.addLayout(self.pathEdit_layout)
         self.outerVertBoxPro.addLayout(self.bottomButtons_layout)
 
         self.outerVertBoxPro.addStretch()
@@ -93,41 +76,33 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.setLayout(self.outerVertBoxPro)
 
         self.logman = logman
-
-    """ def on_view_button_clicked(self, x, folder_path=None):
-        if isinstance(folder_path, QTextEdit):
-            folder_path = folder_path.toPlainText()
-        self.file_explore_thread = FileExplorerRunner(folder_location=folder_path)
-        self.file_explore_thread.start()
-
-    def on_log_out_path_button_clicked(self):
-        logging.debug('on_log_out_path_button_clicked(): Instantiated')
-        folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Directory to Store Data"))
-        if folder_chosen == "":
-            logging.debug("File choose cancelled")
-            return
-        self.logOutPathEdit.setText(folder_chosen)
-
-        if self.logOutPathEdit.toPlainText() != "":
-            self.logOutStartButton.setEnabled(True)
-            self.logOutStopButton.setEnabled(False)
-            self.logOutViewButton.setEnabled(True)
-        logging.debug('on_log_out_path_button_clicked(): Complete') """
     
     def on_log_start_button_clicked(self):
         logging.debug('on_log_start_button_clicked(): Instantiated')
         #check if name has been filed out in order to create a project folder
         #with the name that was chosen:
         if self.configname.toPlainText() != '':
+            self.projectPath = os.path.join("/home/kali/eceld-netsys/ProjectData", self.configname.toPlainText())
+            
             if self.logger_started_once == True and os.path.exists(self.projectPath) == True:
                 buttonReply = QMessageBox.question(self, 'Confirmation', "Restarting the Logger will Remove any Previous Data. \r\n Continue?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                shutil.rmtree(self.projectPath)
                 if buttonReply != QMessageBox.Yes:
                     logging.debug('on_log_start_button_clicked(): Cancelled')
                     return
-            self.projectPath = os.path.join("/home/kali/eceld-netsys/ProjectData", self.configname.toPlainText())
+            if os.path.exists(self.projectPath) == True:
+                QMessageBox.warning(self,
+                                        "Name Exists",
+                                        "The project name specified and directory already exists",
+                                        QMessageBox.Ok)            
+                return None
+            
+            
             self.logger_started_once = True
             self.logman.remove_data_all()
             self.logman.start_collectors()
+
+            self.logEnabled.emit("TRUE")
 
             self.logOutStartButton.setEnabled(False)
             self.logOutStopButton.setEnabled(True)
@@ -148,11 +123,11 @@ class NewProjectDialog(QtWidgets.QWidget):
         
         self.batch_thread.add_function(self.logman.stop_collectors)
         self.batch_thread.add_function(self.logman.parse_data_all)
-        self.batch_thread.add_function(self.logman.export_data, self.configname.toPlainText())
-        parsedLogs = os.path.join(self.logOutPathEdit.toPlainText(),ConfigurationManager.STRUCTURE_PARSED_PATH)
-        annotatedPCAP = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
-        self.batch_thread.add_function(self.logman.copy_latest_data, self.logOutPathEdit.toPlainText(), parsedLogs, annotatedPCAP)
-        dissectorsPath = os.path.join(self.logOutPathEdit.toPlainText(), ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
+        self.batch_thread.add_function(self.logman.export_data, self.projectPath)
+        parsedLogs = os.path.join(self.projectPath,ConfigurationManager.STRUCTURE_PARSED_PATH)
+        annotatedPCAP = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+        self.batch_thread.add_function(self.logman.copy_latest_data, self.projectPath, parsedLogs, annotatedPCAP)
+        dissectorsPath = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
         self.batch_thread.add_function(self.logman.generate_dissectors, parsedLogs, dissectorsPath, None)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
@@ -184,9 +159,8 @@ class NewProjectDialog(QtWidgets.QWidget):
             
             self.logOutStartButton.setEnabled(True)
             self.logOutStopButton.setEnabled(False)
-            #self.logOutPathButton.setEnabled(True)
-            self.logOutViewButton.setEnabled(True)
-            self.annotatedPCAP = os.path.join(self.configname.toPlainText(), ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+            self.annotatedPCAP = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+            self.logEnabled.emit("FALSE")
             
         logging.debug('thread_finish(): Completed')
 
@@ -194,10 +168,10 @@ class NewProjectDialog(QtWidgets.QWidget):
         logging.debug('on_log_save_button_clicked(): Instantiated')
 
         if self.configname.toPlainText() != '':
-            if self.configname.toPlainText() in self.existingconfignames:
+            if self.configname.toPlainText() in self.existingconfignames and os.path.exists(self.projectPath) == True:
                 QMessageBox.warning(self,
                                         "Name Exists",
-                                        "The project name specified already exists",
+                                        "The project name specified and directory already exists",
                                         QMessageBox.Ok)            
                 return None
             else:
@@ -211,10 +185,9 @@ class NewProjectDialog(QtWidgets.QWidget):
                 #Once save is hit, it should close the new project pop up and return to the main window
                 if saveComplete == QMessageBox.Ok:
                     #let main window know everything is ready:
-                    config = self.configname.toPlainText()
-                    #path = self.logOutPathEdit.toPlainText()
                     #Send signal to slot
-                    self.created.emit(config, self.existingconfignames, self.annotatedPCAP)
+                    config = self.configname.toPlainText()
+                    self.created.emit(config, self.existingconfignames, self.annotatedPCAP, self.projectPath)
                     self.close()
         else:
              QMessageBox.warning(self,
@@ -238,3 +211,37 @@ class NewProjectDialog(QtWidgets.QWidget):
             pass
 
         logging.debug('on_cancel_button_clicked(): Complete')
+
+    def closeEvent(self, event):
+        logging.debug("closeEvent(): instantiated")
+        self.quit_event = event
+        if self.logOutStartButton.isEnabled() == True:
+            event.accept()
+            self.close()
+        if self.logOutStartButton.isEnabled() == False:
+            close = QMessageBox.question(self,
+                                            "CLOSE",
+                                            "Logger is running. Stop and Close?",
+                                            QMessageBox.Yes | QMessageBox.No)
+            if close == QMessageBox.Yes:
+                logging.debug("closeEvent(): Creating Quit Command Load")
+                self.batch_thread = BatchThread()
+                self.batch_thread.progress_signal.connect(self.update_progress_bar)
+                #self.batch_thread.completion_signal.connect(self.close)
+                
+                self.batch_thread.add_function(self.logman.stop_collectors)
+                self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
+                self.batch_thread.start()
+                self.progress_dialog_overall.show()
+                self.batch_thread.completion_signal.connect(self.quit_app)
+                return
+        else:
+            pass
+        logging.debug("closeEvent(): returning ignore")
+        return
+
+    def quit_app(self):
+        self.destroy()
+        self.quit_event.accept()
+        self.progress_dialog_overall.hide()
+        return
