@@ -1,9 +1,10 @@
-from PyQt5.QtWidgets import QFileDialog, QWidget, QPushButton, QTextEdit, QMessageBox, QSizePolicy, QAction, qApp
+from PyQt5.QtWidgets import QFileDialog, QWidget, QPushButton, QTextEdit, QMessageBox, QSizePolicy, QAction, qApp, QLabel
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 import logging
 import os
 import shutil
+import re
 
 from ConfigurationManager.FileExplorerRunner import FileExplorerRunner
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
@@ -23,6 +24,7 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.existingconfignames = existingProjects
         self.annotatedPCAP = ''
         self.projectPath = ""
+        self.projectName = ""
 
         quit = QAction("Close", self)
         quit.triggered.connect(self.closeEvent)
@@ -32,6 +34,16 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.outerVertBoxPro.setObjectName("outerVertBox")
         self.setWindowTitle("New Project")
         self.setObjectName("NewProjectDialog")
+
+        #Label 
+        self.labelVerBoxPro = QtWidgets.QVBoxLayout()
+        self.labelVerBoxPro.setObjectName("labeVerBoxPro")
+        self.newProjectLabel = QLabel("Create New Project")
+        labelFont = QtGui.QFont()
+        labelFont.setBold(True)
+        self.newProjectLabel.setFont(labelFont)
+        self.newProjectLabel.setAlignment(Qt.AlignCenter)
+        
 
         self.nameVerBoxPro = QtWidgets.QHBoxLayout()
         self.nameVerBoxPro.setObjectName("nameVerBoxPro")
@@ -53,23 +65,30 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.logOutStartButton.clicked.connect(self.on_log_start_button_clicked)
         self.logOutStartButton.setEnabled(True)
         self.logOutStopButton.clicked.connect(self.on_log_stop_button_clicked)
-        self.logOutStopButton.setEnabled(True)
+        self.logOutStopButton.setEnabled(False)
         self.logOutSaveButton.clicked.connect(self.on_log_save_button_clicked)
-        self.logOutSaveButton.setEnabled(True)
+        self.logOutSaveButton.setEnabled(False)
         self.logOutCancelButton.clicked.connect(self.on_cancel_button_clicked)
 
         #Set the button layouts
         self.bottomButtons_layout = QtWidgets.QHBoxLayout()
 
         #Put all the components together
+        self.labelVerBoxPro.addWidget(self.newProjectLabel)
         self.nameVerBoxPro.addWidget(self.configname)
         self.bottomButtons_layout.addWidget(self.logOutStartButton)
         self.bottomButtons_layout.addWidget(self.logOutStopButton)
         self.bottomButtons_layout.addWidget(self.logOutSaveButton)
         self.bottomButtons_layout.addWidget(self.logOutCancelButton, alignment=QtCore.Qt.AlignRight)
         
+        self.outerVertBoxPro.addLayout(self.labelVerBoxPro)
         self.outerVertBoxPro.addLayout(self.nameVerBoxPro)
         self.outerVertBoxPro.addLayout(self.bottomButtons_layout)
+
+        #Auto Adjust Size
+        self.setFixedSize(self.labelVerBoxPro.sizeHint())
+        self.setFixedSize(self.nameVerBoxPro.sizeHint())
+        self.setFixedSize(self.bottomButtons_layout.sizeHint())
 
         self.outerVertBoxPro.addStretch()
 
@@ -79,10 +98,14 @@ class NewProjectDialog(QtWidgets.QWidget):
     
     def on_log_start_button_clicked(self):
         logging.debug('on_log_start_button_clicked(): Instantiated')
+        #Remove any special characters or spaces:
+        self.projectName = self.configname.toPlainText()
+        self.projectName = re.sub('\W+', '', self.projectName)
+        
         #check if name has been filed out in order to create a project folder
         #with the name that was chosen:
-        if self.configname.toPlainText() != '':
-            self.projectPath = os.path.join("/home/kali/eceld-netsys/ProjectData", self.configname.toPlainText())
+        if self.projectName != '':
+            self.projectPath = os.path.join("/home/kali/eceld-netsys/ProjectData", self.projectName)
             
             if self.logger_started_once == True and os.path.exists(self.projectPath) == True:
                 buttonReply = QMessageBox.question(self, 'Confirmation', "Restarting the Logger will Remove any Previous Data. \r\n Continue?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -106,6 +129,8 @@ class NewProjectDialog(QtWidgets.QWidget):
 
             self.logOutStartButton.setEnabled(False)
             self.logOutStopButton.setEnabled(True)
+            self.configname.setReadOnly(True)
+
         else:
             QMessageBox.warning(self,
                                         "Name is Empty",
@@ -133,8 +158,6 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()
         self.progress_dialog_overall.show()
-
-        self.logOutSaveButton.setEnabled(True)
         
         logging.debug('on_log_stop_button_clicked(): Complete')
     
@@ -159,6 +182,7 @@ class NewProjectDialog(QtWidgets.QWidget):
             
             self.logOutStartButton.setEnabled(True)
             self.logOutStopButton.setEnabled(False)
+            self.logOutSaveButton.setEnabled(True)
             self.annotatedPCAP = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
             self.logEnabled.emit("FALSE")
             
@@ -167,8 +191,8 @@ class NewProjectDialog(QtWidgets.QWidget):
     def on_log_save_button_clicked(self):
         logging.debug('on_log_save_button_clicked(): Instantiated')
 
-        if self.configname.toPlainText() != '':
-            if self.configname.toPlainText() in self.existingconfignames and os.path.exists(self.projectPath) == True:
+        if self.projectName != '':
+            if self.projectName in self.existingconfignames and os.path.exists(self.projectPath) == True:
                 QMessageBox.warning(self,
                                         "Name Exists",
                                         "The project name specified and directory already exists",
@@ -176,7 +200,7 @@ class NewProjectDialog(QtWidgets.QWidget):
                 return None
             else:
                 #if all good, add to existing file names list
-                self.existingconfignames += [self.configname.toPlainText()]
+                self.existingconfignames += [self.projectName]
 
                 saveComplete = QMessageBox.warning(self,
                                                     "Creation Successful",
@@ -186,7 +210,7 @@ class NewProjectDialog(QtWidgets.QWidget):
                 if saveComplete == QMessageBox.Ok:
                     #let main window know everything is ready:
                     #Send signal to slot
-                    config = self.configname.toPlainText()
+                    config = self.projectName
                     self.created.emit(config, self.existingconfignames, self.annotatedPCAP, self.projectPath)
                     self.close()
         else:
@@ -200,13 +224,29 @@ class NewProjectDialog(QtWidgets.QWidget):
     def on_cancel_button_clicked(self, event):
         logging.debug('on_cancel_button_clicked(): Instantiated')
 
+        self.quit_event = event
+
         cancel = QMessageBox.question(
             self, "Close New Project",
             "Are you sure you want to quit? Any unsaved work will be lost.",
             QMessageBox.Close | QMessageBox.Cancel)
 
         if cancel == QMessageBox.Close:
+            if self.logger_started_once == True:
+                delete_temp = QMessageBox.question(self,
+                                                 "Delete Temp Data",
+                                                 "Closing... Would you like to delete any temp data?",
+                                                 QMessageBox.Yes | QMessageBox.No)
+                if delete_temp == QMessageBox.Yes:
+                    #Delete Temp Data
+                    if os.path.exists(self.projectPath):
+                        shutil.rmtree(self.projectPath)
+
+                    self.logman.remove_data_all()
+                    self.close()
+                self.close()
             self.close()
+            
         else:
             pass
 
@@ -219,24 +259,38 @@ class NewProjectDialog(QtWidgets.QWidget):
             event.accept()
             self.close()
         if self.logOutStartButton.isEnabled() == False:
+            logging.debug("closeEvent(): Creating Quit Command Load")
             close = QMessageBox.question(self,
                                             "CLOSE",
                                             "Logger is running. Stop and Close?",
                                             QMessageBox.Yes | QMessageBox.No)
             if close == QMessageBox.Yes:
-                logging.debug("closeEvent(): Creating Quit Command Load")
+                delete_temp = QMessageBox.question(self,
+                                                 "Delete Temp Data",
+                                                 "Closing... Would you like to delete any temp data?",
+                                                 QMessageBox.Yes | QMessageBox.No)
+                if delete_temp == QMessageBox.Yes:
+                    #Delete Temp Data
+                    self.logman.remove_data_all()
+                
+                print("CLOSE - Stop logger")
                 self.batch_thread = BatchThread()
                 self.batch_thread.progress_signal.connect(self.update_progress_bar)
-                #self.batch_thread.completion_signal.connect(self.close)
                 
                 self.batch_thread.add_function(self.logman.stop_collectors)
                 self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
                 self.batch_thread.start()
                 self.progress_dialog_overall.show()
                 self.batch_thread.completion_signal.connect(self.quit_app)
+                self.logEnabled.emit("FALSE")
                 return
-        else:
+            elif close == QMessageBox.No and not type(self.quit_event) == bool:
+                    print("QUIT HERE")
+                    self.quit_event.ignore()
             pass
+
+        else:
+            self.quit_event.ignore()
         logging.debug("closeEvent(): returning ignore")
         return
 
