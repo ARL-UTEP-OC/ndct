@@ -40,6 +40,7 @@ class MainGUI(QMainWindow):
         self.sessionName = ''
         self.existingSessionNames = []
         self.logEnabled = ''
+        self.closeConfirmed = ''
 
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
@@ -230,6 +231,11 @@ class MainGUI(QMainWindow):
     def log_enabled(self, status):
         self.logEnabled = status
 
+    #Slot to let us know if the close has been confirmed or canceled
+    @QtCore.pyqtSlot(str)
+    def close_confirmed(self, status):
+        self.closeConfirmed = status
+
     #Used to create a new project, and this is where the project will actually be populated
     def addProject(self):
         self.projectWidget  = ProjectWidget(self.configname, self.annotatedPCAP, self.path)
@@ -282,45 +288,29 @@ class MainGUI(QMainWindow):
         self.quit_event = event
 
         if self.logEnabled == "TRUE":
-            confirm = QMessageBox.question(self,
-                                        "QUIT",
-                                        "Logger is running. Stop and Quit? \n Any unsaved data will be lost.",
-                                        QMessageBox.Yes | QMessageBox.No)
-            if confirm == QMessageBox.Yes:
-                delete_temp = QMessageBox.question(self,
-                                                "Delete Temp Data",
-                                                "Closing... Would you like to delete any temp data?",
-                                                QMessageBox.Yes | QMessageBox.No)
-                if delete_temp == QMessageBox.Yes:
-                    #Delete Temp Data
-                    self.logman.remove_data_all()
+            #This means that the new project widget is still running so call the close event
+            #for that widget first to stop logger
+            self.newPro.closeEvent(event)
 
-                logging.debug("closeEvent(): Creating Quit Command Load")
-                self.batch_thread = BatchThread()
-                self.batch_thread.progress_signal.connect(self.update_progress_bar)
-                
-                self.batch_thread.add_function(self.logman.stop_collectors)
-                self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
-                self.batch_thread.completion_signal.connect(self.quit_app)
-                self.batch_thread.start()
-                self.progress_dialog_overall.show()
-                return
+            #Check if the close was confirmed or not
+            if self.close_confirmed == True:
+                #after that's done, make sure to quit the app
+                self.quit_app()
+            else: 
+                pass
         else:
             close = QMessageBox.question(self, 
                                 "QUIT",
                                 "Are you sure you want to quit? \n Any unsaved data will be lost",
                                 QMessageBox.Yes | QMessageBox.No)
             if close == QMessageBox.Yes:
-                print("QUIT")
                 qApp.quit()
                 return
             elif close == QMessageBox.No and not type(self.quit_event) == bool:
-                    print("QUIT HERE")
                     self.quit_event.ignore()
             pass
         return
         
-
     def quit_app(self):
         self.quit_event.accept()
         qApp.quit()

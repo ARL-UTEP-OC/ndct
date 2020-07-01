@@ -1,0 +1,106 @@
+[
+	{"clicks_id" : 0,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628836.2616982_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:36"
+	},
+
+	{"clicks_id" : 1,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628835.792796_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:35"
+	},
+
+	{"clicks_id" : 2,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628836.1014_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:36"
+	},
+
+	{"clicks_id" : 3,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628835.8686423_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:35"
+	},
+
+	{"clicks_id" : 4,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628836.3091488_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:36"
+	},
+
+	{"clicks_id" : 5,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628836.141773_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:36"
+	},
+
+	{"clicks_id" : 6,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628835.873618_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:35"
+	},
+
+	{"clicks_id" : 7,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628835.873072_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:35"
+	},
+
+	{"clicks_id" : 8,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628836.288873_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:36"
+	},
+
+	{"clicks_id" : 9,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628835.8484023_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:35"
+	},
+
+	{"clicks_id" : 10,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628836.0332186_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:36"
+	},
+
+	{"clicks_id" : 11,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628835.9269342_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:35"
+	},
+
+	{"clicks_id" : 12,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628836.105061_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:36"
+	},
+
+	{"clicks_id" : 13,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628836.0655239_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:36"
+	},
+
+	{"clicks_id" : 14,
+	"content" : "\/home\/kali\/eceld-netsys\/eceld\/plugins\/collectors\/pykeylogger\/raw\/click_images\/1593628835.8619902_main.py_root.png",
+	"type" : "point",
+	"classname" : "imgPoint",
+	"start" : "2020-07-01T18:40:35"
+	}
+]

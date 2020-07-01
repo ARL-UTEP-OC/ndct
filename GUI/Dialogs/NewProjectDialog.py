@@ -15,6 +15,7 @@ class NewProjectDialog(QtWidgets.QWidget):
     #Signal for when the user is done creating the new project
     created = QtCore.pyqtSignal(str, list, str, str)
     logEnabled = QtCore.pyqtSignal(str)
+    closeConfirmed = QtCore.pyqtSignal(str)
 
     def __init__(self, logman, existingProjects):
         QtWidgets.QWidget.__init__(self, parent=None)
@@ -232,22 +233,9 @@ class NewProjectDialog(QtWidgets.QWidget):
             QMessageBox.Close | QMessageBox.Cancel)
 
         if cancel == QMessageBox.Close:
-            if self.logger_started_once == True:
-                delete_temp = QMessageBox.question(self,
-                                                 "Delete Temp Data",
-                                                 "Closing... Would you like to delete any temp data?",
-                                                 QMessageBox.Yes | QMessageBox.No)
-                if delete_temp == QMessageBox.Yes:
-                    #Delete Temp Data
-                    if os.path.exists(self.projectPath):
-                        shutil.rmtree(self.projectPath)
-
-                    self.logman.remove_data_all()
-                    self.close()
-                self.close()
-            self.close()
-            
-        else:
+            #call closing event
+            self.closeEvent(event)
+        elif cancel == QMessageBox.Cancel:
             pass
 
         logging.debug('on_cancel_button_clicked(): Complete')
@@ -256,8 +244,8 @@ class NewProjectDialog(QtWidgets.QWidget):
         logging.debug("closeEvent(): instantiated")
         self.quit_event = event
         if self.logOutStartButton.isEnabled() == True:
-            event.accept()
-            self.close()
+            #event.accept()
+            self.destroy()
         if self.logOutStartButton.isEnabled() == False:
             logging.debug("closeEvent(): Creating Quit Command Load")
             close = QMessageBox.question(self,
@@ -265,6 +253,7 @@ class NewProjectDialog(QtWidgets.QWidget):
                                             "Logger is running. Stop and Close?",
                                             QMessageBox.Yes | QMessageBox.No)
             if close == QMessageBox.Yes:
+                self.closeConfirmed.emit("FALSE")
                 delete_temp = QMessageBox.question(self,
                                                  "Delete Temp Data",
                                                  "Closing... Would you like to delete any temp data?",
@@ -272,30 +261,39 @@ class NewProjectDialog(QtWidgets.QWidget):
                 if delete_temp == QMessageBox.Yes:
                     #Delete Temp Data
                     self.logman.remove_data_all()
-                
-                print("CLOSE - Stop logger")
-                self.batch_thread = BatchThread()
-                self.batch_thread.progress_signal.connect(self.update_progress_bar)
-                
-                self.batch_thread.add_function(self.logman.stop_collectors)
-                self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
-                self.batch_thread.start()
-                self.progress_dialog_overall.show()
-                self.batch_thread.completion_signal.connect(self.quit_app)
-                self.logEnabled.emit("FALSE")
+
+                    #If project directory has already been created, make sure to delete it
+                    if os.path.exists(self.projectPath):
+                        shutil.rmtree(self.projectPath)
+
+                #run stop process:
+                self.stop_logger()
                 return
             elif close == QMessageBox.No and not type(self.quit_event) == bool:
-                    print("QUIT HERE")
-                    self.quit_event.ignore()
+                self.closeConfirmed.emit("TRUE")
+                self.quit_event.ignore()
+            self.closeConfirmed.emit("TRUE")
             pass
 
-        else:
-            self.quit_event.ignore()
         logging.debug("closeEvent(): returning ignore")
         return
 
     def quit_app(self):
         self.destroy()
-        self.quit_event.accept()
         self.progress_dialog_overall.hide()
         return
+
+    def stop_logger(self):
+        print("CLOSE - Stop logger")
+        self.batch_thread = BatchThread()
+        self.batch_thread.progress_signal.connect(self.update_progress_bar)
+                
+        self.batch_thread.add_function(self.logman.stop_collectors)
+        self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
+        self.batch_thread.start()
+        self.progress_dialog_overall.show()
+        self.batch_thread.completion_signal.connect(self.quit_app)
+        self.logEnabled.emit("FALSE")
+        return
+
+
