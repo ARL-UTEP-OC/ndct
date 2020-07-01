@@ -27,7 +27,7 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.projectPath = ""
         self.projectName = ""
 
-        quit = QAction("Close", self)
+        quit = QAction("Quit", self)
         quit.triggered.connect(self.closeEvent)
 
         #Title of window
@@ -241,11 +241,13 @@ class NewProjectDialog(QtWidgets.QWidget):
         logging.debug('on_cancel_button_clicked(): Complete')
 
     def closeEvent(self, event):
+        print("CLOSE TRIGGERED")
         logging.debug("closeEvent(): instantiated")
         self.quit_event = event
         if self.logOutStartButton.isEnabled() == True:
+            print("HERE")
             #event.accept()
-            self.destroy()
+            self.close()
         if self.logOutStartButton.isEnabled() == False:
             logging.debug("closeEvent(): Creating Quit Command Load")
             close = QMessageBox.question(self,
@@ -253,7 +255,7 @@ class NewProjectDialog(QtWidgets.QWidget):
                                             "Logger is running. Stop and Close?",
                                             QMessageBox.Yes | QMessageBox.No)
             if close == QMessageBox.Yes:
-                self.closeConfirmed.emit("FALSE")
+                self.closeConfirmed.emit("TRUE")
                 delete_temp = QMessageBox.question(self,
                                                  "Delete Temp Data",
                                                  "Closing... Would you like to delete any temp data?",
@@ -270,9 +272,9 @@ class NewProjectDialog(QtWidgets.QWidget):
                 self.stop_logger()
                 return
             elif close == QMessageBox.No and not type(self.quit_event) == bool:
-                self.closeConfirmed.emit("TRUE")
+                self.closeConfirmed.emit("FALSE")
                 self.quit_event.ignore()
-            self.closeConfirmed.emit("TRUE")
+            self.closeConfirmed.emit("FALSE")
             pass
 
         logging.debug("closeEvent(): returning ignore")
@@ -294,6 +296,7 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.progress_dialog_overall.show()
         self.batch_thread.completion_signal.connect(self.quit_app)
         self.logEnabled.emit("FALSE")
+        self.closeConfirmed.emit("TRUE")
         return
 
 

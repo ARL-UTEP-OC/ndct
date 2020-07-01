@@ -214,6 +214,7 @@ class MainGUI(QMainWindow):
         self.newPro = NewProjectDialog(self.logman, self.existingconfignames)
         self.newPro.logEnabled.connect(self.log_enabled)
         self.newPro.created.connect(self.project_created)
+        self.newPro.closeConfirmed.connect(self.close_confirmed)
         self.newPro.show()
 
     #Slot for when the user created the new project, path and configname
@@ -241,15 +242,6 @@ class MainGUI(QMainWindow):
         self.projectWidget  = ProjectWidget(self.configname, self.annotatedPCAP, self.path)
         #create the folders and files for new project:
         self.filename = self.configname
-        self.successfilenames = []
-        self.successfoldernames = []
-        #self.destinationPath = self.path
-        self.foldersToCreate = []
-        self.filesToCreate = []
-        """ basePath = os.path.join(self.path,self.filename)
-        self.foldersToCreate.append(basePath)
-        self.foldersToCreate.append(os.path.join(basePath, "Materials"))
-        self.foldersToCreate.append(os.path.join(basePath, "Logs")) """
 
         if self.filename != None:
             logging.debug("addProject(): OK pressed and valid configname entered: " + str(self.filename))
@@ -293,11 +285,13 @@ class MainGUI(QMainWindow):
             self.newPro.closeEvent(event)
 
             #Check if the close was confirmed or not
-            if self.close_confirmed == True:
+            if self.closeConfirmed == "TRUE":
                 #after that's done, make sure to quit the app
-                self.quit_app()
+                self.quit_event.accept()
+                #self.close()
+                qApp.quit()
             else: 
-                pass
+                return
         else:
             close = QMessageBox.question(self, 
                                 "QUIT",
