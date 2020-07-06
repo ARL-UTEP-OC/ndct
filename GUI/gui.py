@@ -9,11 +9,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, 
                 QHBoxLayout, QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, 
                 QSpinBox, QAction, qApp, QStackedWidget, QMenuBar, QInputDialog, QFileDialog,
-                QPlainTextEdit)
+                QPlainTextEdit, QMessageBox)
 
 import time
+import re
 
-from PyQt5.QtWidgets import QMessageBox
+from distutils.dir_util import copy_tree
+
+from ConfigurationManager.ConfigurationManager import ConfigurationManager
 
 from GUI.Widgets.ProjectWidget import ProjectWidget
 from GUI.Threading.BatchThread import BatchThread
@@ -41,6 +44,10 @@ class MainGUI(QMainWindow):
         self.existingSessionNames = []
         self.logEnabled = ''
         self.closeConfirmed = ''
+        self.newProject_pressed = False
+        self.project_data_folder = "/home/kali/eceld-netsys/ProjectData"
+        self.folder_chosen = ''
+        self.at_start = True
 
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
@@ -103,6 +110,10 @@ class MainGUI(QMainWindow):
         mainlayout.addWidget(self.mainMenu)
         mainlayout.addWidget(tabWidget)
         self.mainWidget.setLayout(mainlayout)
+
+        #load any saved projects
+        self.load_saved()
+        self.at_start = False
 
         logging.debug("MainWindow(): Complete")
 
@@ -215,6 +226,7 @@ class MainGUI(QMainWindow):
         self.newPro.logEnabled.connect(self.log_enabled)
         self.newPro.created.connect(self.project_created)
         self.newPro.closeConfirmed.connect(self.close_confirmed)
+        self.newProject_pressed = True
         self.newPro.show()
 
     #Slot for when the user created the new project, path and configname
@@ -260,14 +272,59 @@ class MainGUI(QMainWindow):
         self.basedataStackedWidget.addWidget(self.projectWidget)
         self.basedataStackedWidget.addWidget(self.baseWidget)
 
-    #A combination of RES Methods
     def importActionEvent(self):
         logging.debug("MainApp:importActionEvent() instantiated") 
+        
+        if self.at_start == False:
+            self.folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Directory to Store Data"))
 
-        folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Directory to Store Data"))
-        if folder_chosen == "":
+        if self.folder_chosen == "":
             logging.debug("File choose cancelled")
             return
+
+        if len(self.folder_chosen) > 0:
+            baseNoExt = os.path.basename(self.folder_chosen)
+            baseNoExt = os.path.splitext(baseNoExt)[0]
+            self.configname = ''.join(e for e in baseNoExt if e.isalnum)
+            print(self.configname)
+            if self.configname in self.existingconfignames:
+                QMessageBox.warning(self,
+                                        "Name Exists",
+                                        "A project with the same name already exists.",
+                                        QMessageBox.Ok)            
+                return None
+            else:
+                self.existingconfignames += [self.configname]
+                importedProjectPath = os.path.join(self.project_data_folder, self.configname)
+                #copy selected dir to new dir
+                copy_tree(self.folder_chosen, importedProjectPath)
+                self.path = importedProjectPath
+                self.annotatedPCAP = os.path.join(importedProjectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+                self.addProject()
+
+    def load_saved(self):
+        i = 0
+        #for each subdir, import the saved projects
+        for (dirName, subdirlist, filelist) in os.walk(self.project_data_folder):
+            folders = ', '.join(subdirlist)
+            folder = folders.strip().split(", ")
+            num_folders_left = len(folder)
+
+            #check if there is anything to import - is it empty?
+            if folder[i] == '':
+                #return if there's nothing to import
+                return
+
+            while(num_folders_left != 0):
+                self.folder_chosen = os.path.join(dirName, folder[i])
+                self.importActionEvent()
+                num_folders_left -= 1
+                i += 1
+
+            if(num_folders_left == 0):
+                #once number of folders left reaches 0, stop the directory traversal
+                return
+            
 
     def update_progress_bar(self):
         logging.debug('update_progress_bar(): Instantiated')
@@ -300,7 +357,8 @@ class MainGUI(QMainWindow):
             if close == QMessageBox.Yes:
                 #call the delete data function from new project, just to make sure
                 #everything has been cleared out
-                self.newPro.delete_data()
+                if self.newProject_pressed == True:
+                    self.newPro.delete_data()
                 qApp.quit()
                 return
             elif close == QMessageBox.No and not type(self.quit_event) == bool:

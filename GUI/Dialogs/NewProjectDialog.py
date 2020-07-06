@@ -27,6 +27,8 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.projectPath = ""
         self.projectName = ""
         self.cancel_pressed = False
+        self.saved_pressed = False
+        self.project_data_folder = "/home/kali/eceld-netsys/ProjectData"
 
         quit = QAction("Quit", self)
         quit.triggered.connect(self.closeEvent)
@@ -106,7 +108,7 @@ class NewProjectDialog(QtWidgets.QWidget):
         #check if name has been filed out in order to create a project folder
         #with the name that was chosen:
         if self.projectName != '':
-            self.projectPath = os.path.join("/home/kali/eceld-netsys/ProjectData", self.projectName)
+            self.projectPath = os.path.join(self.project_data_folder, self.projectName)
             #show the project name edited
             self.configname.setText(self.projectName)
             
@@ -204,6 +206,7 @@ class NewProjectDialog(QtWidgets.QWidget):
             else:
                 #if all good, add to existing file names list
                 self.existingconfignames += [self.projectName]
+                self.saved_pressed = True
 
                 saveComplete = QMessageBox.warning(self,
                                                     "Creation Successful",
@@ -252,7 +255,7 @@ class NewProjectDialog(QtWidgets.QWidget):
                 self.delete_data()
                 self.close()
             
-            elif self.configname.toPlainText() != '':
+            elif self.configname.toPlainText() != '' and self.saved_pressed == False:
                 delete_temp = QMessageBox.question(self,
                                                  "Delete Temp Data",
                                                  "Closing... Discard data for this unsaved project?",
@@ -309,9 +312,13 @@ class NewProjectDialog(QtWidgets.QWidget):
         return
 
     def delete_data(self):
-        #Delete Temp Data
-        self.logman.remove_data_all()
+        #make sure to not delete existing projects:
+        if self.projectName not in self.existingconfignames:
+            if self.logger_started_once == True:
+                #Delete Temp Data
+                self.logman.remove_data_all()
+            
 
-        #If project directory has already been created, make sure to delete it
-        if os.path.exists(self.projectPath):
-            shutil.rmtree(self.projectPath)
+            #If project directory has already been created, make sure to delete it
+            if os.path.exists(self.projectPath):
+                shutil.rmtree(self.projectPath)
