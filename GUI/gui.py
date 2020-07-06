@@ -298,6 +298,9 @@ class MainGUI(QMainWindow):
                                 "Are you sure you want to quit? \n Any unsaved data will be lost",
                                 QMessageBox.Yes | QMessageBox.No)
             if close == QMessageBox.Yes:
+                #call the delete data function from new project, just to make sure
+                #everything has been cleared out
+                self.newPro.delete_data()
                 qApp.quit()
                 return
             elif close == QMessageBox.No and not type(self.quit_event) == bool:

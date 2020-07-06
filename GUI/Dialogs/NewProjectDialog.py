@@ -26,6 +26,7 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.annotatedPCAP = ''
         self.projectPath = ""
         self.projectName = ""
+        self.cancel_pressed = False
 
         quit = QAction("Quit", self)
         quit.triggered.connect(self.closeEvent)
@@ -36,7 +37,7 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.setWindowTitle("New Project")
         self.setObjectName("NewProjectDialog")
 
-        #Label 
+        #Label - New Project Title
         self.labelVerBoxPro = QtWidgets.QVBoxLayout()
         self.labelVerBoxPro.setObjectName("labeVerBoxPro")
         self.newProjectLabel = QLabel("Create New Project")
@@ -44,7 +45,6 @@ class NewProjectDialog(QtWidgets.QWidget):
         labelFont.setBold(True)
         self.newProjectLabel.setFont(labelFont)
         self.newProjectLabel.setAlignment(Qt.AlignCenter)
-        
 
         self.nameVerBoxPro = QtWidgets.QHBoxLayout()
         self.nameVerBoxPro.setObjectName("nameVerBoxPro")
@@ -107,6 +107,8 @@ class NewProjectDialog(QtWidgets.QWidget):
         #with the name that was chosen:
         if self.projectName != '':
             self.projectPath = os.path.join("/home/kali/eceld-netsys/ProjectData", self.projectName)
+            #show the project name edited
+            self.configname.setText(self.projectName)
             
             if self.logger_started_once == True and os.path.exists(self.projectPath) == True:
                 buttonReply = QMessageBox.question(self, 'Confirmation', "Restarting the Logger will Remove any Previous Data. \r\n Continue?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -234,20 +236,33 @@ class NewProjectDialog(QtWidgets.QWidget):
 
         if cancel == QMessageBox.Close:
             #call closing event
+            self.cancel_pressed = True #confrm that cancel was pressed
             self.closeEvent(event)
+
         elif cancel == QMessageBox.Cancel:
             pass
 
         logging.debug('on_cancel_button_clicked(): Complete')
 
     def closeEvent(self, event):
-        print("CLOSE TRIGGERED")
         logging.debug("closeEvent(): instantiated")
         self.quit_event = event
         if self.logOutStartButton.isEnabled() == True:
-            print("HERE")
-            #event.accept()
+            if self.cancel_pressed == True:
+                self.delete_data()
+                self.close()
+            
+            elif self.configname.toPlainText() != '':
+                delete_temp = QMessageBox.question(self,
+                                                 "Delete Temp Data",
+                                                 "Closing... Discard data for this unsaved project?",
+                                                 QMessageBox.Yes | QMessageBox.No)
+                if delete_temp == QMessageBox.Yes:
+                    self.delete_data()
+                    self.close()
+            #if none  of these conditions are met, then close 
             self.close()
+
         if self.logOutStartButton.isEnabled() == False:
             logging.debug("closeEvent(): Creating Quit Command Load")
             close = QMessageBox.question(self,
@@ -258,15 +273,10 @@ class NewProjectDialog(QtWidgets.QWidget):
                 self.closeConfirmed.emit("TRUE")
                 delete_temp = QMessageBox.question(self,
                                                  "Delete Temp Data",
-                                                 "Closing... Would you like to delete any temp data?",
+                                                 "Closing... Discard data for this unsaved project?",
                                                  QMessageBox.Yes | QMessageBox.No)
                 if delete_temp == QMessageBox.Yes:
-                    #Delete Temp Data
-                    self.logman.remove_data_all()
-
-                    #If project directory has already been created, make sure to delete it
-                    if os.path.exists(self.projectPath):
-                        shutil.rmtree(self.projectPath)
+                    self.delete_data()
 
                 #run stop process:
                 self.stop_logger()
@@ -286,7 +296,6 @@ class NewProjectDialog(QtWidgets.QWidget):
         return
 
     def stop_logger(self):
-        print("CLOSE - Stop logger")
         self.batch_thread = BatchThread()
         self.batch_thread.progress_signal.connect(self.update_progress_bar)
                 
@@ -299,4 +308,10 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.closeConfirmed.emit("TRUE")
         return
 
+    def delete_data(self):
+        #Delete Temp Data
+        self.logman.remove_data_all()
 
+        #If project directory has already been created, make sure to delete it
+        if os.path.exists(self.projectPath):
+            shutil.rmtree(self.projectPath)
