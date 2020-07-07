@@ -286,7 +286,6 @@ class MainGUI(QMainWindow):
             baseNoExt = os.path.basename(self.folder_chosen)
             baseNoExt = os.path.splitext(baseNoExt)[0]
             self.configname = ''.join(e for e in baseNoExt if e.isalnum)
-            print(self.configname)
             if self.configname in self.existingconfignames:
                 QMessageBox.warning(self,
                                         "Name Exists",
@@ -297,10 +296,30 @@ class MainGUI(QMainWindow):
                 self.existingconfignames += [self.configname]
                 importedProjectPath = os.path.join(self.project_data_folder, self.configname)
                 #copy selected dir to new dir
-                copy_tree(self.folder_chosen, importedProjectPath)
+                self.batch_thread = BatchThread()
+                self.batch_thread.progress_signal.connect(self.update_progress_bar)
+                self.batch_thread.completion_signal.connect(self.copy_dir_complete)
+                self.batch_thread.add_function(self.copy_dir, importedProjectPath)
+
+                self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
+                self.batch_thread.start()
+                self.progress_dialog_overall.show()
+
                 self.path = importedProjectPath
                 self.annotatedPCAP = os.path.join(importedProjectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
                 self.addProject()
+
+    def copy_dir(self, importPath):
+        logging.debug("copy_dir(): copying selected directory")
+        copy_tree(self.folder_chosen, importPath)
+        logging.debug("copy_dir(): copying complete")
+
+    def copy_dir_complete(self):
+        logging.debug("copy_dir_complete(): Instantiated")
+        print("COMPLETE")
+        self.progress_dialog_overall.update_progress()
+        self.progress_dialog_overall.hide()
+        logging.debug("copy_dir_complete(): Complete")
 
     def load_saved(self):
         i = 0
@@ -324,8 +343,9 @@ class MainGUI(QMainWindow):
             if(num_folders_left == 0):
                 #once number of folders left reaches 0, stop the directory traversal
                 return
-            
 
+            del filelist
+            
     def update_progress_bar(self):
         logging.debug('update_progress_bar(): Instantiated')
         self.progress_dialog_overall.update_progress()

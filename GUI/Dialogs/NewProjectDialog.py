@@ -125,7 +125,6 @@ class NewProjectDialog(QtWidgets.QWidget):
                                         QMessageBox.Ok)            
                 return None
             
-            
             self.logger_started_once = True
             self.logman.remove_data_all()
             self.logman.start_collectors()
