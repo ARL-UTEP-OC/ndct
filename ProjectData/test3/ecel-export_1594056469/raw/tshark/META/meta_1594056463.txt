@@ -1,4 +1,0 @@
-tshark
-===============================
-Commands:# tcpdump -i eth0 -w /home/kali/eceld-netsys/eceld/plugins/collectors/tshark/raw/%TIME%_eth0.pcap
-===============================

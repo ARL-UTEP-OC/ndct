@@ -1,4 +1,0 @@
-20200706|1594056465.105681|main.py|.Window'>(|root|New Project| 
-20200706|1594056465.2199478|main.py|.Window'>(|root|Close New Project|s
-20200706|1594056465.2722807|main.py|.Window'>(|root|Close New Project|d
-20200706|1594056465.523497|main.py|.Window'>(|root|Close New Project|h

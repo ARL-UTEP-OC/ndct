@@ -223,6 +223,7 @@ class MainGUI(QMainWindow):
     def newProject(self):
         #Creating a custom widget to display what is needed for creating a new project:
         self.newPro = NewProjectDialog(self.logman, self.existingconfignames)
+        #slots to receive data from the custom widget
         self.newPro.logEnabled.connect(self.log_enabled)
         self.newPro.created.connect(self.project_created)
         self.newPro.closeConfirmed.connect(self.close_confirmed)
@@ -232,11 +233,12 @@ class MainGUI(QMainWindow):
     #Slot for when the user created the new project, path and configname
     @QtCore.pyqtSlot(str, list, str, str)
     def project_created(self, configname, existingconfignames, pcap, path):
+        #update project info with new info selected from widget
         self.configname = configname
         self.path = path
         self.existingconfignames = existingconfignames
         self.annotatedPCAP = pcap
-
+        #create the new project with the updated information
         self.addProject()
 
     #Slot to let us know if the logging has started
@@ -308,6 +310,16 @@ class MainGUI(QMainWindow):
                 self.path = importedProjectPath
                 self.annotatedPCAP = os.path.join(importedProjectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
                 self.addProject()
+        
+    def load_project_widget(self):
+        logging.debug("load_project_widget(): loading project widget with saved projects")
+        for name in self.existingconfignames:
+            self.path = os.path.join(self.project_data_folder, name)
+            print(self.path)
+            self.annotatedPCAP = os.path.join(self.path, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+            self.configname = name
+            self.addProject()
+        logging.debug("load_project_widget(): Complete")
 
     def copy_dir(self, importPath):
         logging.debug("copy_dir(): copying selected directory")
@@ -316,7 +328,6 @@ class MainGUI(QMainWindow):
 
     def copy_dir_complete(self):
         logging.debug("copy_dir_complete(): Instantiated")
-        print("COMPLETE")
         self.progress_dialog_overall.update_progress()
         self.progress_dialog_overall.hide()
         logging.debug("copy_dir_complete(): Complete")
@@ -332,19 +343,23 @@ class MainGUI(QMainWindow):
             #check if there is anything to import - is it empty?
             if folder[i] == '':
                 #return if there's nothing to import
-                return
+                break
 
             while(num_folders_left != 0):
-                self.folder_chosen = os.path.join(dirName, folder[i])
-                self.importActionEvent()
+                #add the saved projects to existing list
+                self.existingconfignames += [folder[i]]             
                 num_folders_left -= 1
                 i += 1
 
             if(num_folders_left == 0):
                 #once number of folders left reaches 0, stop the directory traversal
-                return
+                break
 
-            del filelist
+            del filelist #needed only to traverse directory
+            del dirName #needed only to traverse directory
+        
+        #once everything has been added, populate widget
+        self.load_project_widget()
             
     def update_progress_bar(self):
         logging.debug('update_progress_bar(): Instantiated')
