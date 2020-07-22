@@ -13,17 +13,17 @@ class AnnotateWidget(QtWidgets.QWidget):
         self.setWindowTitle("AnnotateWidget")
         self.setObjectName("AnnotateWidget")
 
-        #Label - Session Title
+        #Label - Annotation Title
         self.labelVerBoxSess = QtWidgets.QVBoxLayout()
         self.labelVerBoxSess.setObjectName("labeVerBoxPro")
-        self.sessionLabel = QLabel("ANNOTATE")
+        self.annLabel = QtWidgets.QLabel("ANNOTATE")
         labelFont = QtGui.QFont()
         labelFont.setBold(True)
-        self.sessionLabel.setFont(labelFont)
-        self.sessionLabel.setAlignment(Qt.AlignCenter)
+        self.annLabel.setFont(labelFont)
+        self.annLabel.setAlignment(Qt.AlignCenter)
+        self.labelVerBoxSess.addWidget(self.annLabel)
 
         self.outerVertBox.addLayout(self.labelVerBoxSess)
-        self.setFixedSize(self.labelVerBoxSess.sizeHint())
 
         self.outerVertBox.addStretch()
 

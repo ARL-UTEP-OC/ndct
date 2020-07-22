@@ -8,21 +8,23 @@ class ResultsWidget(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, parent=None)
 
         self.outerVertBox = QtWidgets.QVBoxLayout()
-        self.outerVertBox.setObjectName("outerVertBox")
+        self.outerVertBox.setObjectName("outerVertBoxAnnot")
 
-        self.setWindowTitle("RulesWidget")
-        self.setObjectName("RulesWidget")
+        self.setWindowTitle("ResultsWidget")
+        self.setObjectName("ResultsWidget")
 
-        #Label - Session Title
+        #Label - Annotation Title
         self.labelVerBoxSess = QtWidgets.QVBoxLayout()
         self.labelVerBoxSess.setObjectName("labeVerBoxPro")
-        self.sessionLabel = QLabel("Results")
+        self.resultLabel = QtWidgets.QLabel("RESULTS")
         labelFont = QtGui.QFont()
         labelFont.setBold(True)
-        self.sessionLabel.setFont(labelFont)
-        self.sessionLabel.setAlignment(Qt.AlignCenter)
+        self.resultLabel.setFont(labelFont)
+        self.resultLabel.setAlignment(Qt.AlignCenter)
+        self.labelVerBoxSess.addWidget(self.resultLabel)
 
         self.outerVertBox.addLayout(self.labelVerBoxSess)
-        self.setFixedSize(self.labelVerBoxSess.sizeHint())
+
+        self.outerVertBox.addStretch()
 
         self.setLayout(self.outerVertBox)

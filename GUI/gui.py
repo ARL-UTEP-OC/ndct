@@ -141,9 +141,6 @@ class MainGUI(QMainWindow):
         #Check if it's the case that an project name was selected
         parentSelectedItem = self.selectedItem.parent()
 
-        #get child 
-        #child = self.selectedItem.indexOfChild()
-        #print("CHILD " + str(child))
         if(parentSelectedItem == None):
             #A base widget was selected
             #print("PROJECT_WIDGET: " + str((self.baseWidgets[self.selectedItem.text(0)]["ProjectWidget"])))
@@ -154,26 +151,26 @@ class MainGUI(QMainWindow):
 
             #Check if it's the case that a Session Name was selected
             if(self.selectedItem.text(0)[0] == "S"):
-                print("SESSION_WIDGET: " + str(self.baseWidgets[parentSelectedItem.text(0)]["SessionWidget"][self.selectedItem.text(0)]))
-                logging.debug("Setting right widget: " + str(self.baseWidgets[parentSelectedItem.text(0)]["SessionWidget"][self.selectedItem.text(0)]))
-                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentSelectedItem.text(0)]["SessionWidget"][self.selectedItem.text(0)])
+                print("SESSION_WIDGET: " + str(self.baseWidgets[parentSelectedItem.text(0)][self.selectedItem.text(0)]["SessionWidget"]))
+                logging.debug("Setting right widget: " + str(self.baseWidgets[parentSelectedItem.text(0)][self.selectedItem.text(0)]["SessionWidget"]))
+                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentSelectedItem.text(0)][self.selectedItem.text(0)]["SessionWidget"])
                 #Check if it's the case that a Annotate was selected
             elif(self.selectedItem.text(0)[0] == "A"):
                 print("PARENT of Parent: " + str(parentOfParent.text(0)))
                 print("PARENT: " + str(parentSelectedItem.text(0)))
-                print("ANNOTATE " + str(self.baseWidgets[parentOfParent.text(0)]["AnnotateWidget"][self.selectedItem.text(0)]))
-                logging.debug("Setting right widget: " + str(self.baseWidgets[parentOfParent.text(0)]["AnnotateWidget"][self.selectedItem.text(0)]))
-                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentOfParent.text(0)]["AnnotateWidget"][self.selectedItem.text(0)])
+                print("ANNOTATE " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["AnnotateWidget"]))
+                logging.debug("Setting right widget: " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["AnnotateWidget"]))
+                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["AnnotateWidget"])
             #Check if it's the case that a Rules was selected
             elif(self.selectedItem.text(0)[0] == "R"):
-                print("RULES " + str(self.baseWidgets[parentOfParent.text(0)]["RulesWidget"][self.selectedItem.text(0)]))
-                logging.debug("Setting right widget: " + str(self.baseWidgets[parentOfParent.text(0)]["RulesWidget"][self.selectedItem.text(0)]))
-                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentOfParent.text(0)]["RulesWidget"][self.selectedItem.text(0)])
+                print("RULES " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["RulesWidget"]))
+                logging.debug("Setting right widget: " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["RulesWidget"]))
+                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["RulesWidget"])
             #Check if it's the case that a Results was selected
             elif(self.selectedItem.text(0)[0] == "X"):
-                print("RESULTS " + str(self.baseWidgets[parentOfParent.text(0)]["ResultsWidget"][self.selectedItem.text(0)]))
-                logging.debug("Setting right widget: " + str(self.baseWidgets[parentOfParent.text(0)]["ResultsWidget"][self.selectedItem.text(0)]))
-                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentOfParent.text(0)]["ResultsWidget"][self.selectedItem.text(0)])
+                print("RESULTS " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["ResultsWidget"]))
+                logging.debug("Setting right widget: " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["ResultsWidget"]))
+                self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["ResultsWidget"])
 
     #RES METHOD
     def setupContextMenus(self):
@@ -220,7 +217,9 @@ class MainGUI(QMainWindow):
                 sessionItem = QtWidgets.QTreeWidgetItem(selectedItem)
                 sessionItem.setText(0,sessionLabel)   
                 self.sessionWidget = SessionWidget(self.sessionName)
-                self.baseWidgets[selectedItemName]["SessionWidget"][sessionLabel] = self.sessionWidget
+
+                self.baseWidgets[selectedItemName][sessionLabel] = {} #project name (Parent of Parent) + session name (parent of children)
+                self.baseWidgets[selectedItemName][sessionLabel]["SessionWidget"] = self.sessionWidget
                 self.basedataStackedWidget.addWidget(self.sessionWidget)
 
                 #create other widget items
@@ -230,8 +229,8 @@ class MainGUI(QMainWindow):
                 annItem.setText(0, annLabel)
                 sessionItem.addChild(annItem)
                 self.annotateWidget = AnnotateWidget()
-                #print("PARENT " + sessionLabel + " AnnotateWidget " + " Ann Label" + annLabel)
-                self.baseWidgets[selectedItemName]["AnnotateWidget"][annLabel] = self.annotateWidget
+
+                self.baseWidgets[selectedItemName][sessionLabel]["AnnotateWidget"] = self.annotateWidget #child
                 self.basedataStackedWidget.addWidget(self.annotateWidget)
 
                 ##RULES
@@ -240,7 +239,8 @@ class MainGUI(QMainWindow):
                 rulesItem.setText(0, rulesLabel)
                 sessionItem.addChild(rulesItem)
                 self.rulesWidget = RulesWidget()
-                self.baseWidgets[selectedItemName]["RulesWidget"][rulesLabel] = self.rulesWidget
+
+                self.baseWidgets[selectedItemName][sessionLabel]["RulesWidget"] = self.rulesWidget
                 self.basedataStackedWidget.addWidget(self.rulesWidget)
 
                 ##RESULTS
@@ -249,7 +249,8 @@ class MainGUI(QMainWindow):
                 resultsItem.setText(0, resultsLabel)
                 sessionItem.addChild(resultsItem)
                 self.resultsWidget = ResultsWidget()
-                self.baseWidgets[selectedItemName]["ResultsWidget"][resultsLabel] = self.resultsWidget
+               
+                self.baseWidgets[selectedItemName][sessionLabel]["ResultsWidget"] = self.resultsWidget
                 self.basedataStackedWidget.addWidget(self.resultsWidget)
 
         logging.debug("on_add_curation_clicked(): Completed")

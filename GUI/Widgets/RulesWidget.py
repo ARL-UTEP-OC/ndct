@@ -8,21 +8,23 @@ class RulesWidget(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, parent=None)
 
         self.outerVertBox = QtWidgets.QVBoxLayout()
-        self.outerVertBox.setObjectName("outerVertBox")
+        self.outerVertBox.setObjectName("outerVertBoxAnnot")
 
-        self.setWindowTitle("RulesWidget")
-        self.setObjectName("RulesWidget")
+        self.setWindowTitle("ResultsWidget")
+        self.setObjectName("ResultsWidget")
 
-        #Label - Session Title
+        #Label - Annotation Title
         self.labelVerBoxSess = QtWidgets.QVBoxLayout()
         self.labelVerBoxSess.setObjectName("labeVerBoxPro")
-        self.sessionLabel = QLabel("RULES")
+        self.rulesLabel = QtWidgets.QLabel("RULES")
         labelFont = QtGui.QFont()
         labelFont.setBold(True)
-        self.sessionLabel.setFont(labelFont)
-        self.sessionLabel.setAlignment(Qt.AlignCenter)
+        self.rulesLabel.setFont(labelFont)
+        self.rulesLabel.setAlignment(Qt.AlignCenter)
+        self.labelVerBoxSess.addWidget(self.rulesLabel)
 
         self.outerVertBox.addLayout(self.labelVerBoxSess)
-        self.setFixedSize(self.labelVerBoxSess.sizeHint())
+
+        self.outerVertBox.addStretch()
 
         self.setLayout(self.outerVertBox)
