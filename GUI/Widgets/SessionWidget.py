@@ -13,6 +13,16 @@ class SessionWidget(QtWidgets.QWidget):
         self.setWindowTitle("SessionWidget")
         self.setObjectName("SessionWidget")
 
+        #Label - Session Title
+        self.labelVerBoxSess = QtWidgets.QVBoxLayout()
+        self.labelVerBoxSess.setObjectName("labeVerBoxPro")
+        self.sessLabel = QtWidgets.QLabel("SESSION")
+        labelFont = QtGui.QFont()
+        labelFont.setBold(True)
+        self.sessLabel.setFont(labelFont)
+        self.sessLabel.setAlignment(Qt.AlignCenter)
+        self.labelVerBoxSess.addWidget(self.sessLabel)
+
         #Display Session Name
         self.nameHorBox = QtWidgets.QHBoxLayout()
         self.nameHorBox.setObjectName("nameHorBox")
@@ -29,6 +39,7 @@ class SessionWidget(QtWidgets.QWidget):
         self.nameHorBox.addWidget(self.nameLineEdit)
 
         #put all the components together
+        self.outerVertBox.addLayout(self.labelVerBoxSess)
         self.outerVertBox.addLayout(self.nameHorBox)
 
         self.outerVertBox.addStretch()

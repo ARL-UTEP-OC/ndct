@@ -68,10 +68,6 @@ class ProjectWidget(QtWidgets.QWidget):
         self.pcapLineEdit.setAlignment(Qt.AlignLeft)    
         self.pcapHorBox.addWidget(self.pcapLineEdit)
 
-        """ self.pcapPathViewButton = QPushButton("View")
-        self.pcapPathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, projectpcap))
-        self.pcapHorBox.addWidget(self.pcapPathViewButton) """
-
         #put all the components together
         self.outerVertBox.addLayout(self.nameHorBox)
         self.outerVertBox.addLayout(self.pathHorBox)
