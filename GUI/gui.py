@@ -259,7 +259,7 @@ class MainGUI(QMainWindow):
                 if os.path.exists(resultsDir) == False:
                     os.mkdir(resultsDir)
                 
-                self.resultsWidget = ResultsWidget(self.project_data_folder, selectedItemName, self.sessionName, resultsDir)
+                self.resultsWidget = ResultsWidget(self.project_data_folder, selectedItemName, self.sessionName, resultsDir, self.val)
                
                 self.baseWidgets[selectedItemName][sessionLabel]["ResultsWidget"] = self.resultsWidget
                 self.basedataStackedWidget.addWidget(self.resultsWidget)

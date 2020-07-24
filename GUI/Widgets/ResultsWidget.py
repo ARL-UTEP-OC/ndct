@@ -1,14 +1,22 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QLabel, QPushButton, QTextEdit
+from PyQt5.QtWidgets import QLabel, QPushButton, QTextEdit, QMessageBox
 from PyQt5.QtCore import Qt
 import os
 
+import logging
+
 from ConfigurationManager.FileExplorerRunner import FileExplorerRunner
+from GUI.Threading.BatchThread import BatchThread
+from ConfigurationManager.ConfigurationManager import ConfigurationManager
+from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 
 class ResultsWidget(QtWidgets.QWidget):
 
-    def __init__(self, projectfolder, projectName, sessionLabel, resultsDir):
+    def __init__(self, projectfolder, projectName, sessionLabel, resultsDir, val):
         QtWidgets.QWidget.__init__(self, parent=None)
+
+        self.resultsDir = resultsDir
+        self.val = val
 
         self.outerVertBox = QtWidgets.QVBoxLayout()
         self.outerVertBox.setObjectName("outerVertBoxAnnot")
@@ -30,9 +38,7 @@ class ResultsWidget(QtWidgets.QWidget):
         projectpath = os.path.join(projectfolder, projectName)
         projectPCAPFolder = os.path.join(projectpath, "PCAP/")
         sessionPCAPFolder = os.path.join(projectPCAPFolder, sessionLabel)
-        sessionPCAP = os.path.join(sessionPCAPFolder, "NeedsAnnotation.pcapng")
-        sessionRulesDirName = sessionLabel + "Rules"
-        sessionRulesDirName = os.path.join(sessionPCAPFolder, sessionRulesDirName)
+        self.sessionPCAP = os.path.join(sessionPCAPFolder, "NeedsAnnotation.pcapng")
 
         #Path to where the rules stored
         self.ruleHorBox = QtWidgets.QHBoxLayout()
@@ -46,7 +52,7 @@ class ResultsWidget(QtWidgets.QWidget):
         self.ruleLineEdit.setAcceptDrops(False)
         self.ruleLineEdit.setReadOnly(True)
         self.ruleLineEdit.setObjectName("ruleLineEdit")
-        self.ruleLineEdit.setText(sessionRulesDirName)
+        self.ruleLineEdit.setText(self.resultsDir)
         self.ruleLineEdit.setAlignment(Qt.AlignLeft)
         self.ruleHorBox.addWidget(self.ruleLineEdit)
 
@@ -62,7 +68,7 @@ class ResultsWidget(QtWidgets.QWidget):
         self.pcapLineEdit2.setAcceptDrops(False)
         self.pcapLineEdit2.setReadOnly(True)
         self.pcapLineEdit2.setObjectName("pcapLineEdit2") 
-        self.pcapLineEdit2.setText(sessionPCAP)
+        self.pcapLineEdit2.setText(self.sessionPCAP)
         self.pcapLineEdit2.setAlignment(Qt.AlignLeft)    
         self.pcapHorBox2.addWidget(self.pcapLineEdit2)
 
@@ -90,7 +96,7 @@ class ResultsWidget(QtWidgets.QWidget):
         self.alertButtonHorBox = QtWidgets.QHBoxLayout()
         self.alertButtonHorBox.setObjectName("alertButtonHorBox")
         self.alertButton = QPushButton("Generate Alerts")
-        #self.alertButton.clicked.connect(lambda x: self.on_alert_button_clicked(x, sessionPCAP))
+        self.alertButton.clicked.connect(self.on_alert_button_clicked)
         self.alertButtonHorBox.setAlignment(Qt.AlignRight)
         self.alertButtonHorBox.addWidget(self.alertButton)
 
@@ -109,3 +115,44 @@ class ResultsWidget(QtWidgets.QWidget):
             folder_path = folder_path.toPlainText()
         self.file_explore_thread = FileExplorerRunner(folder_location=folder_path)
         self.file_explore_thread.start()
+
+    def on_alert_button_clicked(self):
+        logging.debug('on_analyze_out_start_button_clicked(): Instantiated')
+        
+        self.batch_thread = BatchThread()
+        self.batch_thread.progress_signal.connect(self.update_progress_bar)
+        self.batch_thread.completion_signal.connect(self.analyze_button_batch_completed)
+        #run_suricata_with_rules(self, suricata_executable_filename=None, suricata_config_filename=None, suricata_alert_path=None, suricata_rules_filename=None, validate_pcap_filename=None):
+        alertOutPath = os.path.join(self.resultsDir, ConfigurationManager.STRUCTURE_ALERT_GEN_PATH)
+        self.batch_thread.add_function( self.val.run_suricata_with_rules, None, None, alertOutPath, self.resultsDir, self.sessionPCAP)
+        #self.batch_thread.add_function( self.val.generate_score_report)
+
+        self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
+        self.batch_thread.start()
+        self.progress_dialog_overall.show()
+
+        logging.debug('on_analyze_out_start_button_clicked(): Complete')
+
+    def analyze_button_batch_completed(self):
+        logging.debug('thread_finish(): Instantiated')
+
+        self.progress_dialog_overall.update_progress()
+        self.progress_dialog_overall.hide()
+
+        alertOutFile = os.path.join(self.resultsDir, ConfigurationManager.STRUCTURE_ALERT_GEN_FILE)
+        if os.path.exists(alertOutFile) == False or os.stat(alertOutFile).st_size < 10:
+            QMessageBox.about(self, "IDS Alerts", "No alerts generated")
+        else:
+            res = QMessageBox.question(self,
+                                            "Alerts written.\r\n",
+                                            "Open File?",
+                                            QMessageBox.Yes | QMessageBox.No)
+            
+            if res == QMessageBox.Yes:
+                logging.debug("analyze_button_batch_completed(): Opening Alerts File")
+                self.on_view_button_clicked(None, alertOutFile)
+    
+    def update_progress_bar(self):
+        logging.debug('update_progress_bar(): Instantiated')
+        self.progress_dialog_overall.update_progress()
+        logging.debug('update_progress_bar(): Complete')
