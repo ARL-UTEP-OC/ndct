@@ -24,8 +24,12 @@ class Validator():
 
         logging.debug('CommentManager(): Complete')
 
-    def extract_rules(self):
+    def extract_rules(self, commented_json_filename=None):
         logging.debug('extract_json(): Instantiated')
+        self.commented_json_filename = commented_json_filename
+        if self.commented_json_filename == None:
+            #read from config file
+            self.commented_json_filename = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "COMMENTS_JSON_FILENAME")
         self.rule_list = self.se.json_to_rules(self.commented_json_filename)
         logging.debug('extract_json(): Completed')
 
@@ -97,8 +101,10 @@ class Validator():
         self.cmd+= " -k none"
 
         if sys.platform == "linux" or sys.platform == "linux2":
+            logging.debug('run_suricata_with_rules(): Running Command: ' + str(self.cmd))
             output = subprocess.check_output(shlex.split(self.cmd))
         else: 
+            logging.debug('run_suricata_with_rules(): Running Command: ' + str(self.cmd))
             output = subprocess.check_output(self.cmd)
         logging.debug('run_suricata_with_rules(): Complete')
 
@@ -131,5 +137,3 @@ class Validator():
             self.oscore_file = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SCORE_REPORT_FILENAME")
         self.scorer.write_results_to_file(self.oscore_file, self.score_data)
         logging.debug('write_score_file(): Completed')
-
-    

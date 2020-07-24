@@ -146,10 +146,7 @@ class RulesWidget(QtWidgets.QWidget):
 
         self.progress_dialog_overall.update_progress()
         self.progress_dialog_overall.hide()
-        rules_filename = os.path.join(self.rulesDir, ConfigurationManager.STRUCTURE_RULES_GEN_FILE)
-        self.genRulesInEdit.setText(rules_filename)
-        self.genRulesInViewButton.setEnabled(True)
-        self.tabWidget.setCurrentIndex(3)
+        
         logging.debug('thread_finish(): Completed')
 
     def update_progress_bar(self):
