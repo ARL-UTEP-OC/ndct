@@ -235,7 +235,14 @@ class MainGUI(QMainWindow):
                 rulesLabel = "R: " + "Rules"
                 rulesItem.setText(0, rulesLabel)
                 sessionItem.addChild(rulesItem)
-                self.rulesWidget = RulesWidget(self.project_data_folder, selectedItemName, self.sessionName)
+                #add the corresponding directory -- if it is already created, skip
+                rulesDir = os.path.join(self.project_data_folder, selectedItemName)
+                rulesDir = os.path.join(rulesDir, "RULES")
+    
+                if os.path.exists(rulesDir) == False:
+                    os.mkdir(rulesDir)
+
+                self.rulesWidget = RulesWidget(self.project_data_folder, selectedItemName, self.sessionName, rulesDir, self.comment_mgr, self.val)
 
                 self.baseWidgets[selectedItemName][sessionLabel]["RulesWidget"] = self.rulesWidget
                 self.basedataStackedWidget.addWidget(self.rulesWidget)
@@ -245,7 +252,14 @@ class MainGUI(QMainWindow):
                 resultsLabel = "X: " + "Results"
                 resultsItem.setText(0, resultsLabel)
                 sessionItem.addChild(resultsItem)
-                self.resultsWidget = ResultsWidget()
+                #add the corresponding directory -- if it is already created, skip
+                resultsDir = os.path.join(self.project_data_folder, selectedItemName)
+                resultsDir = os.path.join(resultsDir, "IDS-ALERTS")
+    
+                if os.path.exists(resultsDir) == False:
+                    os.mkdir(resultsDir)
+                
+                self.resultsWidget = ResultsWidget(self.project_data_folder, selectedItemName, self.sessionName, resultsDir)
                
                 self.baseWidgets[selectedItemName][sessionLabel]["ResultsWidget"] = self.resultsWidget
                 self.basedataStackedWidget.addWidget(self.resultsWidget)
