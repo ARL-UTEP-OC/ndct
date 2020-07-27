@@ -70,7 +70,7 @@ class Validator():
         if self.suricata_alert_path == None:
             #read from config file
             self.suricata_alert_path = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SURICATA_ALERT_PATH")
-        try:
+        """ try:
             #if path exists, remove it and then recreate it
             if os.path.exists(self.suricata_alert_path) == True:
                 shutil.rmtree(self.suricata_alert_path, ignore_errors=True)
@@ -79,7 +79,7 @@ class Validator():
             exc_type, exc_value, exc_traceback = sys.exc_info()
             logging.error("write_rules_to_file(): An error occured")
             traceback.print_exception(exc_type, exc_value, exc_traceback)
-            exit()
+            exit() """
 
         self.suricata_rules_filename = suricata_rules_filename
         if self.suricata_rules_filename == None:

@@ -40,6 +40,16 @@ class ResultsWidget(QtWidgets.QWidget):
         sessionPCAPFolder = os.path.join(projectPCAPFolder, sessionLabel)
         self.sessionPCAP = os.path.join(sessionPCAPFolder, "NeedsAnnotation.pcapng")
 
+        #Create dir for session alerts
+        os.chdir(resultsDir)
+        os.mkdir(sessionLabel)
+        self.sessionAlertsDir = os.path.join(resultsDir, sessionLabel)
+
+        #get session rules
+        self.sessionRulesDir = os.path.join(projectpath, "RULES")
+        self.sessionRulesDir = os.path.join(self.sessionRulesDir, sessionLabel)
+        self.rules_filename = os.path.join(self.sessionRulesDir, ConfigurationManager.STRUCTURE_RULES_GEN_FILE)
+
         #Path to where the rules stored
         self.ruleHorBox = QtWidgets.QHBoxLayout()
         self.ruleHorBox.setObjectName("ruleHorBox")
@@ -52,7 +62,7 @@ class ResultsWidget(QtWidgets.QWidget):
         self.ruleLineEdit.setAcceptDrops(False)
         self.ruleLineEdit.setReadOnly(True)
         self.ruleLineEdit.setObjectName("ruleLineEdit")
-        self.ruleLineEdit.setText(self.resultsDir)
+        self.ruleLineEdit.setText(self.sessionRulesDir)
         self.ruleLineEdit.setAlignment(Qt.AlignLeft)
         self.ruleHorBox.addWidget(self.ruleLineEdit)
 
@@ -122,10 +132,9 @@ class ResultsWidget(QtWidgets.QWidget):
         self.batch_thread = BatchThread()
         self.batch_thread.progress_signal.connect(self.update_progress_bar)
         self.batch_thread.completion_signal.connect(self.analyze_button_batch_completed)
-        #run_suricata_with_rules(self, suricata_executable_filename=None, suricata_config_filename=None, suricata_alert_path=None, suricata_rules_filename=None, validate_pcap_filename=None):
-        alertOutPath = os.path.join(self.resultsDir, ConfigurationManager.STRUCTURE_ALERT_GEN_PATH)
-        self.batch_thread.add_function( self.val.run_suricata_with_rules, None, None, alertOutPath, self.resultsDir, self.sessionPCAP)
-        #self.batch_thread.add_function( self.val.generate_score_report)
+        alertOutPath = os.path.join(self.sessionAlertsDir)
+        suricata_config_filename = "/home/kali/eceld-netsys/suricata-config/suricata.yaml"
+        self.batch_thread.add_function( self.val.run_suricata_with_rules, None, suricata_config_filename, alertOutPath, self.rules_filename, self.sessionPCAP)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()

@@ -43,6 +43,11 @@ class RulesWidget(QtWidgets.QWidget):
         sessionPCAPFolder = os.path.join(projectPCAPFolder, sessionLabel)
         self.sessionPCAP = os.path.join(sessionPCAPFolder, "NeedsAnnotation.pcapng")
 
+        #create a directory for session rules
+        os.chdir(rulesDir)
+        os.mkdir(sessionLabel)
+        self.sessionRulesDir = os.path.join(rulesDir, sessionLabel)
+
         #Project PCAP
         self.pcapHorBox = QtWidgets.QHBoxLayout()
         self.pcapHorBox.setObjectName("pcapHorBox")
@@ -95,12 +100,12 @@ class RulesWidget(QtWidgets.QWidget):
         self.ruleLineEdit.setAcceptDrops(False)
         self.ruleLineEdit.setReadOnly(True)
         self.ruleLineEdit.setObjectName("ruleLineEdit")
-        self.ruleLineEdit.setText(rulesDir)
+        self.ruleLineEdit.setText(self.sessionRulesDir)
         self.ruleLineEdit.setAlignment(Qt.AlignLeft)
         self.ruleHorBox.addWidget(self.ruleLineEdit)
 
         self.rulePathViewButton = QPushButton("View")
-        self.rulePathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, rulesDir))
+        self.rulePathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.sessionRulesDir))
         self.ruleHorBox.addWidget(self.rulePathViewButton)
 
         #put everything together
@@ -128,11 +133,11 @@ class RulesWidget(QtWidgets.QWidget):
         self.batch_thread.completion_signal.connect(self.genrules_button_batch_completed)
 
         self.batch_thread.add_function( self.comment_mgr.extract_json, self.sessionPCAP)
-        comment_filename = os.path.join(self.rulesDir, ConfigurationManager.STRUCTURE_JSON_COMMENTS)
+        comment_filename = os.path.join(self.sessionRulesDir, ConfigurationManager.STRUCTURE_JSON_COMMENTS)
         self.batch_thread.add_function( self.comment_mgr.write_comment_json_to_file, comment_filename)
 
         self.batch_thread.add_function( self.val.extract_rules, comment_filename)
-        rules_filename = os.path.join(self.rulesDir, ConfigurationManager.STRUCTURE_RULES_GEN_FILE)
+        rules_filename = os.path.join(self.sessionRulesDir, ConfigurationManager.STRUCTURE_RULES_GEN_FILE)
         self.batch_thread.add_function( self.val.write_rules_to_file, rules_filename)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
@@ -146,7 +151,7 @@ class RulesWidget(QtWidgets.QWidget):
 
         self.progress_dialog_overall.update_progress()
         self.progress_dialog_overall.hide()
-        
+
         logging.debug('thread_finish(): Completed')
 
     def update_progress_bar(self):
