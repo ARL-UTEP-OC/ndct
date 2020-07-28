@@ -5,6 +5,7 @@ import shutil
 from PyQt5 import QtGui
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import *
+from PyQt5 import Qt
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, 
                 QHBoxLayout, QLabel, QPushButton, QLineEdit, QProgressBar, QDoubleSpinBox, 
@@ -26,6 +27,8 @@ from GUI.Widgets.ResultsWidget import ResultsWidget
 from GUI.Threading.BatchThread import BatchThread
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 from GUI.Dialogs.NewProjectDialog import NewProjectDialog
+from GUI.listProjectSessions import ListNode
+from GUI.listProjectSessions import DoubleLinkedList
 
 class MainGUI(QMainWindow):
 
@@ -38,6 +41,8 @@ class MainGUI(QMainWindow):
         self.logman = logman
         self.comment_mgr = comment_mgr
         self.val = val
+
+        self.double = DoubleLinkedList()
 
         #shared data between widgets
         self.configname = ''
@@ -122,6 +127,7 @@ class MainGUI(QMainWindow):
 
         #load any saved projects
         self.load_saved()
+        self.load_sessions()
         self.at_start = False
 
         logging.debug("MainWindow(): Complete")
@@ -201,14 +207,13 @@ class MainGUI(QMainWindow):
             'Enter new session name \r\n(non alphanumeric characters will be removed)')
         if ok:
             self.sessionName = ''.join(e for e in self.sessionName if e.isalnum())
-            if self.sessionName in self.existingSessionNames:
+            add_session = self.add_session_list(selectedItemName, self.sessionName)
+            if add_session == True:
                 QMessageBox.warning(self,
                                         "Session Name Exists",
                                         "The session name specified already exists",
                                         QMessageBox.Ok)    
             else:
-                #if all good, add session name to list
-                self.existingSessionNames += [self.sessionName]
                 sessionLabel = "S: " + self.sessionName
                 #create tree widget item
                 sessionItem = QtWidgets.QTreeWidgetItem(selectedItem)
@@ -225,7 +230,7 @@ class MainGUI(QMainWindow):
                 annLabel = "A: " + "Annotate"
                 annItem.setText(0, annLabel)
                 sessionItem.addChild(annItem)
-                self.annotateWidget = AnnotateWidget(self.project_data_folder, selectedItemName, self.sessionName) #send project name for the corresponding directory
+                self.annotateWidget = AnnotateWidget(self.project_data_folder, selectedItemName, self.sessionName, self.comment_mgr) #send project name for the corresponding directory
 
                 self.baseWidgets[selectedItemName][sessionLabel]["AnnotateWidget"] = self.annotateWidget #child
                 self.basedataStackedWidget.addWidget(self.annotateWidget)
@@ -445,7 +450,115 @@ class MainGUI(QMainWindow):
         
         #once everything has been added, populate widget
         self.load_project_widget()
+
+    def load_sessions(self):
+        print("IN LOAD SESSIONS")
+        for name in self.existingconfignames:
+            project_path = os.path.join(self.project_data_folder, name)
+            print("project path: " + project_path)
+            sessions_rules_dir = os.path.join(project_path, "RULES")
+            print("RULES Path: " + sessions_rules_dir)
+            if os.path.exists(sessions_rules_dir) == True:
+                self.traverse_sessions(name, sessions_rules_dir)
+
+    def traverse_sessions(self, project_name, path):
+        #if RULES dir exists in project folder, then sessions exists
+        print("IN if statement")
+        i = 0
+        for (dirName, subdirlist, filelist) in os.walk(path):
+            folders = ', '.join(subdirlist)
+            folder = folders.strip().split(", ")
+            num_folders_left = len(folder)
+            print("Number of folders: " + str(num_folders_left))
+
+            if folder[i] == '':
+                break
+                        
+            while(num_folders_left != 0):
+                print("in while loop")
+                sessionName = folder[i]
+                print("Folder/Session Name: " + sessionName)
+                
+                if self.add_session_list(project_name, sessionName) == False:
+                    self.add_session_widgets(project_name, sessionName)
+
+                num_folders_left -= 1
+                i += 1
+
+                print("Number of folders after while: " + str(num_folders_left))
+                    
+            if(num_folders_left == 0):
+                break
+
+            del filelist
+            del dirName
+
+    def add_session_widgets(self, project_name, sessionName):
+        print("IN ADD SESSION WIDGETS")
+        sessionLabel = "S: " + sessionName
+        #create tree widget item
+        selectedItem = self.projectTree.findItems(project_name, Qt.Qt.MatchContains)
+        sessionItem = QtWidgets.QTreeWidgetItem(selectedItem[0])
+        sessionItem.setText(0,sessionLabel)   
+        self.sessionWidget = SessionWidget(sessionName)
+
+        for name in self.existingconfignames:
+            if name == project_name:
+                print(name + " exists? - true")
+        
+        self.baseWidgets[project_name][sessionLabel] = {} #project name (Parent of Parent) + session name (parent of children)
+        self.baseWidgets[project_name][sessionLabel]["SessionWidget"] = self.sessionWidget
+        self.basedataStackedWidget.addWidget(self.sessionWidget)
+
+        #create other widget items
+        ##ANNOTATE
+        annItem = QtWidgets.QTreeWidgetItem()
+        annLabel = "A: " + "Annotate"
+        annItem.setText(0, annLabel)
+        sessionItem.addChild(annItem)
+        self.annotateWidget = AnnotateWidget(self.project_data_folder, project_name, sessionName, self.comment_mgr) #send project name for the corresponding directory
+
+        self.baseWidgets[project_name][sessionLabel]["AnnotateWidget"] = self.annotateWidget #child
+        self.basedataStackedWidget.addWidget(self.annotateWidget)
+
+        ##RULES
+        rulesItem = QtWidgets.QTreeWidgetItem()
+        rulesLabel = "R: " + "Rules"
+        rulesItem.setText(0, rulesLabel)
+        sessionItem.addChild(rulesItem)
+        #add the corresponding directory -- if it is already created, skip
+        rulesDir = os.path.join(self.project_data_folder, project_name)
+        rulesDir = os.path.join(rulesDir, "RULES")
+    
+        self.rulesWidget = RulesWidget(self.project_data_folder, project_name, sessionName, rulesDir, self.comment_mgr, self.val)
+
+        self.baseWidgets[project_name][sessionLabel]["RulesWidget"] = self.rulesWidget
+        self.basedataStackedWidget.addWidget(self.rulesWidget)
+
+        ##RESULTS
+        resultsItem = QtWidgets.QTreeWidgetItem()
+        resultsLabel = "X: " + "Results"
+        resultsItem.setText(0, resultsLabel)
+        sessionItem.addChild(resultsItem)
+        #add the corresponding directory -- if it is already created, skip
+        resultsDir = os.path.join(self.project_data_folder, project_name)
+        resultsDir = os.path.join(resultsDir, "IDS-ALERTS")
+                
+        self.resultsWidget = ResultsWidget(self.project_data_folder, project_name, sessionName, resultsDir, self.val)
+               
+        self.baseWidgets[project_name][sessionLabel]["ResultsWidget"] = self.resultsWidget
+        self.basedataStackedWidget.addWidget(self.resultsWidget)
             
+    def add_session_list(self, project_name, project_session):
+        project_name = ListNode(project_session)
+
+        if self.double.unordered_search(project_name) != '':
+            #if session doesnt exist, add to linked list
+            self.double.add_list_item(project_name)
+            return False
+        
+        return True
+
     def update_progress_bar(self):
         logging.debug('update_progress_bar(): Instantiated')
         self.progress_dialog_overall.update_progress()

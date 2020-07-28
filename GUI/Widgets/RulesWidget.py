@@ -45,8 +45,12 @@ class RulesWidget(QtWidgets.QWidget):
 
         #create a directory for session rules
         os.chdir(rulesDir)
-        os.mkdir(sessionLabel)
         self.sessionRulesDir = os.path.join(rulesDir, sessionLabel)
+
+        #if corresponding session dir doesnt exist, create dir
+        if os.path.exists(self.sessionRulesDir) == False:
+            os.mkdir(sessionLabel)
+        
 
         #Project PCAP
         self.pcapHorBox = QtWidgets.QHBoxLayout()

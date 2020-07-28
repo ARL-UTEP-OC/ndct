@@ -3,13 +3,17 @@ from PyQt5.QtWidgets import QLabel, QPushButton, QTextEdit
 from PyQt5.QtCore import Qt
 import os
 from shutil import copy2
+import logging
 
-from ConfigurationManager.FileExplorerRunner import FileExplorerRunner
+from ConfigurationManager.FileExplorerRunner import ConfigurationManager
+from GUI.Threading.BatchThread import BatchThread
 
 class AnnotateWidget(QtWidgets.QWidget):
 
-    def __init__(self, projectfolder, projectName, sessionLabel):
+    def __init__(self, projectfolder, projectName, sessionLabel, comment_mgr):
         QtWidgets.QWidget.__init__(self, parent=None)
+
+        self.comment_mgr = comment_mgr
 
         self.outerVertBox = QtWidgets.QVBoxLayout()
         self.outerVertBox.setObjectName("outerVertBoxAnnot")
@@ -43,8 +47,11 @@ class AnnotateWidget(QtWidgets.QWidget):
 
         #make a copy of the pcap and save it to a new folder based on session
         os.chdir(projectPCAPFolder)
-        os.mkdir(sessionLabel)
         sessionFolder = os.path.join(projectPCAPFolder,sessionLabel)
+
+        if os.path.exists(sessionFolder) == False:
+            os.mkdir(sessionLabel)
+
         copy2(projectpcap, sessionFolder)
         sessionPCAP = os.path.join(sessionFolder, "AnnotatedPCAP.pcapng")
         os.chdir(sessionFolder)
@@ -79,7 +86,7 @@ class AnnotateWidget(QtWidgets.QWidget):
         self.annButtonHorBox = QtWidgets.QHBoxLayout()
         self.annButtonHorBox.setObjectName("annButtonHorBox")
         self.annotationButton = QPushButton("Annotate PCAP")
-        self.annotationButton.clicked.connect(lambda x: self.on_annotate_button_clicked(x, sessionPCAP))
+        self.annotationButton.clicked.connect(lambda x: self.on_annotate_button_clicked(x, sessionPCAP, projectpath))
         self.annButtonHorBox.setAlignment(Qt.AlignRight)
         self.annButtonHorBox.addWidget(self.annotationButton)
 
@@ -92,10 +99,18 @@ class AnnotateWidget(QtWidgets.QWidget):
 
         self.setLayout(self.outerVertBox)
 
-    def on_annotate_button_clicked(self, x, folder_path=None):
-        if isinstance(folder_path, QTextEdit):
-            folder_path = folder_path.toPlainText()
-
-        self.file_explore_thread = FileExplorerRunner(folder_location=folder_path)
-        self.file_explore_thread.start()
+    def on_annotate_button_clicked(self, x, session_pcap=None, project_path=None):
+        logging.debug('on_select_annotate_file_button_clicked(): Instantiated')
+        #open wireshark using pcap and provide base so that the dissectors can be found
+        user_pcap_filename = session_pcap
+        pcapBasepath = os.path.dirname(os.path.dirname(session_pcap))
+        print("PCAP BASE PATH: " + pcapBasepath)
+        dissectors_path = os.path.join(project_path, ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
+        print("DISSECTOR PATH: " + dissectors_path)
+        if os.path.exists(dissectors_path):
+            self.comment_mgr.run_wireshark_with_dissectors(project_path, user_pcap_filename)
+        else:
+            self.comment_mgr.run_wireshark_with_dissectors([], session_pcap)
+        
+        logging.debug('on_select_annotate_file_button_clicked(): Complete')
 

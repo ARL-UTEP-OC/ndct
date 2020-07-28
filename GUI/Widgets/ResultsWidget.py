@@ -42,8 +42,10 @@ class ResultsWidget(QtWidgets.QWidget):
 
         #Create dir for session alerts
         os.chdir(resultsDir)
-        os.mkdir(sessionLabel)
         self.sessionAlertsDir = os.path.join(resultsDir, sessionLabel)
+
+        if os.path.exists(self.sessionAlertsDir) == False:
+            os.mkdir(sessionLabel)
 
         #get session rules
         self.sessionRulesDir = os.path.join(projectpath, "RULES")
