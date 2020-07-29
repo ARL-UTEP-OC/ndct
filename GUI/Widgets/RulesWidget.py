@@ -51,6 +51,9 @@ class RulesWidget(QtWidgets.QWidget):
         if os.path.exists(self.sessionRulesDir) == False:
             os.mkdir(sessionLabel)
         
+        #change dir back
+        og_path = os.path.dirname(projectfolder)
+        os.chdir(og_path)
 
         #Project PCAP
         self.pcapHorBox = QtWidgets.QHBoxLayout()

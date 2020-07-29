@@ -28,7 +28,8 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.projectName = ""
         self.cancel_pressed = False
         self.saved_pressed = False
-        self.project_data_folder = "/home/kali/eceld-netsys/ProjectData"
+        working_dir = os.getcwd()
+        self.project_data_folder = os.path.join(working_dir, "ProjectData")
 
         quit = QAction("Quit", self)
         quit.triggered.connect(self.closeEvent)

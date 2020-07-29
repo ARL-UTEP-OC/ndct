@@ -47,6 +47,10 @@ class ResultsWidget(QtWidgets.QWidget):
         if os.path.exists(self.sessionAlertsDir) == False:
             os.mkdir(sessionLabel)
 
+        #change dir again
+        og_path = os.path.dirname(projectfolder)
+        os.chdir(og_path)
+
         #get session rules
         self.sessionRulesDir = os.path.join(projectpath, "RULES")
         self.sessionRulesDir = os.path.join(self.sessionRulesDir, sessionLabel)
@@ -135,7 +139,7 @@ class ResultsWidget(QtWidgets.QWidget):
         self.batch_thread.progress_signal.connect(self.update_progress_bar)
         self.batch_thread.completion_signal.connect(self.analyze_button_batch_completed)
         alertOutPath = os.path.join(self.sessionAlertsDir)
-        suricata_config_filename = "/home/kali/eceld-netsys/suricata-config/suricata.yaml"
+        suricata_config_filename = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SURICATA_CONFIG_FILENAME")
         self.batch_thread.add_function( self.val.run_suricata_with_rules, None, suricata_config_filename, alertOutPath, self.rules_filename, self.sessionPCAP)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())

@@ -50,11 +50,14 @@ class MainGUI(QMainWindow):
         self.existingconfignames = []
         self.annotatedPCAP = ''
         self.sessionName = ''
-        self.existingSessionNames = []
         self.logEnabled = ''
         self.closeConfirmed = ''
         self.newProject_pressed = False
-        self.project_data_folder = "/home/kali/eceld-netsys/ProjectData"
+
+        #get project folder
+        working_dir = os.getcwd()
+        self.project_data_folder = os.path.join(working_dir, "ProjectData")
+        
         self.folder_chosen = ''
         self.at_start = True
 
@@ -452,40 +455,31 @@ class MainGUI(QMainWindow):
         self.load_project_widget()
 
     def load_sessions(self):
-        print("IN LOAD SESSIONS")
         for name in self.existingconfignames:
             project_path = os.path.join(self.project_data_folder, name)
-            print("project path: " + project_path)
             sessions_rules_dir = os.path.join(project_path, "RULES")
-            print("RULES Path: " + sessions_rules_dir)
             if os.path.exists(sessions_rules_dir) == True:
                 self.traverse_sessions(name, sessions_rules_dir)
 
     def traverse_sessions(self, project_name, path):
         #if RULES dir exists in project folder, then sessions exists
-        print("IN if statement")
         i = 0
         for (dirName, subdirlist, filelist) in os.walk(path):
             folders = ', '.join(subdirlist)
             folder = folders.strip().split(", ")
             num_folders_left = len(folder)
-            print("Number of folders: " + str(num_folders_left))
 
             if folder[i] == '':
                 break
                         
             while(num_folders_left != 0):
-                print("in while loop")
                 sessionName = folder[i]
-                print("Folder/Session Name: " + sessionName)
                 
                 if self.add_session_list(project_name, sessionName) == False:
                     self.add_session_widgets(project_name, sessionName)
 
                 num_folders_left -= 1
                 i += 1
-
-                print("Number of folders after while: " + str(num_folders_left))
                     
             if(num_folders_left == 0):
                 break
@@ -494,17 +488,12 @@ class MainGUI(QMainWindow):
             del dirName
 
     def add_session_widgets(self, project_name, sessionName):
-        print("IN ADD SESSION WIDGETS")
         sessionLabel = "S: " + sessionName
         #create tree widget item
         selectedItem = self.projectTree.findItems(project_name, Qt.Qt.MatchContains)
         sessionItem = QtWidgets.QTreeWidgetItem(selectedItem[0])
         sessionItem.setText(0,sessionLabel)   
         self.sessionWidget = SessionWidget(sessionName)
-
-        for name in self.existingconfignames:
-            if name == project_name:
-                print(name + " exists? - true")
         
         self.baseWidgets[project_name][sessionLabel] = {} #project name (Parent of Parent) + session name (parent of children)
         self.baseWidgets[project_name][sessionLabel]["SessionWidget"] = self.sessionWidget
