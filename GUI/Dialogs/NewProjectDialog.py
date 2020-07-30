@@ -1,6 +1,7 @@
-from PyQt5.QtWidgets import QFileDialog, QWidget, QPushButton, QTextEdit, QMessageBox, QSizePolicy, QAction, qApp, QLabel
+from PyQt5.QtWidgets import QFileDialog, QWidget, QPushButton, QTextEdit, QMessageBox, QSizePolicy, QAction, qApp, QLabel, QLineEdit
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
+from PyQt5.Qt import QKeyEvent, QTextCursor
 import logging
 import os
 import shutil
@@ -55,7 +56,8 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.nameLabel.setObjectName("nameLabel")
         self.nameLabel.setText("Type in New Project Name:")
         self.nameVerBoxPro.addWidget(self.nameLabel)
-        self.configname = QTextEdit()
+        self.configname = QLineEdit()
+        self.configname.returnPressed.connect(self.on_log_start_button_clicked)
         ###### Fixed Height for project name text box
         self.configname.setFixedHeight(27)
 
@@ -103,7 +105,7 @@ class NewProjectDialog(QtWidgets.QWidget):
     def on_log_start_button_clicked(self):
         logging.debug('on_log_start_button_clicked(): Instantiated')
         #Remove any special characters or spaces:
-        self.projectName = self.configname.toPlainText()
+        self.projectName = self.configname.text()
         self.projectName = re.sub('\W+', '', self.projectName)
         
         #check if name has been filed out in order to create a project folder
@@ -255,7 +257,7 @@ class NewProjectDialog(QtWidgets.QWidget):
                 self.delete_data()
                 self.close()
             
-            elif self.configname.toPlainText() != '' and self.saved_pressed == False:
+            elif self.configname.text() != '' and self.saved_pressed == False:
                 delete_temp = QMessageBox.question(self,
                                                  "Delete Temp Data",
                                                  "Closing... Discard data for this unsaved project?",

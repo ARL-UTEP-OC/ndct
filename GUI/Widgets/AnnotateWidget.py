@@ -103,10 +103,8 @@ class AnnotateWidget(QtWidgets.QWidget):
         logging.debug('on_select_annotate_file_button_clicked(): Instantiated')
         #open wireshark using pcap and provide base so that the dissectors can be found
         user_pcap_filename = session_pcap
-        pcapBasepath = os.path.dirname(os.path.dirname(session_pcap))
-        print("PCAP BASE PATH: " + pcapBasepath)
+        #pcapBasepath = os.path.dirname(os.path.dirname(session_pcap))
         dissectors_path = os.path.join(project_path, ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
-        print("DISSECTOR PATH: " + dissectors_path)
         if os.path.exists(dissectors_path):
             self.comment_mgr.run_wireshark_with_dissectors(project_path, user_pcap_filename)
         else:

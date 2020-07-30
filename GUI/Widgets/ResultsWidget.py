@@ -77,7 +77,7 @@ class ResultsWidget(QtWidgets.QWidget):
         self.pcapHorBox2.setObjectName("pcapHorBox2")
         self.pcapLabel2 = QtWidgets.QLabel()
         self.pcapLabel2.setObjectName("pcapLabel2")
-        self.pcapLabel2.setText("Annotated PCAP:  ")
+        self.pcapLabel2.setText("Suspect PCAP:  ")
         self.pcapHorBox2.addWidget(self.pcapLabel2)
 
         self.pcapLineEdit2 = QtWidgets.QLineEdit()
@@ -100,12 +100,12 @@ class ResultsWidget(QtWidgets.QWidget):
         self.alertLineEdit.setAcceptDrops(False)
         self.alertLineEdit.setReadOnly(True)
         self.alertLineEdit.setObjectName("alertLineEdit")
-        self.alertLineEdit.setText(resultsDir)
+        self.alertLineEdit.setText(self.sessionAlertsDir)
         self.alertLineEdit.setAlignment(Qt.AlignLeft)
         self.alertHorBox.addWidget(self.alertLineEdit)
 
         self.alertPathViewButton = QPushButton("View")
-        self.alertPathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, resultsDir))
+        self.alertPathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.sessionAlertsDir))
         self.alertHorBox.addWidget(self.alertPathViewButton)
 
         #Generate Alerts Button
@@ -153,8 +153,8 @@ class ResultsWidget(QtWidgets.QWidget):
 
         self.progress_dialog_overall.update_progress()
         self.progress_dialog_overall.hide()
-
-        alertOutFile = os.path.join(self.resultsDir, ConfigurationManager.STRUCTURE_ALERT_GEN_FILE)
+        alertOutFile = os.path.join(self.sessionAlertsDir, ConfigurationManager.STRUCTURE_ALERT_GEN_FILE)
+        print("AlERT OUT FILE: " + alertOutFile)
         if os.path.exists(alertOutFile) == False or os.stat(alertOutFile).st_size < 10:
             QMessageBox.about(self, "IDS Alerts", "No alerts generated")
         else:
