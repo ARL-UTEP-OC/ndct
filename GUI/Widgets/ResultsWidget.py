@@ -1,13 +1,16 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QLabel, QPushButton, QTextEdit, QMessageBox
+from PyQt5.QtWidgets import QLabel, QPushButton, QTextEdit, QMessageBox, QFileDialog
 from PyQt5.QtCore import Qt
 import os
 
 import logging
+import shutil
+from pathlib import Path
 
 from ConfigurationManager.FileExplorerRunner import FileExplorerRunner
 from GUI.Threading.BatchThread import BatchThread
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
+from GUI.Threading.BatchThread import BatchThread
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 
 class ResultsWidget(QtWidgets.QWidget):
@@ -77,16 +80,27 @@ class ResultsWidget(QtWidgets.QWidget):
         self.pcapHorBox2.setObjectName("pcapHorBox2")
         self.pcapLabel2 = QtWidgets.QLabel()
         self.pcapLabel2.setObjectName("pcapLabel2")
-        self.pcapLabel2.setText("Suspect PCAP:  ")
+        self.pcapLabel2.setText("Apply Rules to PCAP:  ")
         self.pcapHorBox2.addWidget(self.pcapLabel2)
 
         self.pcapLineEdit2 = QtWidgets.QLineEdit()
+        self.pcapLineEdit2.setFixedWidth(150)
+        #self.pcapLineEdit2.setFixedHeight(25)
         self.pcapLineEdit2.setAcceptDrops(False)
         self.pcapLineEdit2.setReadOnly(True)
         self.pcapLineEdit2.setObjectName("pcapLineEdit2") 
-        self.pcapLineEdit2.setText(self.sessionPCAP)
         self.pcapLineEdit2.setAlignment(Qt.AlignLeft)    
         self.pcapHorBox2.addWidget(self.pcapLineEdit2)
+        
+        #view and ... button
+        self.suspViewButton = QPushButton("View")
+        self.suspPathButton = QPushButton("...")
+        self.pcapHorBox2.addWidget(self.suspViewButton)
+        self.pcapHorBox2.addWidget(self.suspPathButton)
+
+        #on buttons clicked
+        self.suspViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.pcapLineEdit2))
+        self.suspPathButton.clicked.connect(self.on_path_button_clicked)
 
         #Show path to the alert folder
         self.alertHorBox = QtWidgets.QHBoxLayout()
@@ -129,6 +143,15 @@ class ResultsWidget(QtWidgets.QWidget):
     def on_view_button_clicked(self, x, folder_path=None):
         if isinstance(folder_path, QTextEdit):
             folder_path = folder_path.toPlainText()
+        elif isinstance(folder_path, QtWidgets.QLineEdit):
+            folder_path = folder_path.text()
+            if folder_path == "":
+                QMessageBox.warning(self, 
+                                    "No path selected",
+                                    "There is no path selected",
+                                    QMessageBox.Ok)
+                return None
+
         self.file_explore_thread = FileExplorerRunner(folder_location=folder_path)
         self.file_explore_thread.start()
 
@@ -140,7 +163,8 @@ class ResultsWidget(QtWidgets.QWidget):
         self.batch_thread.completion_signal.connect(self.analyze_button_batch_completed)
         alertOutPath = os.path.join(self.sessionAlertsDir)
         suricata_config_filename = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SURICATA_CONFIG_FILENAME")
-        self.batch_thread.add_function( self.val.run_suricata_with_rules, None, suricata_config_filename, alertOutPath, self.rules_filename, self.sessionPCAP)
+        self.batch_thread.add_function( self.val.run_suricata_with_rules, None, suricata_config_filename, alertOutPath, self.rules_filename, self.pcapLineEdit2.text())
+        print("SUSPECT PCAP: " + self.pcapLineEdit2.text())
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()
@@ -154,7 +178,6 @@ class ResultsWidget(QtWidgets.QWidget):
         self.progress_dialog_overall.update_progress()
         self.progress_dialog_overall.hide()
         alertOutFile = os.path.join(self.sessionAlertsDir, ConfigurationManager.STRUCTURE_ALERT_GEN_FILE)
-        print("AlERT OUT FILE: " + alertOutFile)
         if os.path.exists(alertOutFile) == False or os.stat(alertOutFile).st_size < 10:
             QMessageBox.about(self, "IDS Alerts", "No alerts generated")
         else:
@@ -171,3 +194,37 @@ class ResultsWidget(QtWidgets.QWidget):
         logging.debug('update_progress_bar(): Instantiated')
         self.progress_dialog_overall.update_progress()
         logging.debug('update_progress_bar(): Complete')
+
+    def on_path_button_clicked(self):
+        logging.debug('on_path_button_clicked(): Instantiated')
+        choose_file = QFileDialog()
+        filenames, _ = QFileDialog.getOpenFileNames(choose_file, "Select Suspect File")
+        if len(filenames) < 0:
+            logging.debug("File choose cancelled")
+            return
+        
+        if len(filenames) > 0:
+            suspect_pcap_chosen = filenames[0]
+            session_pcaps = os.path.dirname(os.path.abspath(self.sessionPCAP))
+            self.suspect_pcap_path = os.path.join(session_pcaps, "SuspectPCAP.pcapng")
+            self.batch_thread = BatchThread()
+            self.batch_thread.progress_signal.connect(self.update_progress_bar)
+            self.batch_thread.completion_signal.connect(self.copy_suspect_complete)
+            self.batch_thread.add_function(self.copy_file, suspect_pcap_chosen, self.suspect_pcap_path)
+            #shutil.copy(suspect_pcap_chosen, suspect_pcap_path)
+
+            self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
+            self.batch_thread.start()
+            self.progress_dialog_overall.show()
+
+        logging.debug('on_path_button_clicked(): Complete')
+
+    def copy_file(self, file, dst):
+        shutil.copy(file, dst)
+
+    def copy_suspect_complete(self):
+        self.pcapLineEdit2.setText(self.suspect_pcap_path)
+        self.progress_dialog_overall.update_progress()
+        self.progress_dialog_overall.hide()
+
+

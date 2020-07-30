@@ -1,5 +1,0 @@
-[
-	{"keypresses_id" : 0, "content" : "[Up][Up][Up][Up][Down][Down][Down][Down][Down]sudo cat \/etc\/passwd[Return]kali[Return]", "className" : "Keypresses", "start" : "2020-07-30T17:06:31"},
-	{"keypresses_id" : 1, "content" : "ping google.com[Return]", "className" : "Keypresses", "start" : "2020-07-30T17:06:39"},
-	{"keypresses_id" : 2, "content" : "[Control_L]", "className" : "Keypresses", "start" : "2020-07-30T17:06:44"}
-]

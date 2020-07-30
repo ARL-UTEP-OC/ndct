@@ -1,4 +1,0 @@
-nmap
-===============================
-Commands:# nmap -sP  localhost -oX /home/kali/eceld-netsys/eceld/plugins/collectors/nmap/raw/nmap_%TIME%.xml
-===============================

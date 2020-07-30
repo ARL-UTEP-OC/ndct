@@ -144,8 +144,6 @@ class MainGUI(QMainWindow):
             logging.debug("MainApp:onItemSelected no configurations left")
             self.statusBar.showMessage("No configuration items selected or available.")
             return
-        # Now enable the save button
-        self.saveProjectMenuButton.setEnabled(True)
 
         #Check if it's the case that an project name was selected
         parentSelectedItem = self.selectedItem.parent()
@@ -306,13 +304,6 @@ class MainGUI(QMainWindow):
         self.importProjectMenuButton.setStatusTip("Import folder")
         self.importProjectMenuButton.triggered.connect(self.importActionEvent)
         self.fileMenu.addAction(self.importProjectMenuButton)
-
-        self.saveProjectMenuButton = QAction(QIcon(), "Save Project", self)
-        self.saveProjectMenuButton.setShortcut("Ctrl+S")
-        self.saveProjectMenuButton.setStatusTip("Save currently selected project")
-        #self.saveProjectMenuButton.triggered.connect(self.saveProjectButton)
-        self.saveProjectMenuButton.setEnabled(False)
-        self.fileMenu.addAction(self.saveProjectMenuButton)
 
         self.quitAppMenuButton = QAction(QIcon(), "Quit", self)
         self.quitAppMenuButton.setShortcut("Ctrl+Q")
