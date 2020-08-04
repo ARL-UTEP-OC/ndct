@@ -45,7 +45,6 @@ class AnnotateWidget(QtWidgets.QWidget):
         projectpcap = os.path.join(projectpath, pcapFolder)
         projectPCAPFolder = os.path.join(projectpath, "PCAP/")
 
-        #make a copy of the pcap and save it to a new folder based on session
         os.chdir(projectPCAPFolder)
         sessionFolder = os.path.join(projectPCAPFolder,sessionLabel)
 

@@ -27,8 +27,7 @@ from GUI.Widgets.ResultsWidget import ResultsWidget
 from GUI.Threading.BatchThread import BatchThread
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 from GUI.Dialogs.NewProjectDialog import NewProjectDialog
-from GUI.listProjectSessions import ListNode
-from GUI.listProjectSessions import DoubleLinkedList
+from GUI.listProjectSessions import ProjectSessions
 
 class MainGUI(QMainWindow):
 
@@ -42,7 +41,7 @@ class MainGUI(QMainWindow):
         self.comment_mgr = comment_mgr
         self.val = val
 
-        self.double = DoubleLinkedList()
+        self.project_sessions = ProjectSessions()
 
         #shared data between widgets
         self.configname = ''
@@ -216,7 +215,7 @@ class MainGUI(QMainWindow):
 
             else: 
                 add_session = self.add_session_list(selectedItemName, self.sessionName)
-                if add_session == True:
+                if add_session == False:
                     QMessageBox.warning(self,
                                             "Session Name Exists",
                                             "The session name specified already exists",
@@ -367,6 +366,9 @@ class MainGUI(QMainWindow):
         self.basedataStackedWidget.addWidget(self.projectWidget)
         self.basedataStackedWidget.addWidget(self.baseWidget)
 
+        #add to list
+        self.project_sessions.add_project(self.configname)
+
     def importActionEvent(self):
         logging.debug("MainApp:importActionEvent() instantiated") 
         
@@ -422,6 +424,7 @@ class MainGUI(QMainWindow):
         logging.debug("copy_dir_complete(): Instantiated")
         self.progress_dialog_overall.update_progress()
         self.progress_dialog_overall.hide()
+        self.load_sessions()
         logging.debug("copy_dir_complete(): Complete")
 
     def load_saved(self):
@@ -455,6 +458,7 @@ class MainGUI(QMainWindow):
 
     def load_sessions(self):
         for name in self.existingconfignames:
+            #for already saved project
             project_path = os.path.join(self.project_data_folder, name)
             sessions_rules_dir = os.path.join(project_path, "RULES")
             if os.path.exists(sessions_rules_dir) == True:
@@ -474,7 +478,7 @@ class MainGUI(QMainWindow):
             while(num_folders_left != 0):
                 sessionName = folder[i]
                 
-                if self.add_session_list(project_name, sessionName) == False:
+                if self.add_session_list(project_name, sessionName) == True:
                     self.add_session_widgets(project_name, sessionName)
 
                 num_folders_left -= 1
@@ -538,14 +542,15 @@ class MainGUI(QMainWindow):
         self.basedataStackedWidget.addWidget(self.resultsWidget)
             
     def add_session_list(self, project_name, project_session):
-        project_name = ListNode(project_session)
+        #method returns true if session was successfully added
+        success = self.project_sessions.add_project_session(project_name, project_session)
 
-        if self.double.unordered_search(project_name) != '':
-            #if session doesnt exist, add to linked list
-            self.double.add_list_item(project_name)
+        if success == False:
+            self.project_sessions.print_d()
             return False
-        
-        return True
+        else:
+            self.project_sessions.print_d()
+            return True
 
     def update_progress_bar(self):
         logging.debug('update_progress_bar(): Instantiated')

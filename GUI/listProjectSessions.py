@@ -1,96 +1,87 @@
-#Taken from:
-# https://stackabuse.com/python-linked-lists/
+#This class is to keep track of 
+#Project Name and its correlating session names
 
-class ListNode:
-    def __init__(self, data):
-        "constructor class to initiate this object"
-
-        # store data
-        self.data = data
-        
-        # store reference (next item)
-        self.next = None
-
-        # store reference (previous item)
-        self.previous = None
-        return
-
-    def has_value(self, value):
-        "method to compare the value with the node data"
-        if self.data == value:
-            return True
-        else:
-            return False
-
-class DoubleLinkedList:
+class ProjectSessions():
     def __init__(self):
-        "constructor to initiate this object"
+        #create the list
+        self.project = {}
+        self.project[1] = {}
+        self.at_start = True
+        self.length = 0
 
-        self.head = None
-        self.tail = None
-        return
+    def add_project(self, project_name):
+        if self.at_start == True:
+            #start at 1
+            self.project[1]
+            self.project[1]["project_name"] = project_name
+            #create session list for later use (if needed)
+            self.project[1]["project_sessions"] = []
+            self.at_start = False
+            self.length += 1
+            return
+        else:
+            #get length
+            dic_len = self.get_length()
+            new_id = dic_len + 1
+            self.project[new_id] = {}
+            self.project[new_id]["project_name"] = project_name
+            #create session list for later use (if needed)
+            self.project[new_id]["project_sessions"] = []
+            return
 
-    def list_length(self):
-        "returns the number of list items"
-        
-        count = 0
-        current_node = self.head
+    def add_project_session(self, project_name, project_session):
+        p_id = self.get_project_id(project_name)
 
-        while current_node is not None:
-            # increase counter by one
-            count = count + 1
-            
-            # jump to the linked node
-            current_node = current_node.next
-        
-        return count
+        #add session
+        if project_session not in self.project[p_id]["project_sessions"]:
+            self.project[p_id]["project_sessions"].append(project_session)
+            #return true that sessions was added
+            return True
 
-    def output_list(self):
-        "outputs the list (the value of the node, actually)"
-        current_node = self.head
+        #return false for session not added
+        #print("session: " + project_session + " already exists")
+        return False
+    
+    def get_length(self):
+        return self.length
 
-        while current_node is not None:
-            print(current_node.data)
+    def print_d(self):
+        print("WHOLE LIST: " + str(self.project))
+        print("Broken Down List:")
+        for p_id, p_info in self.project.items():
+            print("\nProject ID: ", p_id)
+            for key in p_info:
+                print(key + ':', p_info[key])
 
-            # jump to the linked node
-            current_node = current_node.next
-        
-        return
+    def get_project_id(self, project_name):
+        #print("IN GET PROJECT ID:")
+        #print("PROJECT NAME: " + project_name)
+        for p_id, p_info in self.project.items():
+            for key in p_info:
+                if key == "project_name":
+                    info = key + ":", p_info[key]
+                    project = key + ":", project_name
+                    print(info)
+                    if str(info) in str(project):
+                        #print("PROJECT ID: " + str(p_id))
+                        return p_id            
 
-    def unordered_search (self, value):
-        "search the linked list for the node that has this value"
+""" project_list = ProjectSessions()
 
-        # define current_node
-        current_node = self.head
+project_list.add_project("t0")
+print("FIRST PRINT")
+project_list.print_d()
+project_list.add_project("t1")
+print("SECOND PRINT")
+project_list.print_d()
 
-        # define position
-        node_id = 1
+print("ADD SESSIONS")
+project_list.add_project_session("t0","sessionTest")
+project_list.add_project_session("t0","sessionTest")
+project_list.add_project_session("t1", "sessionTest")
+print("AFTER ADDING FIRST SESSION")
+project_list.print_d()
+project_list.add_project_session("t0", "sessionTest2")
+print("AFTER ADDING SECOND SESSION")
 
-        # define list of results
-        results = []
-
-        while current_node is not None:
-            if current_node.has_value(value):
-                results.append(node_id)
-            
-            # jump to the linked node
-            current_node = current_node.next
-            node_id = node_id + 1
-        
-        return results
-
-    def add_list_item(self, item):
-        "add an item at the end of the list"
-
-        if isinstance(item, ListNode):
-            if self.head is None:
-                self.head = item
-                item.previous = None
-                item.next = None
-                self.tail = item
-            else:
-                self.tail.next = item
-                item.previous = self.tail
-                self.tail = item
-        
-        return
+project_list.print_d() """
