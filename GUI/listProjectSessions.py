@@ -61,7 +61,7 @@ class ProjectSessions():
                 if key == "project_name":
                     info = key + ":", p_info[key]
                     project = key + ":", project_name
-                    print(info)
+                    #print(info)
                     if str(info) in str(project):
                         #print("PROJECT ID: " + str(p_id))
                         return p_id            

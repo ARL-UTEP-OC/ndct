@@ -546,10 +546,10 @@ class MainGUI(QMainWindow):
         success = self.project_sessions.add_project_session(project_name, project_session)
 
         if success == False:
-            self.project_sessions.print_d()
+            #self.project_sessions.print_d()
             return False
         else:
-            self.project_sessions.print_d()
+            #self.project_sessions.print_d()
             return True
 
     def update_progress_bar(self):
