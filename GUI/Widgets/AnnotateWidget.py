@@ -7,6 +7,8 @@ import logging
 
 from ConfigurationManager.FileExplorerRunner import ConfigurationManager
 from GUI.Threading.BatchThread import BatchThread
+from ConfigurationManager.FileExplorerRunner import FileExplorerRunner
+
 
 class AnnotateWidget(QtWidgets.QWidget):
 
@@ -65,6 +67,10 @@ class AnnotateWidget(QtWidgets.QWidget):
         self.pcapLineEdit.setAlignment(Qt.AlignLeft)    
         self.pcapHorBox.addWidget(self.pcapLineEdit)
 
+        self.pcapPathViewButton = QPushButton("View")
+        self.pcapPathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, projectPCAPFolder))
+        self.pcapHorBox.addWidget(self.pcapPathViewButton)
+
         #show corresponding folder for annoatation pcap
         self.sessPCAPHorBox = QtWidgets.QHBoxLayout()
         self.sessPCAPHorBox.setObjectName("sessPCAPHorBox")
@@ -80,6 +86,10 @@ class AnnotateWidget(QtWidgets.QWidget):
         self.pcapLineEdit2.setText(sessionPCAP)
         self.pcapLineEdit2.setAlignment(Qt.AlignLeft)
         self.sessPCAPHorBox.addWidget(self.pcapLineEdit2)
+
+        self.sesspcapPathViewButton = QPushButton("View")
+        self.sesspcapPathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, sessionFolder))
+        self.sessPCAPHorBox.addWidget(self.sesspcapPathViewButton)
 
         #Start Annotation Button
         self.annButtonHorBox = QtWidgets.QHBoxLayout()
@@ -111,3 +121,8 @@ class AnnotateWidget(QtWidgets.QWidget):
         
         logging.debug('on_select_annotate_file_button_clicked(): Complete')
 
+    def on_view_button_clicked(self, x, folder_path=None):
+        if isinstance(folder_path, QTextEdit):
+            folder_path = folder_path.toPlainText()
+        self.file_explore_thread = FileExplorerRunner(folder_location=folder_path)
+        self.file_explore_thread.start()

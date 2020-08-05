@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QPushButton, QInputDialog, QMessageBox, QTextEdit
 from PyQt5.QtCore import Qt
 import logging
+import os
 
 from ConfigurationManager.FileExplorerRunner import FileExplorerRunner
 
@@ -17,6 +18,16 @@ class ProjectWidget(QtWidgets.QWidget):
         self.setWindowTitle("ProjectWidget")
         self.setObjectName("ProjectWidget")
 
+        #LABEL
+        self.labelVerBox = QtWidgets.QVBoxLayout()
+        self.labelVerBox.setObjectName("labelVerBox")
+        self.projectLabel = QtWidgets.QLabel("PROJECT INFO")
+        labelFont = QtGui.QFont()
+        labelFont.setBold(True)
+        self.projectLabel.setFont(labelFont)
+        self.projectLabel.setAlignment(Qt.AlignCenter)
+        self.labelVerBox.addWidget(self.projectLabel)
+
         #material widget - res
         #Project Name
         self.nameHorBox = QtWidgets.QHBoxLayout()
@@ -27,8 +38,6 @@ class ProjectWidget(QtWidgets.QWidget):
         self.nameHorBox.addWidget(self.nameLabel)
 
         self.nameLineEdit = QtWidgets.QLineEdit()
-        self.nameLineEdit.setAcceptDrops(False)
-        self.nameLineEdit.setReadOnly(True)
         self.nameLineEdit.setObjectName("nameLineEdit") 
         self.nameLineEdit.setText(projectname)     
         self.nameHorBox.addWidget(self.nameLineEdit)
@@ -68,7 +77,13 @@ class ProjectWidget(QtWidgets.QWidget):
         self.pcapLineEdit.setAlignment(Qt.AlignLeft)    
         self.pcapHorBox.addWidget(self.pcapLineEdit)
 
+        self.pcapPathViewButton = QPushButton("View")
+        pcap_folder = os.path.dirname(projectpcap)
+        self.pcapPathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, pcap_folder))
+        self.pcapHorBox.addWidget(self.pcapPathViewButton)
+
         #put all the components together
+        self.outerVertBox.addLayout(self.labelVerBox)
         self.outerVertBox.addLayout(self.nameHorBox)
         self.outerVertBox.addLayout(self.pathHorBox)
         self.outerVertBox.addLayout(self.pcapHorBox)

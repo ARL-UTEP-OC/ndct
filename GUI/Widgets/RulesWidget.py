@@ -71,6 +71,10 @@ class RulesWidget(QtWidgets.QWidget):
         self.pcapLineEdit.setAlignment(Qt.AlignLeft)    
         self.pcapHorBox.addWidget(self.pcapLineEdit)
 
+        self.pcapPathViewButton = QPushButton("View")
+        self.pcapPathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, projectPCAPFolder))
+        self.pcapHorBox.addWidget(self.pcapPathViewButton)
+
         #Annotated PCAP
         self.pcapHorBox2 = QtWidgets.QHBoxLayout()
         self.pcapHorBox2.setObjectName("pcapHorBox2")
@@ -86,6 +90,10 @@ class RulesWidget(QtWidgets.QWidget):
         self.pcapLineEdit2.setText(self.sessionPCAP)
         self.pcapLineEdit2.setAlignment(Qt.AlignLeft)    
         self.pcapHorBox2.addWidget(self.pcapLineEdit2)
+
+        self.pcapPathViewButton2 = QPushButton("View")
+        self.pcapPathViewButton2.clicked.connect(lambda x: self.on_view_button_clicked(x, sessionPCAPFolder))
+        self.pcapHorBox2.addWidget(self.pcapPathViewButton2)
 
         #Generate Rules Button
         self.ruleButtonHorBox = QtWidgets.QHBoxLayout()

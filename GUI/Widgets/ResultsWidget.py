@@ -75,6 +75,10 @@ class ResultsWidget(QtWidgets.QWidget):
         self.ruleLineEdit.setAlignment(Qt.AlignLeft)
         self.ruleHorBox.addWidget(self.ruleLineEdit)
 
+        self.rulePathViewButton = QPushButton("View")
+        self.rulePathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.sessionRulesDir))
+        self.ruleHorBox.addWidget(self.rulePathViewButton)
+
         #Annotated/Suspect PCAP
         self.pcapHorBox2 = QtWidgets.QHBoxLayout()
         self.pcapHorBox2.setObjectName("pcapHorBox2")
