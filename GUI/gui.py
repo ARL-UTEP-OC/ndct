@@ -426,7 +426,6 @@ class MainGUI(QMainWindow):
                     else:
                         self.populate_import("dir")
                 
-
     def populate_import(self, function):
         self.existingconfignames += [self.configname]
         importedProjectPath = os.path.join(self.project_data_folder, self.configname)
