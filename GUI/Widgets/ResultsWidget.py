@@ -149,12 +149,12 @@ class ResultsWidget(QtWidgets.QWidget):
             folder_path = folder_path.toPlainText()
         elif isinstance(folder_path, QtWidgets.QLineEdit):
             folder_path = folder_path.text()
-            if folder_path == "":
-                QMessageBox.warning(self, 
-                                    "No path selected",
-                                    "There is no path selected",
-                                    QMessageBox.Ok)
-                return None
+        if folder_path == "":
+            QMessageBox.warning(self, 
+                                "No path selected",
+                                "There is no path selected",
+                                QMessageBox.Ok)
+            return None
 
         self.file_explore_thread = FileExplorerRunner(folder_location=folder_path)
         self.file_explore_thread.start()

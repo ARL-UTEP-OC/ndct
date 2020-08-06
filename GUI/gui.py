@@ -29,6 +29,7 @@ from GUI.Threading.BatchThread import BatchThread
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 from GUI.Dialogs.NewProjectDialog import NewProjectDialog
 from GUI.listProjectSessions import ProjectSessions
+from GUI.Dialogs.ExportDialog import ExportDialog
 
 class MainGUI(QMainWindow):
 
@@ -192,6 +193,9 @@ class MainGUI(QMainWindow):
         self.addCuration = self.projectContextMenu.addAction("Add Curation")
         self.addCuration.triggered.connect(self.on_add_curation_clicked)
 
+        self.exportProject = self.projectContextMenu.addAction("Export Project")
+        self.exportProject.triggered.connect(self.on_export_clicked)
+
     def on_add_curation_clicked(self):
         logging.debug("on_add_curation_clicked(): Instantiated")
         selectedItem = self.projectTree.currentItem()
@@ -279,6 +283,20 @@ class MainGUI(QMainWindow):
 
         logging.debug("on_add_curation_clicked(): Completed")
 
+    def on_export_clicked(self):
+        #get project dir
+        selectedItem = self.projectTree.currentItem()
+        selectedItemName = selectedItem.text(0)
+        print("ITEM NAME: " + selectedItemName)
+
+        project_path = os.path.join(selectedItemName)
+        print("PATH: " + project_path)
+
+        self.exportPro = ExportDialog(project_path)
+        self.exportPro.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.exportPro.show()
+
+
     #RES METHOD
     def showContextMenu(self, position):
     	logging.debug("MainApp:showContextMenu() instantiated: " + str(position))
@@ -289,7 +307,6 @@ class MainGUI(QMainWindow):
 
     #RES METHOD
     def initMenu(self):               
-        
         self.mainMenu = QMenuBar()
         self.fileMenu = self.mainMenu.addMenu("File")
 

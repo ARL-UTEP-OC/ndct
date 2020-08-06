@@ -35,6 +35,14 @@ class PackageManager():
         og_path = os.path.dirname(self.main_path)
         os.chdir(og_path)
 
+    def zip(self, output_path, project_to_compress):
+        print(project_to_compress)
+        zipf = zipfile.ZipFile(project_to_compress, 'w', zipfile.ZIP_DEFLATED)
+        for dir_name, subdirlist, filelist in os.walk(output_path):
+            for file in filelist:
+                zipf.write(os.path.join(dir_name, file))
+        del subdirlist
+
     def get_new_dir(self):
         return self.new_extracted_dir
 
