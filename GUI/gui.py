@@ -18,6 +18,7 @@ import re
 from distutils.dir_util import copy_tree
 
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
+from PackageManager.PackageManager import PackageManager
 
 from GUI.Widgets.ProjectWidget import ProjectWidget
 from GUI.Widgets.SessionWidget import SessionWidget
@@ -373,38 +374,80 @@ class MainGUI(QMainWindow):
         logging.debug("MainApp:importActionEvent() instantiated") 
         
         if self.at_start == False:
-            self.folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Directory to Store Data"))
+            #Ask user if they want to import file or dir
+            import_type = QMessageBox.question(self,
+                                "IMPORT",
+                                "Do you want to import a .zip file?",
+                                QMessageBox.Yes | QMessageBox.No)
+            
+            if import_type == QMessageBox.Yes:
+                zip_file = QFileDialog()
+                filenames, _ = QFileDialog.getOpenFileNames(zip_file, "Select File")
 
-        if self.folder_chosen == "":
-            logging.debug("File choose cancelled")
-            return
+                if len(filenames) < 0:
+                    logging.debug("File choose cancelled")
+                    return
 
-        if len(self.folder_chosen) > 0:
-            baseNoExt = os.path.basename(self.folder_chosen)
-            baseNoExt = os.path.splitext(baseNoExt)[0]
-            self.configname = ''.join(e for e in baseNoExt if e.isalnum)
-            if self.configname in self.existingconfignames:
-                QMessageBox.warning(self,
-                                        "Name Exists",
-                                        "A project with the same name already exists.",
-                                        QMessageBox.Ok)            
-                return None
+                if len(filenames) > 0:
+                    zip_to_import = filenames[0]
+                    file_name = os.path.basename(zip_to_import)
+                    file_name = os.path.splitext(file_name)[0]
+                    self.configname = file_name
+
+                    if self.configname in self.existingconfignames:
+                        QMessageBox.warning(self,
+                                            "Name Exists",
+                                            "A project with the same name already exists.",
+                                            QMessageBox.Ok)            
+                        return None
+                    else:
+                        #instance of package manage
+                        pack_mgr = PackageManager(zip_to_import, file_name, self.project_data_folder)
+                        self.populate_import(pack_mgr)
+
             else:
-                self.existingconfignames += [self.configname]
-                importedProjectPath = os.path.join(self.project_data_folder, self.configname)
-                #copy selected dir to new dir
-                self.batch_thread = BatchThread()
-                self.batch_thread.progress_signal.connect(self.update_progress_bar)
-                self.batch_thread.completion_signal.connect(self.copy_dir_complete)
-                self.batch_thread.add_function(self.copy_dir, importedProjectPath)
+                self.folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Directory to Store Data"))
 
-                self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
-                self.batch_thread.start()
-                self.progress_dialog_overall.show()
+                if self.folder_chosen == "":
+                    logging.debug("File choose cancelled")
+                    return
 
-                self.path = importedProjectPath
-                self.annotatedPCAP = os.path.join(importedProjectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
-                self.addProject()
+                if len(self.folder_chosen) > 0:
+                    baseNoExt = os.path.basename(self.folder_chosen)
+                    baseNoExt = os.path.splitext(baseNoExt)[0]
+                    self.configname = ''.join(e for e in baseNoExt if e.isalnum)
+                    if self.configname in self.existingconfignames:
+                        QMessageBox.warning(self,
+                                            "Name Exists",
+                                            "A project with the same name already exists.",
+                                            QMessageBox.Ok)            
+                        return None
+            
+                    else:
+                        self.populate_import("dir")
+                
+
+    def populate_import(self, function):
+        self.existingconfignames += [self.configname]
+        importedProjectPath = os.path.join(self.project_data_folder, self.configname)
+        #copy selected dir to new dir
+        self.batch_thread = BatchThread()
+        self.batch_thread.progress_signal.connect(self.update_progress_bar)
+        self.batch_thread.completion_signal.connect(self.copy_dir_complete)
+        if function == "dir":
+            self.batch_thread.add_function(self.copy_dir, importedProjectPath)
+
+        else:
+            self.batch_thread.add_function(function.unzip)
+
+        self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
+        self.batch_thread.start()
+        self.progress_dialog_overall.show()
+
+        self.path = importedProjectPath
+        self.annotatedPCAP = os.path.join(importedProjectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+        self.addProject()
+
         
     def load_project_widget(self):
         logging.debug("load_project_widget(): loading project widget with saved projects")
