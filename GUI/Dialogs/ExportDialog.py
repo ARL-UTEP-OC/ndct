@@ -68,8 +68,6 @@ class ExportDialog(QtWidgets.QWidget):
         self.buttonsLayout.addWidget(self.cancelButton)
         self.buttonsLayout.setAlignment(QtCore.Qt.AlignBottom | QtCore.Qt.AlignRight)
 
-        #self.nameHorBox.addStretch()
-
         self.outerVertBoxPro.addLayout(self.labelVerBoxPro)
         self.outerVertBoxPro.addLayout(self.nameHorBox)
         #self.outerVertBoxPro.addLayout(self.spacer)

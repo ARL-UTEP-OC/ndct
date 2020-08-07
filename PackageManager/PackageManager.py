@@ -44,11 +44,8 @@ class PackageManager():
 
     def zip(self, output_path, project_to_compress, project_data_path):
         self.main_path = project_data_path
-        
-        dir_comp = self.get_dir_components(project_to_compress)
 
-        for fileName in dir_comp:
-            print(fileName)
+        dir_comp = self.get_dir_components(project_to_compress)
 
         #create the zip file in the chosen output path
         os.chdir(output_path)
@@ -76,16 +73,11 @@ class PackageManager():
         #go to the projects folder to get path
         os.chdir(self.main_path)
         filePaths = []
-        print("DIR: " + dirname)
-        path = os.path.dirname(dirname)
-        print("Path: " + path)
         for root, directories, files in os.walk(dirname):
             for filename in files:
                 filePath = os.path.join(root, filename)
                 filePaths.append(filePath)
             del directories
-
-        print(filePaths)
         
         return filePaths
 

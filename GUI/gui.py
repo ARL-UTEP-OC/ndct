@@ -547,7 +547,7 @@ class MainGUI(QMainWindow):
                     #skip
                     break
                 
-                if self.add_session_list(project_name, sessionName) == True:
+                elif self.add_session_list(project_name, sessionName) == True:
                     self.add_session_widgets(project_name, sessionName)
 
                 num_folders_left -= 1
@@ -621,10 +621,10 @@ class MainGUI(QMainWindow):
         success = self.project_sessions.add_project_session(project_name, project_session)
 
         if success == False:
-            #self.project_sessions.print_d()
+            self.project_sessions.print_d()
             return False
         else:
-            #self.project_sessions.print_d()
+            self.project_sessions.print_d()
             return True
 
     def update_progress_bar(self):

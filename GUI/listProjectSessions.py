@@ -27,6 +27,7 @@ class ProjectSessions():
             self.project[new_id]["project_name"] = project_name
             #create session list for later use (if needed)
             self.project[new_id]["project_sessions"] = []
+            self.length += 1
             return
 
     def add_project_session(self, project_name, project_session):
