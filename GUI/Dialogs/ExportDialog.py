@@ -15,6 +15,7 @@ class ExportDialog(QtWidgets.QWidget):
 
         quit = QAction("Quit", self)
         quit.triggered.connect(self.closeEvent)
+        self.cancel_pressed = False
 
         self.project_path = project_path
         self.project_data_path = project_data_path
@@ -137,10 +138,11 @@ class ExportDialog(QtWidgets.QWidget):
         logging.debug('on_cancel_button_clicked(): Instantiated')
 
         cancel_event = event
-        cancel = QMessageBox.question(
-            self, "Close New Project",
-            "Are you sure you want to quit? Any unsaved work will be lost.",
-            QMessageBox.Close | QMessageBox.Cancel)
+        
+        cancel = QMessageBox.question(self, 
+                                    "Close Export Project",
+                                    "Are you sure you want to close? Any unsaved work will be lost.",
+                                    QMessageBox.Close | QMessageBox.Cancel)
 
         if cancel == QMessageBox.Close:
             #call closing event
@@ -153,8 +155,20 @@ class ExportDialog(QtWidgets.QWidget):
         logging.debug('on_cancel_button_clicked(): Complete')
 
     def closeEvent(self, event):
-        quit_event = event
-        quit_event.accept()
-        self.close()
+        if self.cancel_pressed == True:
+            self.close()
 
+        else:
+            quit_event = event
+            close = QMessageBox.question(self, 
+                                        "Close Export Project",
+                                        "Are you sure you want to close? Any unsaved work will be lost.",
+                                        QMessageBox.Close | QMessageBox.Cancel)
+            if close == QMessageBox.Close:
+                quit_event.accept()
+                self.close()
+
+            elif close == QMessageBox.Cancel:
+                quit_event.ignore()
+        pass
 
