@@ -287,15 +287,12 @@ class MainGUI(QMainWindow):
         #get project dir
         selectedItem = self.projectTree.currentItem()
         selectedItemName = selectedItem.text(0)
-        print("ITEM NAME: " + selectedItemName)
 
         project_path = os.path.join(selectedItemName)
-        print("PATH: " + project_path)
 
-        self.exportPro = ExportDialog(project_path)
+        self.exportPro = ExportDialog(project_path, self.project_data_folder)
         self.exportPro.setWindowModality(QtCore.Qt.ApplicationModal)
         self.exportPro.show()
-
 
     #RES METHOD
     def showContextMenu(self, position):
@@ -406,10 +403,10 @@ class MainGUI(QMainWindow):
                     return
 
                 if len(filenames) > 0:
-                    zip_to_import = filenames[0]
-                    file_name = os.path.basename(zip_to_import)
-                    file_name = os.path.splitext(file_name)[0]
-                    self.configname = file_name
+                    self.zip_to_import = filenames[0]
+                    self.file_name = os.path.basename(self.zip_to_import)
+                    self.file_name = os.path.splitext(self.file_name)[0]
+                    self.configname = self.file_name
 
                     if self.configname in self.existingconfignames:
                         QMessageBox.warning(self,
@@ -419,7 +416,7 @@ class MainGUI(QMainWindow):
                         return None
                     else:
                         #instance of package manage
-                        pack_mgr = PackageManager(zip_to_import, file_name, self.project_data_folder)
+                        pack_mgr = PackageManager()
                         self.populate_import(pack_mgr)
 
             else:
@@ -454,7 +451,7 @@ class MainGUI(QMainWindow):
             self.batch_thread.add_function(self.copy_dir, importedProjectPath)
 
         else:
-            self.batch_thread.add_function(function.unzip)
+            self.batch_thread.add_function(function.unzip, self.zip_to_import, self.file_name, self.project_data_folder)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()
@@ -519,9 +516,18 @@ class MainGUI(QMainWindow):
         for name in self.existingconfignames:
             #for already saved project
             project_path = os.path.join(self.project_data_folder, name)
-            sessions_rules_dir = os.path.join(project_path, "RULES")
-            if os.path.exists(sessions_rules_dir) == True:
-                self.traverse_sessions(name, sessions_rules_dir)
+            project_pcap_session = os.path.join(project_path, "PCAP")
+            pcap_session_found = False
+            for contents in project_pcap_session:
+                if os.path.isdir(contents):
+                    pcap_session_found = True 
+            if pcap_session_found == True:
+                self.traverse_sessions(name, project_pcap_session)
+
+            #sessions_rules_dir = os.path.join(project_path, "RULES")
+            #if os.path.exists(sessions_rules_dir) == True:
+                #self.traverse_sessions(name, sessions_rules_dir)
+            
 
     def traverse_sessions(self, project_name, path):
         #if RULES dir exists in project folder, then sessions exists
@@ -536,6 +542,10 @@ class MainGUI(QMainWindow):
                         
             while(num_folders_left != 0):
                 sessionName = folder[i]
+
+                if os.path.isfile(sessionName):
+                    #skip
+                    break
                 
                 if self.add_session_list(project_name, sessionName) == True:
                     self.add_session_widgets(project_name, sessionName)
@@ -580,6 +590,9 @@ class MainGUI(QMainWindow):
         #add the corresponding directory -- if it is already created, skip
         rulesDir = os.path.join(self.project_data_folder, project_name)
         rulesDir = os.path.join(rulesDir, "RULES")
+
+        if os.path.exists(rulesDir) == False:
+            os.mkdir(rulesDir)
     
         self.rulesWidget = RulesWidget(self.project_data_folder, project_name, sessionName, rulesDir, self.comment_mgr, self.val)
 
@@ -594,6 +607,9 @@ class MainGUI(QMainWindow):
         #add the corresponding directory -- if it is already created, skip
         resultsDir = os.path.join(self.project_data_folder, project_name)
         resultsDir = os.path.join(resultsDir, "IDS-ALERTS")
+
+        if os.path.exists(resultsDir) == False:
+            os.mkdir(resultsDir)
                 
         self.resultsWidget = ResultsWidget(self.project_data_folder, project_name, sessionName, resultsDir, self.val)
                
