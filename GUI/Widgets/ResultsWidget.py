@@ -64,7 +64,7 @@ class ResultsWidget(QtWidgets.QWidget):
         self.ruleHorBox.setObjectName("ruleHorBox")
         self.rulePathLabel = QtWidgets.QLabel()
         self.rulePathLabel.setObjectName("rulePathLabel")
-        self.rulePathLabel.setText("Rule Output Path: ")
+        self.rulePathLabel.setText("Rule Path: ")
         self.ruleHorBox.addWidget(self.rulePathLabel)
 
         self.ruleLineEdit = QtWidgets.QLineEdit()
@@ -99,8 +99,8 @@ class ResultsWidget(QtWidgets.QWidget):
         #view and ... button
         self.suspViewButton = QPushButton("View")
         self.suspPathButton = QPushButton("...")
-        self.pcapHorBox2.addWidget(self.suspViewButton)
         self.pcapHorBox2.addWidget(self.suspPathButton)
+        self.pcapHorBox2.addWidget(self.suspViewButton)
 
         #on buttons clicked
         self.suspViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.pcapLineEdit2))
