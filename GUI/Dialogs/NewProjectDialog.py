@@ -158,8 +158,11 @@ class NewProjectDialog(QtWidgets.QWidget):
         self.batch_thread.add_function(self.logman.export_data, self.projectPath)
         parsedLogs = os.path.join(self.projectPath,ConfigurationManager.STRUCTURE_PARSED_PATH)
         annotatedPCAP = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
-        self.batch_thread.add_function(self.logman.copy_latest_data, self.projectPath, parsedLogs, annotatedPCAP)
+        click_out_path = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_CLICKS_PATH)
+        timed_out_path = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_TIMED_PATH)
+        self.batch_thread.add_function(self.logman.copy_latest_data, self.projectPath, parsedLogs, annotatedPCAP, click_out_path, timed_out_path)
         dissectorsPath = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
+        
         self.batch_thread.add_function(self.logman.generate_dissectors, parsedLogs, dissectorsPath, None)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
