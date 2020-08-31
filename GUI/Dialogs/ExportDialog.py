@@ -9,13 +9,15 @@ from PackageManager.PackageManager import PackageManager
 from GUI.Threading.BatchThread import BatchThread
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 
-class ExportDialog(QtWidgets.QWidget):
-    def __init__(self, project_path, project_data_path):
-        QtWidgets.QWidget.__init__(self, parent=None)
+class ExportDialog(QtWidgets.QDialog):
+    def __init__(self, parent, project_path, project_data_path):
+        logging.debug("ExportDialog(): instantiated")
+        super(ExportDialog, self).__init__(parent)
+        self.parent = parent
 
-        quit = QAction("Quit", self)
-        quit.triggered.connect(self.closeEvent)
-        self.cancel_pressed = False
+        # quit = QAction("Quit", self)
+        # quit.triggered.connect(self.closeEvent)
+        # self.cancel_pressed = False
 
         self.project_path = project_path
         self.project_data_path = project_data_path
@@ -50,17 +52,18 @@ class ExportDialog(QtWidgets.QWidget):
         self.exportOutputPath.setObjectName("exportOutputPath")
         self.nameHorBox.addWidget(self.exportOutputPath)
 
-        self.exportPathViewButton = QPushButton("View")
-        self.exportPathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.exportOutputPath))
-        self.nameHorBox.addWidget(self.exportPathViewButton)
-
         self.exportPathButton = QPushButton("...")
         self.exportPathButton.clicked.connect(self.on_path_button_clicked)
         self.nameHorBox.addWidget(self.exportPathButton)
 
+        self.exportPathViewButton = QPushButton("View")
+        self.exportPathViewButton.clicked.connect(lambda x: self.on_view_button_clicked(x, self.exportOutputPath))
+        self.nameHorBox.addWidget(self.exportPathViewButton)
+
         self.buttonsLayout = QtWidgets.QHBoxLayout()
         self.exportButton = QPushButton("Export")
         self.exportButton.setFixedWidth(60)
+        self.exportButton.setEnabled(False)
         self.exportButton.clicked.connect(self.on_export_clicked)
         self.buttonsLayout.addWidget(self.exportButton)
         self.cancelButton = QPushButton("Cancel")
@@ -101,6 +104,7 @@ class ExportDialog(QtWidgets.QWidget):
             logging.debug("File choose cancelled")
             return
         self.exportOutputPath.setText(folder_chosen)
+        self.exportButton.setEnabled(True)
 
     def on_export_clicked(self):
         out_path = self.exportOutputPath.text()
@@ -123,52 +127,25 @@ class ExportDialog(QtWidgets.QWidget):
 
     def export_complete(self):
         logging.debug("export_complete(): Instantiated")
-        self.progress_dialog_overall.update_progress()
-        self.progress_dialog_overall.hide()
-        ok = QMessageBox.warning(self,
+        self.progress_dialog_overall.update_progress()      
+        QMessageBox.information(self,
                             "Export Complete!",
                             "Success! Project Exported",
                             QMessageBox.Ok)
-        if ok == QMessageBox.Ok:
-            self.close()
-
+        self.progress_dialog_overall.hide()
+        self.hide()
         logging.debug("copy_dir_complete(): Complete")
 
     def on_cancel_button_clicked(self, event):
         logging.debug('on_cancel_button_clicked(): Instantiated')
-
-        cancel_event = event
-        
-        cancel = QMessageBox.question(self, 
-                                    "Close Export Project",
-                                    "Are you sure you want to close? Any unsaved work will be lost.",
-                                    QMessageBox.Close | QMessageBox.Cancel)
-
-        if cancel == QMessageBox.Close:
-            #call closing event
-            self.cancel_pressed = True #confrm that cancel was pressed
-            self.closeEvent(cancel_event)
-
-        elif cancel == QMessageBox.Cancel:
-            pass
-
+        self.hide()
         logging.debug('on_cancel_button_clicked(): Complete')
 
-    def closeEvent(self, event):
-        if self.cancel_pressed == True:
-            self.close()
-
-        else:
-            quit_event = event
-            close = QMessageBox.question(self, 
-                                        "Close Export Project",
-                                        "Are you sure you want to close? Any unsaved work will be lost.",
-                                        QMessageBox.Close | QMessageBox.Cancel)
-            if close == QMessageBox.Close:
-                quit_event.accept()
-                self.close()
-
-            elif close == QMessageBox.Cancel:
-                quit_event.ignore()
-        pass
-
+    def exec_(self):
+        logging.debug("ExportDialog(): exec_() instantiated")
+        result = super(ExportDialog, self).exec_()
+        if str(result) == str(1):
+            logging.debug("dialog_response(): OK was pressed")
+            self.hide()
+            return (QMessageBox.Ok)
+        return (QMessageBox.Cancel)

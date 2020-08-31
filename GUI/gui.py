@@ -290,9 +290,9 @@ class MainGUI(QMainWindow):
 
         project_path = os.path.join(selectedItemName)
 
-        self.exportPro = ExportDialog(project_path, self.project_data_folder)
-        self.exportPro.setWindowModality(QtCore.Qt.ApplicationModal)
-        self.exportPro.show()
+        self.exportPro = ExportDialog(self, project_path, self.project_data_folder).exec_()
+        #self.exportPro.setWindowModality(QtCore.Qt.ApplicationModal)
+        #self.exportPro.show()
 
     #RES METHOD
     def showContextMenu(self, position):
@@ -653,7 +653,7 @@ class MainGUI(QMainWindow):
         else:
             close = QMessageBox.question(self, 
                                 "QUIT",
-                                "Are you sure you want to quit? \n Any unsaved data will be lost",
+                                "Are you sure you want to quit?",
                                 QMessageBox.Yes | QMessageBox.No)
             if close == QMessageBox.Yes:
                 #call the delete data function from new project, just to make sure
