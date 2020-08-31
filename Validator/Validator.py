@@ -99,14 +99,19 @@ class Validator():
         self.cmd+= " -r " + self.validate_pcap_filename
         self.cmd+= " -s " + self.suricata_rules_filename
         self.cmd+= " -k none"
+        try:
 
-        if sys.platform == "linux" or sys.platform == "linux2":
-            logging.debug('run_suricata_with_rules(): Running Command: ' + str(self.cmd))
-            output = subprocess.check_output(shlex.split(self.cmd))
-        else: 
-            logging.debug('run_suricata_with_rules(): Running Command: ' + str(self.cmd))
-            output = subprocess.check_output(self.cmd)
-        logging.debug('run_suricata_with_rules(): Complete')
+            if sys.platform == "linux" or sys.platform == "linux2":
+                logging.debug('run_suricata_with_rules(): Running Command: ' + str(self.cmd))
+                output = subprocess.check_output(shlex.split(self.cmd))
+            else: 
+                logging.debug('run_suricata_with_rules(): Running Command: ' + str(self.cmd))
+                output = subprocess.check_output(self.cmd)
+            logging.debug('run_suricata_with_rules(): Complete')
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            logging.error('run_suricata_with_rules(): Error during suricata execution')
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
 
     def generate_score_report(self, suricata_soln_alerts_json=None, suricata_alert_path=None):
         logging.debug('generate_score_report(): Instantiated')
