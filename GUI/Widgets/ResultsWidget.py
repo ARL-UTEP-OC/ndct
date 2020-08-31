@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QLabel, QPushButton, QTextEdit, QMessageBox, QFileDialog
 from PyQt5.QtCore import Qt
 import os
-
+import sys, traceback
 import logging
 import shutil
 from pathlib import Path
@@ -47,8 +47,14 @@ class ResultsWidget(QtWidgets.QWidget):
         os.chdir(resultsDir)
         self.sessionAlertsDir = os.path.join(resultsDir, sessionLabel)
 
-        if os.path.exists(self.sessionAlertsDir) == False:
-            os.mkdir(sessionLabel)
+        try:
+            if os.path.exists(self.sessionAlertsDir):
+                shutil.rmtree(self.sessionAlertsDir, ignore_errors=True)
+            os.makedirs(self.sessionAlertsDir)
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            logging.error("comment_to_json(): An error occured ")
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
 
         #change dir again
         og_path = os.path.dirname(projectfolder)
@@ -130,6 +136,7 @@ class ResultsWidget(QtWidgets.QWidget):
         self.alertButtonHorBox = QtWidgets.QHBoxLayout()
         self.alertButtonHorBox.setObjectName("alertButtonHorBox")
         self.alertButton = QPushButton("Generate Alerts")
+        self.alertButton.setEnabled(False)
         self.alertButton.clicked.connect(self.on_alert_button_clicked)
         self.alertButtonHorBox.setAlignment(Qt.AlignRight)
         self.alertButtonHorBox.addWidget(self.alertButton)
@@ -166,6 +173,15 @@ class ResultsWidget(QtWidgets.QWidget):
         self.batch_thread.progress_signal.connect(self.update_progress_bar)
         self.batch_thread.completion_signal.connect(self.analyze_button_batch_completed)
         alertOutPath = os.path.join(self.sessionAlertsDir)
+        try:
+            if os.path.exists(alertOutPath):
+                shutil.rmtree(self.sessionAlertsDir, ignore_errors=True)
+            os.makedirs(alertOutPath)
+        except Exception as e:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                logging.error("comment_to_json(): An error occured ")
+                traceback.print_exception(exc_type, exc_value, exc_traceback)
+
         suricata_config_filename = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SURICATA_CONFIG_FILENAME")
         self.batch_thread.add_function( self.val.run_suricata_with_rules, None, suricata_config_filename, alertOutPath, self.rules_filename, self.pcapLineEdit2.text())
         logging.debug("SUSPECT PCAP: " + self.pcapLineEdit2.text())
@@ -230,5 +246,6 @@ class ResultsWidget(QtWidgets.QWidget):
         self.pcapLineEdit2.setText(self.suspect_pcap_path)
         self.progress_dialog_overall.update_progress()
         self.progress_dialog_overall.hide()
+        self.alertButton.setEnabled(True)
 
 
