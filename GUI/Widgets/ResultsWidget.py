@@ -168,7 +168,7 @@ class ResultsWidget(QtWidgets.QWidget):
         alertOutPath = os.path.join(self.sessionAlertsDir)
         suricata_config_filename = ConfigurationManager.get_instance().read_config_abspath("VALIDATOR", "SURICATA_CONFIG_FILENAME")
         self.batch_thread.add_function( self.val.run_suricata_with_rules, None, suricata_config_filename, alertOutPath, self.rules_filename, self.pcapLineEdit2.text())
-        print("SUSPECT PCAP: " + self.pcapLineEdit2.text())
+        logging.debug("SUSPECT PCAP: " + self.pcapLineEdit2.text())
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()

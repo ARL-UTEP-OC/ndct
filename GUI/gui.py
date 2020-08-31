@@ -151,7 +151,7 @@ class MainGUI(QMainWindow):
 
         if(parentSelectedItem == None):
             #A base widget was selected
-            #print("PROJECT_WIDGET: " + str((self.baseWidgets[self.selectedItem.text(0)]["ProjectWidget"])))
+            #logging.debug"PROJECT_WIDGET: " + str((self.baseWidgets[self.selectedItem.text(0)]["ProjectWidget"])))
             self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[self.selectedItem.text(0)]["ProjectWidget"])
         else:
             #for children
@@ -159,22 +159,22 @@ class MainGUI(QMainWindow):
 
             #Check if it's the case that a Session Name was selected
             if(self.selectedItem.text(0)[0] == "S"):
-                #print("SESSION_WIDGET: " + str(self.baseWidgets[parentSelectedItem.text(0)][self.selectedItem.text(0)]["SessionWidget"]))
+                #logging.debug"SESSION_WIDGET: " + str(self.baseWidgets[parentSelectedItem.text(0)][self.selectedItem.text(0)]["SessionWidget"]))
                 logging.debug("Setting right widget: " + str(self.baseWidgets[parentSelectedItem.text(0)][self.selectedItem.text(0)]["SessionWidget"]))
                 self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentSelectedItem.text(0)][self.selectedItem.text(0)]["SessionWidget"])
                 #Check if it's the case that a Annotate was selected
             elif(self.selectedItem.text(0)[0] == "A"):
-                #print("ANNOTATE " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["AnnotateWidget"]))
+                #logging.debug"ANNOTATE " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["AnnotateWidget"]))
                 logging.debug("Setting right widget: " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["AnnotateWidget"]))
                 self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["AnnotateWidget"])
             #Check if it's the case that a Rules was selected
             elif(self.selectedItem.text(0)[0] == "R"):
-                #print("RULES " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["RulesWidget"]))
+                #logging.debug"RULES " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["RulesWidget"]))
                 logging.debug("Setting right widget: " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["RulesWidget"]))
                 self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["RulesWidget"])
             #Check if it's the case that a Results was selected
             elif(self.selectedItem.text(0)[0] == "X"):
-                #print("RESULTS " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["ResultsWidget"]))
+                #logging.debug"RESULTS " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["ResultsWidget"]))
                 logging.debug("Setting right widget: " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["ResultsWidget"]))
                 self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["ResultsWidget"])
 

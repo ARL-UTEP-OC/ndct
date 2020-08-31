@@ -40,49 +40,49 @@ class ProjectSessions():
             return True
 
         #return false for session not added
-        #print("session: " + project_session + " already exists")
+        #logging.debug("session: " + project_session + " already exists")
         return False
     
     def get_length(self):
         return self.length
 
     def print_d(self):
-        print("WHOLE LIST: " + str(self.project))
-        print("Broken Down List:")
+        logging.debug("WHOLE LIST: " + str(self.project))
+        logging.debug("Broken Down List:")
         for p_id, p_info in self.project.items():
-            print("\nProject ID: ", p_id)
+            logging.debug("\nProject ID: ", p_id)
             for key in p_info:
-                print(key + ':', p_info[key])
+                logging.debug(key + ':', p_info[key])
 
     def get_project_id(self, project_name):
-        #print("IN GET PROJECT ID:")
-        #print("PROJECT NAME: " + project_name)
+        #logging.debug("IN GET PROJECT ID:")
+        #logging.debug("PROJECT NAME: " + project_name)
         for p_id, p_info in self.project.items():
             for key in p_info:
                 if key == "project_name":
                     info = key + ":", p_info[key]
                     project = key + ":", project_name
-                    #print(info)
+                    #logging.debug(info)
                     if str(info) in str(project):
-                        #print("PROJECT ID: " + str(p_id))
+                        #logging.debug("PROJECT ID: " + str(p_id))
                         return p_id            
 
 """ project_list = ProjectSessions()
 
 project_list.add_project("t0")
-print("FIRST PRINT")
+logging.debug("FIRST PRINT")
 project_list.print_d()
 project_list.add_project("t1")
-print("SECOND PRINT")
+logging.debug("SECOND PRINT")
 project_list.print_d()
 
-print("ADD SESSIONS")
+logging.debug("ADD SESSIONS")
 project_list.add_project_session("t0","sessionTest")
 project_list.add_project_session("t0","sessionTest")
 project_list.add_project_session("t1", "sessionTest")
-print("AFTER ADDING FIRST SESSION")
+logging.debug("AFTER ADDING FIRST SESSION")
 project_list.print_d()
 project_list.add_project_session("t0", "sessionTest2")
-print("AFTER ADDING SECOND SESSION")
+logging.debug("AFTER ADDING SECOND SESSION")
 
 project_list.print_d() """
