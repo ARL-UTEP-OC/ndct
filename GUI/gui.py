@@ -1,5 +1,5 @@
-import logging
 import sys
+import logging
 import os, traceback
 import shutil
 from PyQt5 import QtGui
@@ -14,9 +14,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QTabWidget, QVB
 
 import time
 import re
-
 from distutils.dir_util import copy_tree
-
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
 from PackageManager.PackageManager import PackageManager
 
@@ -32,7 +30,6 @@ from GUI.listProjectSessions import ProjectSessions
 from GUI.Dialogs.ExportDialog import ExportDialog
 
 class MainGUI(QMainWindow):
-
     def __init__(self, logman, comment_mgr, val):
         logging.debug("MainGUI(): Instantiated")
         super(MainGUI, self).__init__()
@@ -145,7 +142,6 @@ class MainGUI(QMainWindow):
             logging.debug("MainApp:onItemSelected no configurations left")
             self.statusBar.showMessage("No configuration items selected or available.")
             return
-
         #Check if it's the case that an project name was selected
         parentSelectedItem = self.selectedItem.parent()
 
@@ -456,7 +452,6 @@ class MainGUI(QMainWindow):
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()
         self.progress_dialog_overall.show()
-
         self.path = importedProjectPath
         self.annotatedPCAP = os.path.join(importedProjectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
         self.addProject()
@@ -632,6 +627,7 @@ class MainGUI(QMainWindow):
         self.progress_dialog_overall.update_progress()
         logging.debug('update_progress_bar(): Complete')
 
+
     def closeEvent(self, event):
         logging.debug("closeEvent(): instantiated")
 
@@ -655,6 +651,7 @@ class MainGUI(QMainWindow):
                                 "QUIT",
                                 "Are you sure you want to quit?",
                                 QMessageBox.Yes | QMessageBox.No)
+
             if close == QMessageBox.Yes:
                 #call the delete data function from new project, just to make sure
                 #everything has been cleared out
@@ -666,11 +663,8 @@ class MainGUI(QMainWindow):
                     self.quit_event.ignore()
             pass
         return
-        
+
     def quit_app(self):
         self.quit_event.accept()
         qApp.quit()
         return
-            
-        
-                

@@ -100,7 +100,6 @@ class Validator():
         self.cmd+= " -s " + self.suricata_rules_filename
         self.cmd+= " -k none"
         try:
-
             if sys.platform == "linux" or sys.platform == "linux2":
                 logging.debug('run_suricata_with_rules(): Running Command: ' + str(self.cmd))
                 output = subprocess.check_output(shlex.split(self.cmd))

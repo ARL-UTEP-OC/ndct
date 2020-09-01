@@ -1,10 +1,10 @@
 -- {{jinja_dissector_name}} frame number-based postdissector
 -- declare Fields to be read
 -- declare our (pseudo) protocol
-{{jinja_dissector_name}}_proto = Proto("{{jinja_dissector_name}}","{{jinja_dissector_name}} Log")
+{{jinja_dissector_name}}_proto = Proto("{{jinja_dissector_name|lower}}","{{jinja_dissector_name}} Log")
 -- create the fields for our "protocol"
-timestamp_F = ProtoField.string("{{jinja_dissector_name}}.timestamp","Original Event Timestamp")
-eventdata_F = ProtoField.string("{{jinja_dissector_name}}.data","Data")
+timestamp_F = ProtoField.string("{{jinja_dissector_name|lower}}.timestamp","Original Event Timestamp")
+eventdata_F = ProtoField.string("{{jinja_dissector_name|lower}}.data","Log Data")
 
 -- add the field to the protocol
 {{jinja_dissector_name}}_proto.fields = {timestamp_F, eventdata_F}
@@ -15,10 +15,10 @@ function {{jinja_dissector_name}}_proto.dissector(buffer,pinfo,tree)
     {%- for event in range(0, jinja_eventlist_thresh|length) %}
     if pinfo.abs_ts >= {{jinja_eventlist_thresh[event][0]}} and pinfo.abs_ts <= {{jinja_eventlist_thresh[event][1]}} then
        local subtree = tree:add({{jinja_dissector_name}}_proto,"{{jinja_dissector_name}} Log")
-       local mycomplientstr = tostring("{{jinja_eventlist_thresh[event][3] | replace("\\","") }}")
+       local mycomplientstr = tostring("{{jinja_eventlist_thresh[event][3] | replace("\\","") | replace("\"","'")}}")
 
-       subtree:add(tostring("Original Timestamp: "),tostring("{{jinja_eventlist_thresh[event][2]}}"))
-       subtree:add(tostring("Log Data: "), mycomplientstr)
+       subtree:add(timestamp_F,tostring("{{jinja_eventlist_thresh[event][2]}}"))
+       subtree:add(eventdata_F, mycomplientstr)
     end
     {%- endfor %}
 end

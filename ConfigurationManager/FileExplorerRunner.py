@@ -31,3 +31,4 @@ class FileExplorerRunner(QThread):
             logging.error('FileExplorerRunner(): Error during FileExplorer execution')
             traceback.print_exception(exc_type, exc_value, exc_traceback)
 
+

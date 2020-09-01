@@ -15,7 +15,7 @@ class ConfigurationManager():
     STRUCTURE_JSON_COMMENTS=os.path.join("tmp", "comments.JSON")
     STRUCTURE_RULES_GEN_FILE=os.path.join("GeneratedRules","generated.rules")
     STRUCTURE_ALERT_GEN_PATH=os.path.join("IDS-ALERTS")
-    STRUCTURE_ALERT_GEN_FILE= "fast.log"
+    STRUCTURE_ALERT_GEN_FILE=os.path.join("IDS-ALERTS","fast.log")
 
     @staticmethod 
     def get_instance():

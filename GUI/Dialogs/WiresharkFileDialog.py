@@ -6,7 +6,7 @@ class WiresharkFileDialog:
         logging.debug('wireshark_dialog(): Instantiated')
         widget = QFileDialog()
         filename = ""
-        filename, _ = QFileDialog.getOpenFileNames(widget, "Choose a Wireshark file", "", "Wireshark Files (*.pcapng)")
+        filename, _ = QFileDialog.getOpenFileNames(widget, "Choose a Wireshark file", "", "Wireshark Files (*.pcapng *.pcap)")
         if len(filename) > 0:
             return filename[0]
         else:

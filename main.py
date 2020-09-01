@@ -17,8 +17,9 @@ from Validator.Validator import Validator
 from GUI.gui import MainGUI
 
 if __name__ == '__main__':
-    logging.debug("MainApp(): Starting GUI")
+    logging.getLogger().setLevel(logging.DEBUG)
 
+    logging.debug("MainApp(): Starting GUI")
     logging.debug("MainApp(): Instantiating LogManager")
     logman = LogManager()
     logging.debug("MainApp(): Instantiating Comment Manager")
@@ -34,7 +35,7 @@ if __name__ == '__main__':
             logging.debug("MainApp(): config file " + sys.argv[1] + " does not exist")
     
     logging.debug("MainApp(): Instantiated")
-    logging.basicConfig(format='%(levelname)s:%(message)s', level = logging.DEBUG)
+    logging.basicConfig(stream=sys.stdout, format='%(levelname)s:%(message)s', level = logging.DEBUG)
 
     appctxt = QApplication(sys.argv)
     gui = MainGUI(logman, comment_mgr, validator)
