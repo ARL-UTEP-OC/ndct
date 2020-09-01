@@ -12,16 +12,10 @@ ECEL should run from a variety of Linux Distros, but it has been primarily teste
 ```
 sudo ./install.sh
 ```
-This will install all dependecies, including [eceld](https://github.com/ARL-UTEP-OC/eceld)
+This will install all dependecies, including [eceld](https://github.com/ARL-UTEP-OC/eceld) and [eceld-wireshark](https://github.com/ARL-UTEP-OC/eceld-wireshark)
 
 ## Run the GUI
-1. Open a separate terminal and start the eceld service
-```
-sudo eceld/eceld_service
-```
-Allow some time for the service to instantiate (this usually takes 5-10 seconds)
-
-2. Instantiate the GUI
+Instantiate the GUI
 ```
 sudo ./eceld-netsys-gui
 ```
