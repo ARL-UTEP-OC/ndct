@@ -55,7 +55,8 @@ class MainGUI(QMainWindow):
         #get project folder
         working_dir = os.getcwd()
         self.project_data_folder = os.path.join(working_dir, "ProjectData")
-        
+        self.createRequiredSubDirectories()
+
         self.folder_chosen = ''
         self.at_start = True
 
@@ -133,6 +134,21 @@ class MainGUI(QMainWindow):
 
         logging.debug("MainWindow(): Complete")
 
+    def createRequiredSubDirectories(self):
+        logging.debug("MainApp:createRequiredSubDirectories() instantiated")
+        if os.path.exists(self.project_data_folder) == False:
+            try:
+                os.makedirs(self.project_data_folder)
+            except:
+                logging.error("MainApp:createRequiredSubDirectories(): An error occured when trying to create project directories: ")
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                traceback.print_exception(exc_type, exc_value, exc_traceback)
+                QMessageBox.error(self,
+                                        "Create Error",
+                                        "Could not create project subdirectories, quitting...",
+                                        QMessageBox.Ok) 
+                exit()
+
     #RES Method
     def onItemSelected(self):
         logging.debug("MainApp:onItemSelected instantiated")
@@ -186,10 +202,10 @@ class MainGUI(QMainWindow):
 
         #Context menu project 
         self.projectContextMenu = QtWidgets.QMenu()
-        self.addCuration = self.projectContextMenu.addAction("Add Curation")
+        self.addCuration = self.projectContextMenu.addAction("Create curation session")
         self.addCuration.triggered.connect(self.on_add_curation_clicked)
 
-        self.exportProject = self.projectContextMenu.addAction("Export Project")
+        self.exportProject = self.projectContextMenu.addAction("Export project")
         self.exportProject.triggered.connect(self.on_export_clicked)
 
     def on_add_curation_clicked(self):
