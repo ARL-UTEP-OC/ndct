@@ -186,9 +186,9 @@ class NewProjectDialog(QtWidgets.QWidget):
             output_dissected += str(os.path.basename(dissected)) +"\r\n"
 
         if output_dissected == "":
-            QMessageBox.about(self, "Processing Complete", "No files processed")
+            QMessageBox.about(self, "Completed", "No files processed")
         else: 
-            QMessageBox.about(self, "Processing Complete", output_dissected)
+            QMessageBox.about(self, "Completed", output_dissected)
             
             self.logOutStartButton.setEnabled(True)
             self.logOutStopButton.setEnabled(False)
@@ -239,7 +239,7 @@ class NewProjectDialog(QtWidgets.QWidget):
 
         cancel = QMessageBox.question(
             self, "Close New Project",
-            "Are you sure you want to quit? Any unsaved work will be lost.",
+            "Are you sure you want to quit? Any Collected data work will be discarded.",
             QMessageBox.Close | QMessageBox.Cancel)
 
         if cancel == QMessageBox.Close:
