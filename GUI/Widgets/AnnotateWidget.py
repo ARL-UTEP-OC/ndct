@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QLabel, QPushButton, QTextEdit
 from PyQt5.QtCore import Qt
 import os
+import sys, traceback
 from shutil import copy2
 import logging
 
@@ -52,12 +53,16 @@ class AnnotateWidget(QtWidgets.QWidget):
 
         if os.path.exists(sessionFolder) == False:
             os.mkdir(sessionLabel)
+        #check if already exists (in case of import or reopen application)
+        sessionPCAP_Annotated = os.path.join(sessionFolder, "NeedsAnnotation.pcapng")
+        if os.path.exists(sessionPCAP_Annotated) == False:
+            try:
+                copy2(projectpcap, sessionPCAP_Annotated)
+            except Exception as e:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                logging.error("AnnotateWidget init(): An error occured ")
+                traceback.print_exception(exc_type, exc_value, exc_traceback)
 
-        copy2(projectpcap, sessionFolder)
-        sessionPCAP = os.path.join(sessionFolder, "AnnotatedPCAP.pcapng")
-        os.chdir(sessionFolder)
-        os.rename(sessionPCAP, "NeedsAnnotation.pcapng")
-        sessionPCAP = os.path.join(sessionFolder, "NeedsAnnotation.pcapng")
 
         self.pcapLineEdit = QtWidgets.QLineEdit()
         self.pcapLineEdit.setAcceptDrops(False)
@@ -83,7 +88,7 @@ class AnnotateWidget(QtWidgets.QWidget):
         self.pcapLineEdit2.setAcceptDrops(False)
         self.pcapLineEdit2.setReadOnly(True)
         self.pcapLineEdit2.setObjectName("pcapLineEdit2") 
-        self.pcapLineEdit2.setText(sessionPCAP)
+        self.pcapLineEdit2.setText(sessionPCAP_Annotated)
         self.pcapLineEdit2.setAlignment(Qt.AlignLeft)
         self.sessPCAPHorBox.addWidget(self.pcapLineEdit2)
 
@@ -95,7 +100,7 @@ class AnnotateWidget(QtWidgets.QWidget):
         self.annButtonHorBox = QtWidgets.QHBoxLayout()
         self.annButtonHorBox.setObjectName("annButtonHorBox")
         self.annotationButton = QPushButton("Annotate PCAP")
-        self.annotationButton.clicked.connect(lambda x: self.on_annotate_button_clicked(x, sessionPCAP, projectpath))
+        self.annotationButton.clicked.connect(lambda x: self.on_annotate_button_clicked(x, sessionPCAP_Annotated, projectpath))
         self.annButtonHorBox.setAlignment(Qt.AlignRight)
         self.annButtonHorBox.addWidget(self.annotationButton)
 
