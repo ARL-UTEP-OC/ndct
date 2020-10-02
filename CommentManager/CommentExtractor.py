@@ -48,11 +48,13 @@ class CommentExtractor():
 			field = str(field, encoding="utf-8")
 			packet_info = field.split(",")[:11]
 			(protocols, time_epoch, number, ip_src, ip_dst, udp_srcport, udp_dstport, tcp_srcport, tcp_dstport, tcp_flags, tcp_payload) = packet_info
-			packet_comment = field.split(",")[11]
+			packet_comment = field.split(",")[11].strip()
 			if "**" not in packet_comment:
 				logging.error( "packet_comment malformatted; skipping: " + str(packet_comment))
 				exit()
-			scope = payload_identifier = sf_call = description = confidence = ""
+			scope = payload_identifier = sf_call = description = confidence = advanced_attr = ""
+			adv_attr_src_mac = adv_attr_dst_mac = adv_attr_src_ip = adv_attr_dst_ip = adv_attr_src_port = adv_attr_dst_port = "false"
+			adv_attr_direction = ""
 			#check what fields are non-empty#
 			fields = packet_comment.split("**")
 			for field in fields:
@@ -71,6 +73,32 @@ class CommentExtractor():
 				elif field.startswith("confidence"):
 					if len(field.split("=")) > 0:
 						confidence = field.split("=")[1]
+				elif field.startswith("advanced"):
+					logging.debug("proc_output_to_json(): Found advanced field: " + str(field))
+					if len(field.split("=")) > 0:
+						advanced = field.split("=")[1]
+						advanced_attr = advanced.split(";")
+						for attr in advanced_attr:
+							if attr.startswith("srcMACAddress"):
+								adv_attr_src_mac = "true"
+							elif attr.startswith("dstMACAddress"):
+								adv_attr_dst_mac = "true"
+							elif attr.startswith("srcIPAddress"):
+								adv_attr_src_ip = "true"
+							elif attr.startswith("dstIPAddress"):
+								adv_attr_dst_ip = "true"
+							elif attr.startswith("dstIPAddress"):
+								adv_attr_dst_ip = "true"
+							elif attr.startswith("srcPort"):
+								adv_attr_src_port = "true"
+							elif attr.startswith("dstPort"):
+								adv_attr_dst_port = "true"
+							elif attr.startswith("bothDir"):
+								adv_attr_direction = "<>"
+							elif attr.startswith("ingress"):
+								adv_attr_direction = "<"
+							elif attr.startswith("egress"):
+								adv_attr_direction = ">"
 
 			#now fill in any that are required with default values:
 			if scope == "":
@@ -82,14 +110,14 @@ class CommentExtractor():
 			
 			#build basic IP json:
 			if "eth:ethertype:ip" in protocols: 
-				#hard coded keep values for now
-				ip_src_dict = {"val": ip_src, "keep": "false"}
-				ip_dest_dict = {"val": ip_dst, "keep": "false"}
+				
+				ip_src_dict = {"val": ip_src, "keep": adv_attr_src_ip}
+				ip_dest_dict = {"val": ip_dst, "keep": adv_attr_dst_ip}
 				comm_mode_dict = None
 
 				if scope == "single":
 					#hard coded direction for now
-					direction_dict = {"direction": ">"}
+					direction_dict = {"direction": adv_attr_direction}
 					comm_mode_dict = {"single": direction_dict}
 				elif scope == "conversation":
 					comm_mode_dict = "conversation"
@@ -118,8 +146,8 @@ class CommentExtractor():
 				if "eth:ethertype:ip:tcp" in protocols:
 					#TODO
 					#hard coded keep values for now; may be hard for participants with no prior network skills
-					sport_dict = {"val": tcp_srcport, "keep": "false"}
-					dport_dict = {"val": tcp_dstport, "keep": "false"}
+					sport_dict = {"val": tcp_srcport, "keep": adv_attr_src_port}
+					dport_dict = {"val": tcp_dstport, "keep": adv_attr_dst_port}
 
 					#TODO payload-based identification for TCP 
 					#let user choose if case matters
