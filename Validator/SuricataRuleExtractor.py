@@ -49,9 +49,11 @@ class SuricataRuleExtractor():
 
                     if ip_dict["ip_dest"]["keep"] == "true":
                         suri_ip_dest = ip_dict["ip_dest"]["val"]
-
-                    if ip_dict["comm_mode"] == "single":
+                    print("READ DIRECTION1: " + str(ip_dict["comm_mode"]))
+                    if "single" in ip_dict["comm_mode"]:
+                        print("READ DIRECTION2: " + str(ip_dict["comm_mode"]))
                         comm_mode_single_dict = ip_dict["comm_mode"]["single"]
+                        print("READ DIRECTION3: " + str(comm_mode_single_dict))
                         if comm_mode_single_dict["direction"] == ">":
                             suri_direction = "->"
                         elif comm_mode_single_dict["direction"] == "<":
@@ -71,8 +73,6 @@ class SuricataRuleExtractor():
 
                     if "eth:ethertype:ip:icmp" in protocol_dict:
                         suri_proto = "icmp"
-                        #TODO: a hack
-                        suri_ip_dest = "any"
                         ##Write the rule as an ICMP rule
                         suricata_rule = "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
                         + suri_direction + " " + suri_ip_dest + " " + suri_dport \
