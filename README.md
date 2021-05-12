@@ -1,4 +1,4 @@
-# ECELd-NetSys
+# Network Data Curation Toolkit (NDCT)
 
 ## System Requirements
 ECEL should run from a variety of Linux Distros, but it has been primarily tested on:
