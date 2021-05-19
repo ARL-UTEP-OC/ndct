@@ -45,8 +45,8 @@ if lsb_release -c | grep -iq 'xenial'; then
 fi
 
 if lsb_release -d | grep -iq 'kali'; then
-    if lsb_release -r | grep -q '2020'; then
-        OS_VERSION="kali_2020"
+    if lsb_release -r | grep -q '2020' || lsb_release -r | grep -q '2021.1'; then
+        OS_VERSION="kali_OOB"
         #works out of the box
     fi
     if lsb_release -r | grep -q '2019.2'; then

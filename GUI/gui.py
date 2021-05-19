@@ -25,7 +25,7 @@ from GUI.Widgets.RulesWidget import RulesWidget
 from GUI.Widgets.ResultsWidget import ResultsWidget
 from GUI.Threading.BatchThread import BatchThread
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
-from GUI.Dialogs.NewProjectDialog import NewProjectDialog
+from GUI.Dialogs.CollectDataDialog import CollectDataDialog
 from GUI.listProjectSessions import ProjectSessions
 from GUI.Dialogs.ExportDialog import ExportDialog
 
@@ -41,6 +41,7 @@ class MainGUI(QMainWindow):
         self.val = val
 
         self.project_sessions = ProjectSessions()
+        self.cm = ConfigurationManager.get_instance()
 
         #shared data between widgets
         self.configname = ''
@@ -54,7 +55,7 @@ class MainGUI(QMainWindow):
 
         #get project folder
         working_dir = os.getcwd()
-        self.project_data_folder = os.path.join(working_dir, "ProjectData")
+        self.project_data_folder = self.cm.read_config_value("PROJECTS", "PROJECTS_BASE_PATH")#os.path.join(working_dir, "ProjectData")
         self.createRequiredSubDirectories()
 
         self.folder_chosen = ''
@@ -340,7 +341,7 @@ class MainGUI(QMainWindow):
     #Used to create a new project, this is where the prompt to write a name for the project is taken.
     def newProject(self):
         #Creating a custom widget to display what is needed for creating a new project:
-        self.newPro = NewProjectDialog(self.logman, self.existingconfignames)
+        self.newPro = CollectDataDialog(self.logman, self.existingconfignames)
         #slots to receive data from the custom widget
         self.newPro.logEnabled.connect(self.log_enabled)
         self.newPro.created.connect(self.project_created)
@@ -528,17 +529,10 @@ class MainGUI(QMainWindow):
             #for already saved project
             project_path = os.path.join(self.project_data_folder, name)
             project_pcap_session = os.path.join(project_path, "PCAP")
-            pcap_session_found = False
-            for contents in project_pcap_session:
-                if os.path.isdir(contents):
-                    pcap_session_found = True 
-            if pcap_session_found == True:
-                self.traverse_sessions(name, project_pcap_session)
-
-            #sessions_rules_dir = os.path.join(project_path, "RULES")
-            #if os.path.exists(sessions_rules_dir) == True:
-                #self.traverse_sessions(name, sessions_rules_dir)
-            
+            if os.path.exists(project_pcap_session):
+                paths, dirs, files = next(os.walk(project_pcap_session))
+                if len(dirs) > 0:
+                    self.traverse_sessions(name, project_pcap_session)
 
     def traverse_sessions(self, project_name, path):
         #if RULES dir exists in project folder, then sessions exists

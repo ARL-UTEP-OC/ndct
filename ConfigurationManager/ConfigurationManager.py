@@ -7,6 +7,7 @@ class ConfigurationManager():
     __instance = None
     
     CONFIG_FILENAME = "config.ini"
+    STRUCTURE_PROJECTS_BASE_PATH="ProjectData"
     STRUCTURE_PARSED_PATH="ParsedLogs"
     STRUCTURE_ANNOTATED_PCAP_FILE=os.path.join("PCAP", "AnnotatedPCAP.pcapng")
     STRUCTURE_CLICKS_PATH="Clicks"

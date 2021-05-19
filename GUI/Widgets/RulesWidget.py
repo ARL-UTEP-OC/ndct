@@ -36,25 +36,21 @@ class RulesWidget(QtWidgets.QWidget):
         self.labelVerBoxSess.addWidget(self.rulesLabel)
 
         #get project pcap path
+
         projectpath = os.path.join(projectfolder, projectName)
-        pcapFolder = "PCAP/AnnotatedPCAP.pcapng"
-        projectpcap = os.path.join(projectpath, pcapFolder)
         projectPCAPFolder = os.path.join(projectpath, "PCAP/")
+        projectpcap = os.path.join(projectPCAPFolder, "AnnotatedPCAP.pcapng")
+
         sessionPCAPFolder = os.path.join(projectPCAPFolder, sessionLabel)
         self.sessionPCAP = os.path.join(sessionPCAPFolder, "NeedsAnnotation.pcapng")
 
         #create a directory for session rules
-        os.chdir(rulesDir)
         self.sessionRulesDir = os.path.join(rulesDir, sessionLabel)
 
         #if corresponding session dir doesnt exist, create dir
         if os.path.exists(self.sessionRulesDir) == False:
-            os.mkdir(sessionLabel)
+            os.mkdir(self.sessionRulesDir)
         
-        #change dir back
-        og_path = os.path.dirname(projectfolder)
-        os.chdir(og_path)
-
         #Project PCAP
         self.pcapHorBox = QtWidgets.QHBoxLayout()
         self.pcapHorBox.setObjectName("pcapHorBox")

@@ -44,7 +44,6 @@ class ResultsWidget(QtWidgets.QWidget):
         self.sessionPCAP = os.path.join(sessionPCAPFolder, "NeedsAnnotation.pcapng")
 
         #Create dir for session alerts
-        os.chdir(resultsDir)
         self.sessionAlertsDir = os.path.join(resultsDir, sessionLabel)
 
         try:
@@ -55,10 +54,6 @@ class ResultsWidget(QtWidgets.QWidget):
             exc_type, exc_value, exc_traceback = sys.exc_info()
             logging.error("comment_to_json(): An error occured ")
             traceback.print_exception(exc_type, exc_value, exc_traceback)
-
-        #change dir again
-        og_path = os.path.dirname(projectfolder)
-        os.chdir(og_path)
 
         #get session rules
         self.sessionRulesDir = os.path.join(projectpath, "RULES")

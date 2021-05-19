@@ -44,15 +44,13 @@ class AnnotateWidget(QtWidgets.QWidget):
 
         #get project pcap path
         projectpath = os.path.join(projectfolder, projectName)
-        pcapFolder = "PCAP/AnnotatedPCAP.pcapng"
-        projectpcap = os.path.join(projectpath, pcapFolder)
         projectPCAPFolder = os.path.join(projectpath, "PCAP/")
-
-        os.chdir(projectPCAPFolder)
+        projectpcap = os.path.join(projectPCAPFolder, "AnnotatedPCAP.pcapng")
+        
         sessionFolder = os.path.join(projectPCAPFolder,sessionLabel)
 
         if os.path.exists(sessionFolder) == False:
-            os.mkdir(sessionLabel)
+            os.makedirs(sessionFolder)
         #check if already exists (in case of import or reopen application)
         sessionPCAP_Annotated = os.path.join(sessionFolder, "NeedsAnnotation.pcapng")
         if os.path.exists(sessionPCAP_Annotated) == False:
