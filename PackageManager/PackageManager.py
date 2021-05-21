@@ -1,6 +1,6 @@
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
 import zipfile
-import os, 
+import os
 import sys, traceback
 import shutil
 import logging
