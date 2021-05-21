@@ -2,78 +2,48 @@ from ConfigurationManager.ConfigurationManager import ConfigurationManager
 import zipfile
 import os
 import shutil
+import logging
 
 class PackageManager():
     def __init__(self):
-        self.file_path = ''
-        self.file_name = ''
-        self.main_path = ''
-        self.zip_file = ''
-        self.new_extracted_dir = ''
+        logging.debug("PackageManager(): Instantiating")
         
-    def unzip(self, file_path, file_name, project_data_path):
-        self.file_path = file_path
-        self.file_name = file_name
-        self.main_path = project_data_path
-        if file_path != None:
-            self.zip_file = os.path.basename(file_path)
-        
-        #copy .zip file to corresponding directory first
-        path_to_selected = os.path.dirname(os.path.realpath(self.file_path))
-        os.chdir(path_to_selected)
-        self.copy_files(self.zip_file, self.main_path)
-        
-        os.chdir(self.main_path)
-        new_file_path = os.path.join(self.main_path, self.file_name)
+    def unzip(self, zipfile_path, configname, project_data_path):
+        logging.debug("PackageManager(): unzip(): Instantiating")
+        if zipfile_path == None or os.path.exists(zipfile_path) == False:
+            logging.error("Could not unzip because path was not specified or does not exist.")
+            return
 
-        os.mkdir(new_file_path)
-        
-        with zipfile.ZipFile(self.zip_file, 'r') as zip_ref:
-            zip_ref.extractall(self.main_path)
+        outpath = os.path.join(project_data_path, configname)
+        if os.path.exists(outpath) == False:
+            os.mkdir(outpath)
+        else:
+            logging.error("Could not unzip because config with same name already exists: " + str(configname))
+            return
+        with zipfile.ZipFile(zipfile_path, 'r') as zip_ref:
+            zip_ref.extractall(outpath)
 
-        #for next steps of import.. 
-        self.new_extracted_dir = os.path.dirname(self.file_name)
-        
-        #once done, remove the zip file
-        #keep only the extracted directory
-        os.remove(self.zip_file)
+    def zip(self, output_path, project_name, project_data_path):
+        logging.debug("PackageManager(): zip(): Instantiating")
 
-        #change dir back
-        og_path = os.path.dirname(self.main_path)
-        os.chdir(og_path)
-
-    def zip(self, output_path, project_to_compress, project_data_path):
-        self.main_path = project_data_path
-
-        dir_comp = self.get_dir_components(project_to_compress)
+        output_filename = os.path.join(output_path, str(project_name)+".zip")
+        dir_comp = self.get_dir_components(project_data_path)
 
         #create the zip file in the chosen output path
-        os.chdir(output_path)
-        zipf = zipfile.ZipFile(project_to_compress+'.zip', 'w')
+        zipf = zipfile.ZipFile(output_filename, 'w')
 
-        #copy files to chosen output path
-        new_dir = os.path.join(output_path, project_to_compress)
-        os.mkdir(new_dir)
-        os.chdir(self.main_path)
-        self.copy_files(project_to_compress, new_dir)
-        
+        #now zip the files       
         with zipf:
             for file in dir_comp:
-                zipf.write(file)
+                logging.debug("FILE PATH: " + str(file))
+                outfile = file[len(project_data_path):]
+                logging.debug("zipping file: " + str(file) + " as " + str(outfile))
+                zipf.write(file, arcname=outfile)
 
-        #remove the copied directory and keep only the .zip file
-        dir_to_rm = os.path.join(output_path, project_to_compress)
-        shutil.rmtree(dir_to_rm)
-
-        #once done, change dir back
-        og_path = os.path.dirname(self.main_path)
-        os.chdir(og_path)
-
-    def get_dir_components(self, dirname):
-        #go to the projects folder to get path
-        os.chdir(self.main_path)
+    def get_dir_components(self, project_data_path):
+        logging.debug("PackageManager(): get_dir_components(): Instantiating")
         filePaths = []
-        for root, directories, files in os.walk(dirname):
+        for root, directories, files in os.walk(project_data_path):
             for filename in files:
                 filePath = os.path.join(root, filename)
                 filePaths.append(filePath)
@@ -81,10 +51,8 @@ class PackageManager():
         
         return filePaths
 
-    def get_new_dir(self):
-        return self.new_extracted_dir
-
     def copy_files(self, src, dst):
+        logging.debug("PackageManager(): copy_files(): Instantiating")
         if os.path.isdir(src):
             #if is dir, copy whole directory
             self.copytree(src, dst)
@@ -92,6 +60,7 @@ class PackageManager():
             shutil.copy2(src, dst)
 
     def copytree(self, src, dst, symlinks=False, ignore=None):
+        logging.debug("PackageManager(): copytree(): Instantiating")
         for item in os.listdir(src):
             s = os.path.join(src, item)
             d = os.path.join(dst, item)

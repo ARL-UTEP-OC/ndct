@@ -44,34 +44,25 @@ class MainGUI(QMainWindow):
         self.cm = ConfigurationManager.get_instance()
 
         #shared data between widgets
-        self.configname = ''
-        self.path = ''
         self.existingconfignames = []
-        self.annotatedPCAP = ''
-        self.sessionName = ''
         self.logEnabled = ''
         self.closeConfirmed = ''
         self.newProject_pressed = False
 
         #get project folder
-        working_dir = os.getcwd()
-        self.project_data_folder = self.cm.read_config_value("PROJECTS", "PROJECTS_BASE_PATH")#os.path.join(working_dir, "ProjectData")
+        self.project_data_folder = self.cm.read_config_value("PROJECTS", "PROJECTS_BASE_PATH")
         self.createRequiredSubDirectories()
 
-        self.folder_chosen = ''
         self.at_start = True
 
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
         mainlayout = QVBoxLayout()
         self.baseWidget = QWidget() #BaseWidget()
-        self.sessionWidget = QWidget()
         self.annotateWidget = QWidget()
-        self.rulesWidget = QWidget()
         self.resultsWidget = QWidget()
         self.projectTree = QtWidgets.QTreeWidget()
         self.baseWidgets = {}
-        self.sessionWidgets = {}
         self.blankTreeContextMenu = {}
         
         quit = QAction("Quit", self)
@@ -199,7 +190,6 @@ class MainGUI(QMainWindow):
        	self.addproject = self.blankTreeContextMenu.addAction("New project")
        	self.addproject.triggered.connect(self.newProject)
         self.importproject = self.blankTreeContextMenu.addAction("Import project folder")
-        self.importproject.triggered.connect(self.importActionEvent)
 
         #Context menu project 
         self.projectContextMenu = QtWidgets.QMenu()
@@ -221,33 +211,33 @@ class MainGUI(QMainWindow):
         
         selectedItemName = selectedItem.text(0)
 
-        self.sessionName, ok = QInputDialog.getText(self, 'New Session', 
+        sessionName, ok = QInputDialog.getText(self, 'New Session', 
             'Enter new session name \r\n(non alphanumeric characters will be removed)')
         if ok:
-            self.sessionName = ''.join(e for e in self.sessionName if e.isalnum())
-            if self.sessionName == '':
+            sessionName = ''.join(e for e in sessionName if e.isalnum())
+            if sessionName == '':
                 QMessageBox.warning(self,
                                         "Invalid Name",
                                         "The session name specified is invalid",
                                         QMessageBox.Ok) 
 
             else: 
-                add_session = self.add_session_list(selectedItemName, self.sessionName)
+                add_session = self.add_session_list(selectedItemName, sessionName)
                 if add_session == False:
                     QMessageBox.warning(self,
                                             "Session Name Exists",
                                             "The session name specified already exists",
                                             QMessageBox.Ok)    
                 else:
-                    sessionLabel = "S: " + self.sessionName
+                    sessionLabel = "S: " + sessionName
                     #create tree widget item
                     sessionItem = QtWidgets.QTreeWidgetItem(selectedItem)
                     sessionItem.setText(0,sessionLabel)   
-                    self.sessionWidget = SessionWidget(self.sessionName)
+                    sessionWidget = SessionWidget(sessionName)
 
                     self.baseWidgets[selectedItemName][sessionLabel] = {} #project name (Parent of Parent) + session name (parent of children)
-                    self.baseWidgets[selectedItemName][sessionLabel]["SessionWidget"] = self.sessionWidget
-                    self.basedataStackedWidget.addWidget(self.sessionWidget)
+                    self.baseWidgets[selectedItemName][sessionLabel]["SessionWidget"] = sessionWidget
+                    self.basedataStackedWidget.addWidget(sessionWidget)
 
                     #create other widget items
                     ##ANNOTATE
@@ -255,7 +245,7 @@ class MainGUI(QMainWindow):
                     annLabel = "A: " + "Annotate"
                     annItem.setText(0, annLabel)
                     sessionItem.addChild(annItem)
-                    self.annotateWidget = AnnotateWidget(self.project_data_folder, selectedItemName, self.sessionName, self.comment_mgr) #send project name for the corresponding directory
+                    self.annotateWidget = AnnotateWidget(self.project_data_folder, selectedItemName, sessionName, self.comment_mgr) #send project name for the corresponding directory
 
                     self.baseWidgets[selectedItemName][sessionLabel]["AnnotateWidget"] = self.annotateWidget #child
                     self.basedataStackedWidget.addWidget(self.annotateWidget)
@@ -272,10 +262,10 @@ class MainGUI(QMainWindow):
                     if os.path.exists(rulesDir) == False:
                         os.mkdir(rulesDir)
 
-                    self.rulesWidget = RulesWidget(self.project_data_folder, selectedItemName, self.sessionName, rulesDir, self.comment_mgr, self.val)
+                    rulesWidget = RulesWidget(self.project_data_folder, selectedItemName, sessionName, rulesDir, self.comment_mgr, self.val)
 
-                    self.baseWidgets[selectedItemName][sessionLabel]["RulesWidget"] = self.rulesWidget
-                    self.basedataStackedWidget.addWidget(self.rulesWidget)
+                    self.baseWidgets[selectedItemName][sessionLabel]["RulesWidget"] = rulesWidget
+                    self.basedataStackedWidget.addWidget(rulesWidget)
 
                     ##RESULTS
                     resultsItem = QtWidgets.QTreeWidgetItem()
@@ -289,7 +279,7 @@ class MainGUI(QMainWindow):
                     if os.path.exists(resultsDir) == False:
                         os.mkdir(resultsDir)
                 
-                    self.resultsWidget = ResultsWidget(self.project_data_folder, selectedItemName, self.sessionName, resultsDir, self.val)
+                    self.resultsWidget = ResultsWidget(self.project_data_folder, selectedItemName, sessionName, resultsDir, self.val)
                
                     self.baseWidgets[selectedItemName][sessionLabel]["ResultsWidget"] = self.resultsWidget
                     self.basedataStackedWidget.addWidget(self.resultsWidget)
@@ -301,9 +291,10 @@ class MainGUI(QMainWindow):
         selectedItem = self.projectTree.currentItem()
         selectedItemName = selectedItem.text(0)
 
-        project_path = os.path.join(selectedItemName)
+        project_folder = os.path.join(self.project_data_folder, selectedItemName)
+        project_folder = os.path.abspath(project_folder)
 
-        self.exportPro = ExportDialog(self, project_path, self.project_data_folder).exec_()
+        self.exportPro = ExportDialog(self, selectedItemName, project_folder).exec_()
         #self.exportPro.setWindowModality(QtCore.Qt.ApplicationModal)
         #self.exportPro.show()
 
@@ -320,17 +311,21 @@ class MainGUI(QMainWindow):
         self.mainMenu = QMenuBar()
         self.fileMenu = self.mainMenu.addMenu("File")
 
-        self.newProjectMenuButton = QAction(QIcon(), "New Project", self)
-        self.newProjectMenuButton.setShortcut("Ctrl+N")
-        self.newProjectMenuButton.setStatusTip("Create New Project")
-        self.newProjectMenuButton.triggered.connect(self.newProject)
-        self.fileMenu.addAction(self.newProjectMenuButton)
+        self.blankTreeContextMenu = QtWidgets.QMenu()
+       	self.addExperiment = self.blankTreeContextMenu.addAction("New Project")
+       	self.addExperiment.triggered.connect(self.newProject)
+        # self.importExperiment.triggered.connect(self.importFolderActionEvent)
 
-        self.importProjectMenuButton = QAction(QIcon(), "Import Project", self)
-        self.importProjectMenuButton.setShortcut("Ctrl+I")
-        self.importProjectMenuButton.setStatusTip("Import folder")
-        self.importProjectMenuButton.triggered.connect(self.importActionEvent)
-        self.fileMenu.addAction(self.importProjectMenuButton)
+        # Experiment context menu
+        self.importContextMenu =  QtWidgets.QMenu("Import Project")
+        self.blankTreeContextMenu.addMenu(self.importContextMenu)
+        
+        self.fromFolderContextSubMenu = self.importContextMenu.addAction("From Folder")
+        self.fromFolderContextSubMenu.triggered.connect(self.importFromFolder)
+
+        self.fromZipContextSubMenu = self.importContextMenu.addAction("From Zip")
+        self.fromZipContextSubMenu.triggered.connect(self.importFromZip)
+
 
         self.quitAppMenuButton = QAction(QIcon(), "Quit", self)
         self.quitAppMenuButton.setShortcut("Ctrl+Q")
@@ -353,13 +348,10 @@ class MainGUI(QMainWindow):
     #Slot for when the user created the new project, path and configname
     @QtCore.pyqtSlot(str, list, str, str)
     def project_created(self, configname, existingconfignames, pcap, path):
-        #update project info with new info selected from widget
-        self.configname = configname
-        self.path = path
+        #update project info with new info selected from widget     
         self.existingconfignames = existingconfignames
-        self.annotatedPCAP = pcap
         #create the new project with the updated information
-        self.addProject()
+        self.addProject(configname, pcap, path)
 
     #Slot to let us know if the logging has started
     @QtCore.pyqtSlot(str)
@@ -372,120 +364,114 @@ class MainGUI(QMainWindow):
         self.closeConfirmed = status
 
     #Used to create a new project, and this is where the project will actually be populated
-    def addProject(self):
-        self.projectWidget  = ProjectWidget(self.configname, self.annotatedPCAP, self.path)
+    def addProject(self, configname, annotatedPCAP, path):
+        self.projectWidget  = ProjectWidget(configname, annotatedPCAP, path)
         #create the folders and files for new project:
-        self.filename = self.configname
+        filename = configname
 
-        if self.filename != None:
-            logging.debug("addProject(): OK pressed and valid configname entered: " + str(self.filename))
+        if filename != None:
+            logging.debug("addProject(): OK pressed and valid configname entered: " + str(filename))
         
         configTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.projectTree)
-        configTreeWidgetItem.setText(0,self.filename)
-        self.projectWidget.addProjectItem(self.filename)
+        configTreeWidgetItem.setText(0,filename)
+        self.projectWidget.addProjectItem(filename)
 
         #Add base info
-        self.baseWidgets[self.configname] = {"BaseWidget": {}, "ProjectWidget": {}, "SessionWidget": {}, "AnnotateWidget": {}, "RulesWidget": {}, "ResultsWidget": {}}
-        self.baseWidgets[self.configname]["BaseWidget"] = self.baseWidget
+        self.baseWidgets[configname] = {"BaseWidget": {}, "ProjectWidget": {}, "SessionWidget": {}, "AnnotateWidget": {}, "RulesWidget": {}, "ResultsWidget": {}}
+        self.baseWidgets[configname]["BaseWidget"] = self.baseWidget
         self.basedataStackedWidget.addWidget(self.baseWidget)
         
-        self.baseWidgets[self.configname]["ProjectWidget"] = self.projectWidget
+        self.baseWidgets[configname]["ProjectWidget"] = self.projectWidget
 
         self.basedataStackedWidget.addWidget(self.projectWidget)
         self.basedataStackedWidget.addWidget(self.baseWidget)
 
         #add to list
-        self.project_sessions.add_project(self.configname)
+        self.project_sessions.add_project(configname)
 
-    def importActionEvent(self):
-        logging.debug("MainApp:importActionEvent() instantiated") 
-        
-        if self.at_start == False:
-            #Ask user if they want to import file or dir
-            import_type = QMessageBox.question(self,
-                                "IMPORT",
-                                "Do you want to import a .zip file?",
-                                QMessageBox.Yes | QMessageBox.No)
-            
-            if import_type == QMessageBox.Yes:
-                zip_file = QFileDialog()
-                filenames, _ = QFileDialog.getOpenFileNames(zip_file, "Select File")
+    def importFromZip(self):
+        logging.debug("MainApp:importFromZip() instantiated") 
+        zip_file = QFileDialog()
+        zip_file.setWindowTitle("Select File")
+        zip_file.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+        zip_file.setNameFilter("Zip Files (*.zip)")
 
-                if len(filenames) < 0:
-                    logging.debug("File choose cancelled")
-                    return
+        filenames = zip_file.getOpenFileName()
+        filename = filenames[0]
+        if filename == "":
+            logging.debug("File choose cancelled")
+            return
+        else:
 
-                if len(filenames) > 0:
-                    self.zip_to_import = filenames[0]
-                    self.file_name = os.path.basename(self.zip_to_import)
-                    self.file_name = os.path.splitext(self.file_name)[0]
-                    self.configname = self.file_name
+            configname = os.path.basename(filename)
+            configname = os.path.splitext(configname)[0]
 
-                    if self.configname in self.existingconfignames:
-                        QMessageBox.warning(self,
-                                            "Name Exists",
-                                            "A project with the same name already exists.",
-                                            QMessageBox.Ok)            
-                        return None
-                    else:
-                        #instance of package manage
-                        pack_mgr = PackageManager()
-                        self.populate_import(pack_mgr)
-
+            if configname in self.existingconfignames:
+                QMessageBox.warning(self,
+                                    "Name Exists",
+                                    "A project with the same name already exists.",
+                                    QMessageBox.Ok)            
+                return None
             else:
-                self.folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Directory to Store Data"))
+                #instance of package manage
+                pack_mgr = PackageManager()
+                self.populate_import(pack_mgr, configname, os.path.abspath(filename))
 
-                if self.folder_chosen == "":
-                    logging.debug("File choose cancelled")
-                    return
+    def importFromFolder(self, configname):
+        logging.debug("MainApp:importFromFolder() instantiated") 
 
-                if len(self.folder_chosen) > 0:
-                    baseNoExt = os.path.basename(self.folder_chosen)
-                    baseNoExt = os.path.splitext(baseNoExt)[0]
-                    self.configname = ''.join(e for e in baseNoExt if e.isalnum)
-                    if self.configname in self.existingconfignames:
-                        QMessageBox.warning(self,
-                                            "Name Exists",
-                                            "A project with the same name already exists.",
-                                            QMessageBox.Ok)            
-                        return None
-            
-                    else:
-                        self.populate_import("dir")
+        folder_chosen = str(QFileDialog.getExistingDirectory(self, "Select Directory to Store Data"))
+        if folder_chosen == "":
+            logging.debug("File choose cancelled")
+            return
+
+        if len(folder_chosen) > 0:
+            baseNoExt = os.path.basename(folder_chosen)
+            baseNoExt = os.path.splitext(baseNoExt)[0]
+            configname = ''.join(e for e in baseNoExt if e.isalnum)
+            if configname in self.existingconfignames:
+                QMessageBox.warning(self,
+                                    "Name Exists",
+                                    "A project with the same name already exists.",
+                                    QMessageBox.Ok)            
+                return None
+    
+            else:
+                self.populate_import("dir", configname, folder_chosen)
+
                 
-    def populate_import(self, function):
-        self.existingconfignames += [self.configname]
-        importedProjectPath = os.path.join(self.project_data_folder, self.configname)
+    def populate_import(self, function, configname, from_file):
+        self.existingconfignames += [configname]
+        importedProjectPath = os.path.join(self.project_data_folder, configname)
         #copy selected dir to new dir
         self.batch_thread = BatchThread()
         self.batch_thread.progress_signal.connect(self.update_progress_bar)
         self.batch_thread.completion_signal.connect(self.copy_dir_complete)
         if function == "dir":
-            self.batch_thread.add_function(self.copy_dir, importedProjectPath)
+            self.batch_thread.add_function(self.copy_dir, from_file, importedProjectPath)
 
         else:
-            self.batch_thread.add_function(function.unzip, self.zip_to_import, self.file_name, self.project_data_folder)
+            self.batch_thread.add_function(function.unzip, from_file, configname, self.project_data_folder)
 
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()
         self.progress_dialog_overall.show()
-        self.path = importedProjectPath
-        self.annotatedPCAP = os.path.join(importedProjectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
-        self.addProject()
+        path = importedProjectPath
+        annotatedPCAP = os.path.join(importedProjectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+        self.addProject(configname, annotatedPCAP, path)
 
-        
     def load_project_widget(self):
         logging.debug("load_project_widget(): loading project widget with saved projects")
         for name in self.existingconfignames:
-            self.path = os.path.join(self.project_data_folder, name)
-            self.annotatedPCAP = os.path.join(self.path, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
-            self.configname = name
-            self.addProject()
+            path = os.path.join(self.project_data_folder, name)
+            annotatedPCAP = os.path.join(path, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+            configname = name
+            self.addProject(configname, annotatedPCAP, path)
         logging.debug("load_project_widget(): Complete")
 
-    def copy_dir(self, importPath):
+    def copy_dir(self, from_dir, to_dir):
         logging.debug("copy_dir(): copying selected directory")
-        copy_tree(self.folder_chosen, importPath)
+        copy_tree(from_dir, to_dir)
         logging.debug("copy_dir(): copying complete")
 
     def copy_dir_complete(self):
@@ -570,11 +556,11 @@ class MainGUI(QMainWindow):
         selectedItem = self.projectTree.findItems(project_name, Qt.Qt.MatchContains)
         sessionItem = QtWidgets.QTreeWidgetItem(selectedItem[0])
         sessionItem.setText(0,sessionLabel)   
-        self.sessionWidget = SessionWidget(sessionName)
+        sessionWidget = SessionWidget(sessionName)
         
         self.baseWidgets[project_name][sessionLabel] = {} #project name (Parent of Parent) + session name (parent of children)
-        self.baseWidgets[project_name][sessionLabel]["SessionWidget"] = self.sessionWidget
-        self.basedataStackedWidget.addWidget(self.sessionWidget)
+        self.baseWidgets[project_name][sessionLabel]["SessionWidget"] = sessionWidget
+        self.basedataStackedWidget.addWidget(sessionWidget)
 
         #create other widget items
         ##ANNOTATE

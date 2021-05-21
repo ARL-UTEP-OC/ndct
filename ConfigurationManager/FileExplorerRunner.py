@@ -2,6 +2,7 @@ import logging
 import subprocess
 import shlex
 import sys, traceback
+import os
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
 from PyQt5.QtCore import QThread
 
@@ -11,8 +12,8 @@ class FileExplorerRunner(QThread):
         logging.debug('FileExplorerRunner(): Instantiated')
         QThread.__init__(self)
         self.cmd = ConfigurationManager.get_instance().read_config_abspath("SYSTEM","FILE_EXPLORER_FILENAME")
-        if folder_location != None:
-            self.cmd+= " " + folder_location
+        if folder_location != None and os.path.exists(folder_location):
+            self.cmd+= " " + os.path.abspath(folder_location)
         logging.debug('FileExplorerRunner(): Complete')
 
     def run(self):

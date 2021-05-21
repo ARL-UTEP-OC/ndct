@@ -134,7 +134,7 @@ class ExportDialog(QtWidgets.QDialog):
                             QMessageBox.Ok)
         self.progress_dialog_overall.hide()
         self.hide()
-        logging.debug("copy_dir_complete(): Complete")
+        logging.debug("export_complete(): Complete")
 
     def on_cancel_button_clicked(self, event):
         logging.debug('on_cancel_button_clicked(): Instantiated')
