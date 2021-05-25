@@ -8,8 +8,10 @@ class ConfigurationManager():
     
     CONFIG_FILENAME = "config.ini"
     STRUCTURE_PROJECTS_BASE_PATH="ProjectData"
+    STRUCTURE_PCAP_SUBDIR="PCAP"
     STRUCTURE_PARSED_PATH="ParsedLogs"
-    STRUCTURE_ANNOTATED_PCAP_FILE=os.path.join("PCAP", "AnnotatedPCAP.pcapng")
+    STRUCTURE_DEFAULT_RAW_PCAP_FILE=os.path.join(STRUCTURE_PCAP_SUBDIR, "RawCapture.pcapng")
+    STRUCTURE_ANNOTATED_PCAP_FILE=os.path.join(STRUCTURE_PCAP_SUBDIR, "AnnotatedPCAP.pcapng")
     STRUCTURE_CLICKS_PATH="Clicks"
     STRUCTURE_TIMED_PATH="Timed"
     STRUCTURE_GEN_DISSECTORS_PATH="GeneratedDissectors"

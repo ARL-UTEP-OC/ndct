@@ -25,9 +25,10 @@ from GUI.Widgets.RulesWidget import RulesWidget
 from GUI.Widgets.ResultsWidget import ResultsWidget
 from GUI.Threading.BatchThread import BatchThread
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
-from GUI.Dialogs.CollectDataDialog import CollectDataDialog
 from GUI.listProjectSessions import ProjectSessions
 from GUI.Dialogs.ExportDialog import ExportDialog
+from GUI.Dialogs.NewFromCollectDataDialog import NewFromCollectDataDialog
+from GUI.Dialogs.NewFromPCAPDialog import NewFromPCAPDialog
 
 class MainGUI(QMainWindow):
     def __init__(self, logman, comment_mgr, val):
@@ -44,10 +45,11 @@ class MainGUI(QMainWindow):
         self.cm = ConfigurationManager.get_instance()
 
         #shared data between widgets
-        self.existingconfignames = []
+        self.existingconfignames = {}
         self.logEnabled = ''
         self.closeConfirmed = ''
         self.newProject_pressed = False
+        self.newPro = None
 
         #get project folder
         self.project_data_folder = self.cm.read_config_value("PROJECTS", "PROJECTS_BASE_PATH")
@@ -108,9 +110,6 @@ class MainGUI(QMainWindow):
         self.basedataStackedWidget.setObjectName("basedataStackedWidget")
         windowBoxHLayout.addWidget(self.basedataStackedWidget)
         tabWidget.addTab(windowWidget, "Configuration")
-
-        #Set up context menu
-        self.setupContextMenus()
 
         #ADD TAB WIDGET - RES
         self.initMenu()
@@ -182,22 +181,6 @@ class MainGUI(QMainWindow):
                 logging.debug("Setting right widget: " + str(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["ResultsWidget"]))
                 self.basedataStackedWidget.setCurrentWidget(self.baseWidgets[parentOfParent.text(0)][parentSelectedItem.text(0)]["ResultsWidget"])
 
-    #RES METHOD
-    def setupContextMenus(self):
-        logging.debug("MainApp:setupContextMenus() instantiated")
-        #Context menu for blank space
-        self.blankTreeContextMenu = QtWidgets.QMenu()
-       	self.addproject = self.blankTreeContextMenu.addAction("New project")
-       	self.addproject.triggered.connect(self.newProject)
-        self.importproject = self.blankTreeContextMenu.addAction("Import project folder")
-
-        #Context menu project 
-        self.projectContextMenu = QtWidgets.QMenu()
-        self.addCuration = self.projectContextMenu.addAction("Create curation session")
-        self.addCuration.triggered.connect(self.on_add_curation_clicked)
-
-        self.exportProject = self.projectContextMenu.addAction("Export project")
-        self.exportProject.triggered.connect(self.on_export_clicked)
 
     def on_add_curation_clicked(self):
         logging.debug("on_add_curation_clicked(): Instantiated")
@@ -245,7 +228,7 @@ class MainGUI(QMainWindow):
                     annLabel = "A: " + "Annotate"
                     annItem.setText(0, annLabel)
                     sessionItem.addChild(annItem)
-                    self.annotateWidget = AnnotateWidget(self.project_data_folder, selectedItemName, sessionName, self.comment_mgr) #send project name for the corresponding directory
+                    self.annotateWidget = AnnotateWidget(self.project_data_folder, selectedItemName, os.path.basename(self.existingconfignames[selectedItemName]), sessionName, self.comment_mgr) #send project name for the corresponding directory
 
                     self.baseWidgets[selectedItemName][sessionLabel]["AnnotateWidget"] = self.annotateWidget #child
                     self.basedataStackedWidget.addWidget(self.annotateWidget)
@@ -262,7 +245,7 @@ class MainGUI(QMainWindow):
                     if os.path.exists(rulesDir) == False:
                         os.mkdir(rulesDir)
 
-                    rulesWidget = RulesWidget(self.project_data_folder, selectedItemName, sessionName, rulesDir, self.comment_mgr, self.val)
+                    rulesWidget = RulesWidget(self.project_data_folder, selectedItemName, os.path.basename(self.existingconfignames[selectedItemName]), sessionName, rulesDir, self.comment_mgr, self.val)
 
                     self.baseWidgets[selectedItemName][sessionLabel]["RulesWidget"] = rulesWidget
                     self.basedataStackedWidget.addWidget(rulesWidget)
@@ -308,13 +291,19 @@ class MainGUI(QMainWindow):
 
     #RES METHOD
     def initMenu(self):               
+        logging.debug("MainApp:initMenu() instantiated")
         self.mainMenu = QMenuBar()
         self.fileMenu = self.mainMenu.addMenu("File")
 
         self.blankTreeContextMenu = QtWidgets.QMenu()
-       	self.addExperiment = self.blankTreeContextMenu.addAction("New Project")
-       	self.addExperiment.triggered.connect(self.newProject)
-        # self.importExperiment.triggered.connect(self.importFolderActionEvent)
+       	self.newProjectContextMenu = QtWidgets.QMenu("New Project")
+        self.blankTreeContextMenu.addMenu(self.newProjectContextMenu)
+
+        self.fromCapture = self.newProjectContextMenu.addAction("Create Capture")
+        self.fromCapture.triggered.connect(self.newFromCapture)
+
+        self.fromPCAP = self.newProjectContextMenu.addAction("From PCAP")
+        self.fromPCAP.triggered.connect(self.newFromPCAP)
 
         # Experiment context menu
         self.importContextMenu =  QtWidgets.QMenu("Import Project")
@@ -326,6 +315,13 @@ class MainGUI(QMainWindow):
         self.fromZipContextSubMenu = self.importContextMenu.addAction("From Zip")
         self.fromZipContextSubMenu.triggered.connect(self.importFromZip)
 
+        #Context menu project 
+        self.projectContextMenu = QtWidgets.QMenu()
+        self.addCuration = self.projectContextMenu.addAction("Create curation session")
+        self.addCuration.triggered.connect(self.on_add_curation_clicked)
+
+        self.exportProject = self.projectContextMenu.addAction("Export project")
+        self.exportProject.triggered.connect(self.on_export_clicked)
 
         self.quitAppMenuButton = QAction(QIcon(), "Quit", self)
         self.quitAppMenuButton.setShortcut("Ctrl+Q")
@@ -334,9 +330,10 @@ class MainGUI(QMainWindow):
         self.fileMenu.addAction(self.quitAppMenuButton)
     
     #Used to create a new project, this is where the prompt to write a name for the project is taken.
-    def newProject(self):
+    def newFromCapture(self):
+        logging.debug("MainApp:newFromCapture() instantiated")
         #Creating a custom widget to display what is needed for creating a new project:
-        self.newPro = CollectDataDialog(self.logman, self.existingconfignames)
+        self.newPro = NewFromCollectDataDialog(self.logman, self.existingconfignames)
         #slots to receive data from the custom widget
         self.newPro.logEnabled.connect(self.log_enabled)
         self.newPro.created.connect(self.project_created)
@@ -345,13 +342,23 @@ class MainGUI(QMainWindow):
         self.newPro.setWindowModality(QtCore.Qt.ApplicationModal)
         self.newPro.show()
 
+    def newFromPCAP(self):
+        logging.debug("MainApp:newFromPCAP() instantiated")
+        #Creating a custom widget to display what is needed for creating a new project:
+        self.newCap = NewFromPCAPDialog(self.existingconfignames)
+        #slot to receive data from the custom widget
+        self.newCap.created.connect(self.project_created)
+        self.newProject_pressed = True
+        self.newCap.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.newCap.show()
+
     #Slot for when the user created the new project, path and configname
-    @QtCore.pyqtSlot(str, list, str, str)
-    def project_created(self, configname, existingconfignames, pcap, path):
+    @QtCore.pyqtSlot(str, dict, str)
+    def project_created(self, configname, existingconfignames, path):
         #update project info with new info selected from widget     
         self.existingconfignames = existingconfignames
         #create the new project with the updated information
-        self.addProject(configname, pcap, path)
+        self.addProject(configname, self.existingconfignames[configname], path)
 
     #Slot to let us know if the logging has started
     @QtCore.pyqtSlot(str)
@@ -364,17 +371,12 @@ class MainGUI(QMainWindow):
         self.closeConfirmed = status
 
     #Used to create a new project, and this is where the project will actually be populated
-    def addProject(self, configname, annotatedPCAP, path):
-        self.projectWidget  = ProjectWidget(configname, annotatedPCAP, path)
+    def addProject(self, configname, projectPCAP, path):
+        self.projectWidget  = ProjectWidget(configname, projectPCAP, path)
         #create the folders and files for new project:
-        filename = configname
-
-        if filename != None:
-            logging.debug("addProject(): OK pressed and valid configname entered: " + str(filename))
-        
         configTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.projectTree)
-        configTreeWidgetItem.setText(0,filename)
-        self.projectWidget.addProjectItem(filename)
+        configTreeWidgetItem.setText(0,configname)
+        self.projectWidget.addProjectItem(configname)
 
         #Add base info
         self.baseWidgets[configname] = {"BaseWidget": {}, "ProjectWidget": {}, "SessionWidget": {}, "AnnotateWidget": {}, "RulesWidget": {}, "ResultsWidget": {}}
@@ -441,7 +443,6 @@ class MainGUI(QMainWindow):
 
                 
     def populate_import(self, function, configname, from_file):
-        self.existingconfignames += [configname]
         importedProjectPath = os.path.join(self.project_data_folder, configname)
         #copy selected dir to new dir
         self.batch_thread = BatchThread()
@@ -456,17 +457,14 @@ class MainGUI(QMainWindow):
         self.progress_dialog_overall = ProgressBarDialog(self, self.batch_thread.get_load_count())
         self.batch_thread.start()
         self.progress_dialog_overall.show()
-        path = importedProjectPath
-        annotatedPCAP = os.path.join(importedProjectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
-        self.addProject(configname, annotatedPCAP, path)
 
-    def load_project_widget(self):
+    def load_project_widgets(self):
         logging.debug("load_project_widget(): loading project widget with saved projects")
         for name in self.existingconfignames:
             path = os.path.join(self.project_data_folder, name)
-            annotatedPCAP = os.path.join(path, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+            projectPCAP = os.path.join(path, self.existingconfignames[name])
             configname = name
-            self.addProject(configname, annotatedPCAP, path)
+            self.addProject(configname, projectPCAP, path)
         logging.debug("load_project_widget(): Complete")
 
     def copy_dir(self, from_dir, to_dir):
@@ -478,43 +476,47 @@ class MainGUI(QMainWindow):
         logging.debug("copy_dir_complete(): Instantiated")
         self.progress_dialog_overall.update_progress()
         self.progress_dialog_overall.hide()
+        #Need to load projects (add to existing...)
+        ##GET Project PCAP Name Here and also add to existingprojectnames
+        self.load_saved()
         self.load_sessions()
         logging.debug("copy_dir_complete(): Complete")
 
     def load_saved(self):
         i = 0
+
+        # #check if this is the project_pcap
+        # for (dirName, subdirlist, filelist) in os.walk(path):
+        #     for filename in filelist:
+        #         spt = os.path.splitext(filename)
+        #         if len(spt) > 0 and spt[1] == "pcap" or spt[1] == "pcapng":
+        #             project_pcap_filename = filename
+        #             break
+
         #for each subdir, import the saved projects
         for (dirName, subdirlist, filelist) in os.walk(self.project_data_folder):
-            folders = ', '.join(subdirlist)
-            folder = folders.strip().split(", ")
-            num_folders_left = len(folder)
-
-            #check if there is anything to import - is it empty?
-            if folder[i] == '':
-                #return if there's nothing to import
-                break
-
-            while(num_folders_left != 0):
-                #add the saved projects to existing list
-                self.existingconfignames += [folder[i]]             
-                num_folders_left -= 1
-                i += 1
-
-            if(num_folders_left == 0):
-                #once number of folders left reaches 0, stop the directory traversal
-                break
-
-            del filelist #needed only to traverse directory
-            del dirName #needed only to traverse directory
-        
+            for projectFolder in subdirlist:
+                pcapSubdir = os.path.join(self.project_data_folder, projectFolder, ConfigurationManager.STRUCTURE_PCAP_SUBDIR)
+                abspcapSubdir = os.path.abspath(pcapSubdir)
+                if os.path.exists(abspcapSubdir):
+                    #go one level down
+                    #if this is the pcap directory, then check if a pcap exists
+                    #if so, this is a good project; create an entry in existingconfignames
+                    for (subdirName, subsubdirlist, subfilelist) in os.walk(abspcapSubdir):
+                        if len(subfilelist) == 1:
+                            filename = subfilelist[0]
+                            spt = os.path.splitext(filename)
+                            if spt[1] == ".pcap" or spt[1] == ".pcapng":
+                                self.existingconfignames[projectFolder] = filename
+                                break
         #once everything has been added, populate widget
-        self.load_project_widget()
+        self.load_project_widgets()
 
     def load_sessions(self):
         for name in self.existingconfignames:
             #for already saved project
             project_path = os.path.join(self.project_data_folder, name)
-            project_pcap_session = os.path.join(project_path, "PCAP")
+            project_pcap_session = os.path.join(project_path, ConfigurationManager.STRUCTURE_PCAP_SUBDIR)
             if os.path.exists(project_pcap_session):
                 paths, dirs, files = next(os.walk(project_pcap_session))
                 if len(dirs) > 0:
@@ -523,34 +525,17 @@ class MainGUI(QMainWindow):
     def traverse_sessions(self, project_name, path):
         #if RULES dir exists in project folder, then sessions exists
         i = 0
+
         for (dirName, subdirlist, filelist) in os.walk(path):
-            folders = ', '.join(subdirlist)
-            folder = folders.strip().split(", ")
-            num_folders_left = len(folder)
-
-            if folder[i] == '':
-                break
-                        
-            while(num_folders_left != 0):
-                sessionName = folder[i]
-
+            for sessionName in subdirlist:
                 if os.path.isfile(sessionName):
                     #skip
                     break
                 
                 elif self.add_session_list(project_name, sessionName) == True:
-                    self.add_session_widgets(project_name, sessionName)
+                    self.add_session_widgets(project_name, self.existingconfignames[project_name], sessionName)
 
-                num_folders_left -= 1
-                i += 1
-                    
-            if(num_folders_left == 0):
-                break
-
-            del filelist
-            del dirName
-
-    def add_session_widgets(self, project_name, sessionName):
+    def add_session_widgets(self, project_name, project_pcap_filename, sessionName):
         sessionLabel = "S: " + sessionName
         #create tree widget item
         selectedItem = self.projectTree.findItems(project_name, Qt.Qt.MatchContains)
@@ -568,7 +553,7 @@ class MainGUI(QMainWindow):
         annLabel = "A: " + "Annotate"
         annItem.setText(0, annLabel)
         sessionItem.addChild(annItem)
-        self.annotateWidget = AnnotateWidget(self.project_data_folder, project_name, sessionName, self.comment_mgr) #send project name for the corresponding directory
+        self.annotateWidget = AnnotateWidget(self.project_data_folder, project_name, project_pcap_filename, sessionName, self.comment_mgr) #send project name for the corresponding directory
 
         self.baseWidgets[project_name][sessionLabel]["AnnotateWidget"] = self.annotateWidget #child
         self.basedataStackedWidget.addWidget(self.annotateWidget)
@@ -585,7 +570,7 @@ class MainGUI(QMainWindow):
         if os.path.exists(rulesDir) == False:
             os.mkdir(rulesDir)
     
-        self.rulesWidget = RulesWidget(self.project_data_folder, project_name, sessionName, rulesDir, self.comment_mgr, self.val)
+        self.rulesWidget = RulesWidget(self.project_data_folder, project_name, project_pcap_filename, sessionName, rulesDir, self.comment_mgr, self.val)
 
         self.baseWidgets[project_name][sessionLabel]["RulesWidget"] = self.rulesWidget
         self.basedataStackedWidget.addWidget(self.rulesWidget)
@@ -652,7 +637,8 @@ class MainGUI(QMainWindow):
                 #call the delete data function from new project, just to make sure
                 #everything has been cleared out
                 if self.newProject_pressed == True:
-                    self.newPro.delete_data()
+                    if self.newPro != None:
+                        self.newPro.delete_data()
                 qApp.quit()
                 return
             elif close == QMessageBox.No and not type(self.quit_event) == bool:

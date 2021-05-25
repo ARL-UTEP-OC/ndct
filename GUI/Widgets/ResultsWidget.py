@@ -39,9 +39,9 @@ class ResultsWidget(QtWidgets.QWidget):
 
         #get project-session rules path
         projectpath = os.path.join(projectfolder, projectName)
-        projectPCAPFolder = os.path.join(projectpath, "PCAP/")
+        projectPCAPFolder = os.path.join(projectpath, ConfigurationManager.STRUCTURE_PCAP_SUBDIR)
         sessionPCAPFolder = os.path.join(projectPCAPFolder, sessionLabel)
-        self.sessionPCAP = os.path.join(sessionPCAPFolder, "NeedsAnnotation.pcapng")
+        self.sessionPCAP = os.path.join(sessionPCAPFolder, "SessionGenerated.pcapng")
 
         #Create dir for session alerts
         self.sessionAlertsDir = os.path.join(resultsDir, sessionLabel)

@@ -12,7 +12,7 @@ from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 
 class RulesWidget(QtWidgets.QWidget):
 
-    def __init__(self, projectfolder, projectName, sessionLabel, rulesDir, comment_mgr, val):
+    def __init__(self, projectfolder, projectName, projectPCAPName, sessionLabel, rulesDir, comment_mgr, val):
         QtWidgets.QWidget.__init__(self, parent=None)
 
         self.rulesDir = rulesDir
@@ -38,11 +38,11 @@ class RulesWidget(QtWidgets.QWidget):
         #get project pcap path
 
         projectpath = os.path.join(projectfolder, projectName)
-        projectPCAPFolder = os.path.join(projectpath, "PCAP/")
-        projectpcap = os.path.join(projectPCAPFolder, "AnnotatedPCAP.pcapng")
+        projectPCAPFolder = os.path.join(projectpath, ConfigurationManager.STRUCTURE_PCAP_SUBDIR)
+        projectpcap = os.path.join(projectPCAPFolder, projectPCAPName)
 
         sessionPCAPFolder = os.path.join(projectPCAPFolder, sessionLabel)
-        self.sessionPCAP = os.path.join(sessionPCAPFolder, "NeedsAnnotation.pcapng")
+        self.sessionPCAP = os.path.join(sessionPCAPFolder, "SessionGenerated.pcapng")
 
         #create a directory for session rules
         self.sessionRulesDir = os.path.join(rulesDir, sessionLabel)

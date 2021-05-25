@@ -61,9 +61,9 @@ class LogManager():
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback)
         self.ecel_manager.export_data(self.export_data_path)
-        logging.debug("export_data(): Completed requesting to export data")
+        logging.debug("export_data(): Completed requesting to export data to path: " + str(self.export_data_path))
 
-    def copy_latest_data(self, export_data_path_temp=None, export_data_path_latest=None, user_pcap_filename=None, out_click_path=None, out_timed_path=None):
+    def copy_latest_data(self, export_data_path_temp=None, export_data_path_latest=None, path_for_latest_pcap=None, out_click_path=None, out_timed_path=None):
         logging.debug('copy_latest_data(): Instantiated')
         #get the directory with all of the exported data:
         self.export_data_path_temp = export_data_path_temp
@@ -77,10 +77,10 @@ class LogManager():
             #read from config file
             self.export_data_path_latest = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "EXPORT_DATA_PATH_LATEST")
         
-        self.user_pcap_filename = user_pcap_filename
-        if self.user_pcap_filename == None:
+        self.path_for_latest_pcap = path_for_latest_pcap
+        if self.path_for_latest_pcap == None:
             #read from config file
-            self.user_pcap_filename = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "USER_PCAP_FILENAME")
+            self.path_for_latest_pcap = ConfigurationManager.get_instance().read_config_abspath("LOG_MANAGER", "PATH_FOR_LATEST_PCAP")
 
         self.out_click_path = out_click_path
         if self.out_click_path == None:
@@ -103,7 +103,7 @@ class LogManager():
         try:
             if os.path.exists(self.export_data_path_latest) == False:
                 os.makedirs(self.export_data_path_latest)
-            pcapbase = os.path.dirname(self.user_pcap_filename)
+            pcapbase = os.path.dirname(self.path_for_latest_pcap)
             if os.path.exists(pcapbase) == False:
                 os.makedirs(pcapbase)
         except:
@@ -127,7 +127,7 @@ class LogManager():
             #cp merged pcap to dir
             pcapFile = os.path.join(latestlogdir,"raw","tshark","merged.pcapng")
             if os.path.exists(pcapFile):
-                shutil.copy(pcapFile,self.user_pcap_filename)
+                shutil.copy(pcapFile,self.path_for_latest_pcap)
             clicksPath = os.path.join(latestlogdir,"raw","pykeylogger","click_images")
             if os.path.exists(clicksPath):
                 shutil.copytree(clicksPath,self.out_click_path)
@@ -198,7 +198,7 @@ class LogManager():
             basenoext = os.path.splitext(base)[0]
             dissector_filename = dg.events_to_dissector(file_events, dissector_name=basenoext, ofilename=os.path.join(self.dissector_path,basenoext), template_filename=self.dissector_code_template_filename, start_threshold=0.0, end_threshold=2.0)
             self.generated_dissector_filenames.append(dissector_filename)
-        logging.debug('generate_dissectors(): Completed')
+        logging.debug('generate_dissectors(): Completed')     
 
     def get_generated_dissector_filenames(self):
         logging.debug('get_generated_dissector_filenames(): Instantiated')

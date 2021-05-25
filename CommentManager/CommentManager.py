@@ -10,12 +10,12 @@ from ConfigurationManager.ConfigurationManager import ConfigurationManager
 
 class CommentManager():
 
-    def __init__(self, user_pcap_filename = None):
+    def __init__(self, path_for_latest_pcap = None):
         logging.debug('CommentManager(): Instantiated')
-        self.user_pcap_filename = user_pcap_filename
-        if user_pcap_filename == None:
+        self.path_for_latest_pcap = path_for_latest_pcap
+        if path_for_latest_pcap == None:
             #read from config file
-            self.commented_pcap_filename = ConfigurationManager.get_instance().read_config_abspath("COMMENT_MANAGER", "USER_PCAP_FILENAME")
+            self.commented_pcap_filename = ConfigurationManager.get_instance().read_config_abspath("COMMENT_MANAGER", "PATH_FOR_LATEST_PCAP")
         
         self.ce = CommentExtractor()
         logging.debug('CommentManager(): Complete')
@@ -24,7 +24,7 @@ class CommentManager():
         logging.debug('extract_json(): Instantiated')
         self.commented_pcap_filename = commented_pcap_filename
         if commented_pcap_filename == None:
-            self.commented_pcap_filename = ConfigurationManager.get_instance().read_config_abspath("COMMENT_MANAGER", "USER_PCAP_FILENAME")
+            self.commented_pcap_filename = ConfigurationManager.get_instance().read_config_abspath("COMMENT_MANAGER", "PATH_FOR_LATEST_PCAP")
         self.jsondata = self.ce.comment_to_json(self.commented_pcap_filename)
         logging.debug('extract_json(): Completed')
     
@@ -37,15 +37,15 @@ class CommentManager():
         self.ce.write_json_to_file(self.comment_json_output_filename, self.jsondata)
         logging.debug('write_comment_json_to_file(): Completed')
 
-    def run_wireshark_with_dissectors(self, dissector_path=[], user_pcap_filename=None):
+    def run_wireshark_with_dissectors(self, dissector_path=[], path_for_latest_pcap=None):
         logging.debug('run_wireshark_with_dissectors(): Instantiated')
 
-        self.user_pcap_filename = user_pcap_filename
+        self.path_for_latest_pcap = path_for_latest_pcap
         filelist = list()
 
-        if user_pcap_filename == None:
+        if path_for_latest_pcap == None:
             #read from config file
-            self.user_pcap_filename = ConfigurationManager.get_instance().read_config_abspath("COMMENT_MANAGER", "USER_PCAP_FILENAME")
+            self.path_for_latest_pcap = ConfigurationManager.get_instance().read_config_abspath("COMMENT_MANAGER", "PATH_FOR_LATEST_PCAP")
         self.dissector_path = dissector_path
         if dissector_path == []:
             #read from config file
@@ -67,8 +67,8 @@ class CommentManager():
                 exit()	   
 
         if len(filelist) == 0:
-            self.wireshark_thread = WiresharkRunner(pcap_filename=self.user_pcap_filename)
+            self.wireshark_thread = WiresharkRunner(pcap_filename=self.path_for_latest_pcap)
         else:
-            self.wireshark_thread = WiresharkRunner(lua_scripts=filelist, pcap_filename=self.user_pcap_filename)
+            self.wireshark_thread = WiresharkRunner(lua_scripts=filelist, pcap_filename=self.path_for_latest_pcap)
         self.wireshark_thread.start()
         logging.debug('run_wireshark_with_dissectors(): Completed')
