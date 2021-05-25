@@ -372,8 +372,11 @@ class MainGUI(QMainWindow):
 
     #Used to create a new project, and this is where the project will actually be populated
     def addProject(self, configname, projectPCAP, path):
+        if configname in self.baseWidgets:
+            logging.debug("Project already in tree: " + str(configname + "; skipping"))
+            return
+        #create the folders and files for new project if it's not already there:
         self.projectWidget  = ProjectWidget(configname, projectPCAP, path)
-        #create the folders and files for new project:
         configTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.projectTree)
         configTreeWidgetItem.setText(0,configname)
         self.projectWidget.addProjectItem(configname)
@@ -450,7 +453,6 @@ class MainGUI(QMainWindow):
         self.batch_thread.completion_signal.connect(self.copy_dir_complete)
         if function == "dir":
             self.batch_thread.add_function(self.copy_dir, from_file, importedProjectPath)
-
         else:
             self.batch_thread.add_function(function.unzip, from_file, configname, self.project_data_folder)
 
@@ -459,13 +461,13 @@ class MainGUI(QMainWindow):
         self.progress_dialog_overall.show()
 
     def load_project_widgets(self):
-        logging.debug("load_project_widget(): loading project widget with saved projects")
+        logging.debug("load_project_widgets(): instantiated")
         for name in self.existingconfignames:
             path = os.path.join(self.project_data_folder, name)
             projectPCAP = os.path.join(path, self.existingconfignames[name])
             configname = name
             self.addProject(configname, projectPCAP, path)
-        logging.debug("load_project_widget(): Complete")
+        logging.debug("load_project_widgets(): Complete")
 
     def copy_dir(self, from_dir, to_dir):
         logging.debug("copy_dir(): copying selected directory")
@@ -484,14 +486,6 @@ class MainGUI(QMainWindow):
 
     def load_saved(self):
         i = 0
-
-        # #check if this is the project_pcap
-        # for (dirName, subdirlist, filelist) in os.walk(path):
-        #     for filename in filelist:
-        #         spt = os.path.splitext(filename)
-        #         if len(spt) > 0 and spt[1] == "pcap" or spt[1] == "pcapng":
-        #             project_pcap_filename = filename
-        #             break
 
         #for each subdir, import the saved projects
         for (dirName, subdirlist, filelist) in os.walk(self.project_data_folder):
