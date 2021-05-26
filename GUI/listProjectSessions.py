@@ -1,3 +1,4 @@
+import logging
 #This class is to keep track of 
 #Project Name and its correlating session names
 

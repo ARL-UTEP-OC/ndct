@@ -12,9 +12,9 @@ from ConfigurationManager.ConfigurationManager import ConfigurationManager
 from GUI.Dialogs.ProgressBarDialog import ProgressBarDialog
 from GUI.Threading.BatchThread import BatchThread
 
-class CollectDataDialog(QtWidgets.QWidget):
+class NewFromCollectDataDialog(QtWidgets.QWidget):
     #Signal for when the user is done creating the new project
-    created = QtCore.pyqtSignal(str, list, str, str)
+    created = QtCore.pyqtSignal(str, dict, str)
     logEnabled = QtCore.pyqtSignal(str)
     closeConfirmed = QtCore.pyqtSignal(str)
 
@@ -24,12 +24,10 @@ class CollectDataDialog(QtWidgets.QWidget):
         self.logger_started_once = False
 
         self.existingconfignames = existingProjects
-        self.annotatedPCAP = ''
         self.projectPath = ""
         self.projectName = ""
         self.cancel_pressed = False
         self.saved_pressed = False
-        working_dir = os.getcwd()
         self.cm = ConfigurationManager.get_instance()
         self.project_data_folder = self.cm.read_config_value("PROJECTS", "PROJECTS_BASE_PATH")
 
@@ -40,7 +38,7 @@ class CollectDataDialog(QtWidgets.QWidget):
         self.outerVertBoxPro = QtWidgets.QVBoxLayout()
         self.outerVertBoxPro.setObjectName("outerVertBox")
         self.setWindowTitle("Collect Data")
-        self.setObjectName("CollectDataDialog")
+        self.setObjectName("NewFromCollectDataDialog")
 
         #Label - New Project Title
         self.labelVerBoxPro = QtWidgets.QVBoxLayout()
@@ -158,10 +156,10 @@ class CollectDataDialog(QtWidgets.QWidget):
         self.batch_thread.add_function(self.logman.parse_data_all)
         self.batch_thread.add_function(self.logman.export_data, os.path.abspath(self.projectPath))
         parsedLogs = os.path.join(self.projectPath,ConfigurationManager.STRUCTURE_PARSED_PATH)
-        annotatedPCAP = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+        latest_captured_PCAP = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_DEFAULT_RAW_PCAP_FILE)
         click_out_path = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_CLICKS_PATH)
         timed_out_path = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_TIMED_PATH)
-        self.batch_thread.add_function(self.logman.copy_latest_data, self.projectPath, parsedLogs, annotatedPCAP, click_out_path, timed_out_path)
+        self.batch_thread.add_function(self.logman.copy_latest_data, self.projectPath, parsedLogs, latest_captured_PCAP, click_out_path, timed_out_path)
         dissectorsPath = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
         
         self.batch_thread.add_function(self.logman.generate_dissectors, parsedLogs, dissectorsPath, None)
@@ -194,7 +192,7 @@ class CollectDataDialog(QtWidgets.QWidget):
             self.logOutStartButton.setEnabled(True)
             self.logOutStopButton.setEnabled(False)
             self.logOutSaveButton.setEnabled(True)
-            self.annotatedPCAP = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_ANNOTATED_PCAP_FILE)
+            self.pcapFilename = os.path.join(self.projectPath, ConfigurationManager.STRUCTURE_DEFAULT_RAW_PCAP_FILE)
             self.logEnabled.emit("FALSE")
             
         logging.debug('thread_finish(): Completed')
@@ -211,7 +209,7 @@ class CollectDataDialog(QtWidgets.QWidget):
                 return None
             else:
                 #if all good, add to existing file names list
-                self.existingconfignames += [self.projectName]
+                self.existingconfignames[self.projectName] = self.pcapFilename
                 self.saved_pressed = True
 
                 saveComplete = QMessageBox.warning(self,
@@ -223,7 +221,7 @@ class CollectDataDialog(QtWidgets.QWidget):
                     #let main window know everything is ready:
                     #Send signal to slot
                     config = self.projectName
-                    self.created.emit(config, self.existingconfignames, self.annotatedPCAP, self.projectPath)
+                    self.created.emit(config, self.existingconfignames, self.projectPath)
                     self.close()
         else:
              QMessageBox.warning(self,

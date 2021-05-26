@@ -13,7 +13,7 @@ from ConfigurationManager.FileExplorerRunner import FileExplorerRunner
 
 class AnnotateWidget(QtWidgets.QWidget):
 
-    def __init__(self, projectfolder, projectName, sessionLabel, comment_mgr):
+    def __init__(self, projectfolder, projectName, projectPCAPName, sessionLabel, comment_mgr):
         QtWidgets.QWidget.__init__(self, parent=None)
 
         self.comment_mgr = comment_mgr
@@ -44,15 +44,16 @@ class AnnotateWidget(QtWidgets.QWidget):
 
         #get project pcap path
         projectpath = os.path.join(projectfolder, projectName)
-        projectPCAPFolder = os.path.join(projectpath, "PCAP/")
-        projectpcap = os.path.join(projectPCAPFolder, "AnnotatedPCAP.pcapng")
+        projectPCAPFolder = os.path.join(projectpath, ConfigurationManager.STRUCTURE_PCAP_SUBDIR)
+
+        projectpcap = os.path.join(projectPCAPFolder, projectPCAPName)
         
         sessionFolder = os.path.join(projectPCAPFolder,sessionLabel)
 
         if os.path.exists(sessionFolder) == False:
             os.makedirs(sessionFolder)
         #check if already exists (in case of import or reopen application)
-        sessionPCAP_Annotated = os.path.join(sessionFolder, "NeedsAnnotation.pcapng")
+        sessionPCAP_Annotated = os.path.join(sessionFolder, "SessionGenerated.pcapng")
         if os.path.exists(sessionPCAP_Annotated) == False:
             try:
                 copy2(projectpcap, sessionPCAP_Annotated)
@@ -60,7 +61,6 @@ class AnnotateWidget(QtWidgets.QWidget):
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 logging.error("AnnotateWidget init(): An error occured ")
                 traceback.print_exception(exc_type, exc_value, exc_traceback)
-
 
         self.pcapLineEdit = QtWidgets.QLineEdit()
         self.pcapLineEdit.setAcceptDrops(False)
@@ -114,12 +114,12 @@ class AnnotateWidget(QtWidgets.QWidget):
     def on_annotate_button_clicked(self, x, session_pcap=None, project_path=None):
         logging.debug('on_select_annotate_file_button_clicked(): Instantiated')
         #open wireshark using pcap and provide base so that the dissectors can be found
-        user_pcap_filename = session_pcap
+        path_for_latest_pcap = session_pcap
         #pcapBasepath = os.path.dirname(os.path.dirname(session_pcap))
         dissectors_path = os.path.join(project_path, ConfigurationManager.STRUCTURE_GEN_DISSECTORS_PATH)
         logging.debug("Checking if path exists: " + str(dissectors_path))
         if os.path.exists(dissectors_path):
-            self.comment_mgr.run_wireshark_with_dissectors(project_path, user_pcap_filename)
+            self.comment_mgr.run_wireshark_with_dissectors(project_path, path_for_latest_pcap)
         else:
             self.comment_mgr.run_wireshark_with_dissectors([], session_pcap)
         
