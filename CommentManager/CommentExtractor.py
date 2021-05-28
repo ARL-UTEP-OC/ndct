@@ -48,12 +48,13 @@ class CommentExtractor():
 			field = str(field, encoding="utf-8")
 			packet_info = field.split(",")[:11]
 			(protocols, time_epoch, number, ip_src, ip_dst, udp_srcport, udp_dstport, tcp_srcport, tcp_dstport, tcp_flags, tcp_payload) = packet_info
-			packet_comment = field.split(",")[11].strip()
+			packet_comment = field.split(",",11)[11].strip()
 			if "**" not in packet_comment:
 				logging.error( "packet_comment malformatted; skipping: " + str(packet_comment))
 				exit()
 			scope = payload_identifier = sf_call = description = confidence = advanced_attr = ""
 			adv_attr_src_mac = adv_attr_dst_mac = adv_attr_src_ip = adv_attr_dst_ip = adv_attr_src_port = adv_attr_dst_port = "false"
+			adv_custom_suricata = ""
 			adv_attr_direction = ""
 			#check what fields are non-empty#
 			fields = packet_comment.split("**")
@@ -99,6 +100,10 @@ class CommentExtractor():
 								adv_attr_direction = "<"
 							elif attr.startswith("egress"):
 								adv_attr_direction = ">"
+				elif field.startswith("customSuricataRule"):
+					logging.debug("proc_output_to_json(): Found custom suricata field: " + str(field))
+					if len(field.split("=")) > 0:
+						adv_custom_suricata = field.split("=",1)[1]
 
 			#now fill in any that are required with default values:
 			if scope == "":
@@ -144,7 +149,6 @@ class CommentExtractor():
 
 				#build additional details specific to TCP
 				if "eth:ethertype:ip:tcp" in protocols:
-					#TODO
 					#hard coded keep values for now; may be hard for participants with no prior network skills
 					sport_dict = {"val": tcp_srcport, "keep": adv_attr_src_port}
 					dport_dict = {"val": tcp_dstport, "keep": adv_attr_dst_port}
@@ -169,7 +173,7 @@ class CommentExtractor():
 			logging.debug("proc_output_to_json(): Done Reading Packet Data")
 
 			#build the over-arching comment_data object
-			comment_data_list.append({"id": id, "frameno": number, "protocol": protocol_dict, "description": description, "run-descriptor": sf_call})
+			comment_data_list.append({"id": id, "frameno": number, "protocol": protocol_dict, "description": description, "run-descriptor": sf_call, "custom-suricata": adv_custom_suricata})
 			logging.debug("proc_output_to_json(): Formatted JSON:"+json.dumps(comment_data_list, indent=3))
 			logging.debug("proc_output_to_json() Completed.")
 

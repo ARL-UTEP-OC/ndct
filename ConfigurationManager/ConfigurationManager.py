@@ -11,12 +11,12 @@ class ConfigurationManager():
     STRUCTURE_PCAP_SUBDIR="PCAP"
     STRUCTURE_PARSED_PATH="ParsedLogs"
     STRUCTURE_DEFAULT_RAW_PCAP_FILE=os.path.join(STRUCTURE_PCAP_SUBDIR, "RawCapture.pcapng")
-    STRUCTURE_ANNOTATED_PCAP_FILE=os.path.join(STRUCTURE_PCAP_SUBDIR, "AnnotatedPCAP.pcapng")
     STRUCTURE_CLICKS_PATH="Clicks"
     STRUCTURE_TIMED_PATH="Timed"
     STRUCTURE_GEN_DISSECTORS_PATH="GeneratedDissectors"
     STRUCTURE_JSON_COMMENTS=os.path.join("tmp", "comments.JSON")
-    STRUCTURE_RULES_GEN_FILE=os.path.join("GeneratedRules","generated.rules")
+    STRUCTURE_RULES_GEN_PATH=os.path.join("RULES")
+    STRUCTURE_RULES_GEN_FILE=os.path.join(STRUCTURE_RULES_GEN_PATH,"generated.rules")
     STRUCTURE_ALERT_GEN_PATH=os.path.join("IDS-ALERTS")
     STRUCTURE_ALERT_GEN_FILE=os.path.join("fast.log")
 

@@ -56,7 +56,7 @@ class ResultsWidget(QtWidgets.QWidget):
             traceback.print_exception(exc_type, exc_value, exc_traceback)
 
         #get session rules
-        self.sessionRulesDir = os.path.join(projectpath, "RULES")
+        self.sessionRulesDir = os.path.join(projectpath, ConfigurationManager.STRUCTURE_RULES_GEN_PATH)
         self.sessionRulesDir = os.path.join(self.sessionRulesDir, sessionLabel)
         self.rules_filename = os.path.join(self.sessionRulesDir, ConfigurationManager.STRUCTURE_RULES_GEN_FILE)
 

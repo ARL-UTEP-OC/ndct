@@ -53,7 +53,7 @@ class NewFromCollectDataDialog(QtWidgets.QWidget):
         self.nameVerBoxPro.setObjectName("nameVerBoxPro")
         self.nameLabel = QtWidgets.QLabel()
         self.nameLabel.setObjectName("nameLabel")
-        self.nameLabel.setText("Type in New Project Name:")
+        self.nameLabel.setText("Project Name:")
         self.nameVerBoxPro.addWidget(self.nameLabel)
         self.configname = QLineEdit()
         self.configname.returnPressed.connect(self.on_log_start_button_clicked)

@@ -29,6 +29,7 @@ class SuricataRuleExtractor():
                 suri_sid += 1
                 protocol_dict = comment["id"]
                 suri_proto = ""
+                suri_adv_custom_rule = comment["custom-suricata"]
 
                 suri_msg = comment["description"] + " CMD-" + self.comply_string(comment["run-descriptor"])
                 protocol_dict = comment["protocol"]
@@ -49,11 +50,8 @@ class SuricataRuleExtractor():
 
                     if ip_dict["ip_dest"]["keep"] == "true":
                         suri_ip_dest = ip_dict["ip_dest"]["val"]
-                    print("READ DIRECTION1: " + str(ip_dict["comm_mode"]))
                     if "single" in ip_dict["comm_mode"]:
-                        print("READ DIRECTION2: " + str(ip_dict["comm_mode"]))
                         comm_mode_single_dict = ip_dict["comm_mode"]["single"]
-                        print("READ DIRECTION3: " + str(comm_mode_single_dict))
                         if comm_mode_single_dict["direction"] == ">":
                             suri_direction = "->"
                         elif comm_mode_single_dict["direction"] == "<":
@@ -65,18 +63,18 @@ class SuricataRuleExtractor():
                         comm_mode_attr_dict = ip_dict["comm_mode"]["suricata-rule-attr"]
                         for attr in comm_mode_attr_dict:
                             suri_custom_attr += str(attr) + "; "
-
+                    
                     ##Write the rule as an IP rule
                     suricata_rule = "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
                         + suri_direction + " " + suri_ip_dest + " " + suri_dport \
-                        + " (msg: \"" + suri_msg + "\"; " + suri_custom_attr + " sid:" + str(suri_sid) + ";)"
+                        + " (msg: \"" + suri_msg + "\"; " + suri_custom_attr + suri_adv_custom_rule + " sid:" + str(suri_sid) + ";)"
 
                     if "eth:ethertype:ip:icmp" in protocol_dict:
                         suri_proto = "icmp"
                         ##Write the rule as an ICMP rule
                         suricata_rule = "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
                         + suri_direction + " " + suri_ip_dest + " " + suri_dport \
-                        + " (msg: \"" + suri_msg + "\"; " + suri_custom_attr + " sid:" + str(suri_sid) + ";)"
+                        + " (msg: \"" + suri_msg + "\"; " + suri_custom_attr + suri_adv_custom_rule + " sid:" + str(suri_sid) + ";)"
 
                     if "eth:ethertype:ip:tcp" in protocol_dict:
                         suri_proto = "tcp"
@@ -143,7 +141,7 @@ class SuricataRuleExtractor():
                             + suri_direction + " " + suri_ip_dest + " " + suri_dport \
                             + " (msg: \"Start 3-way TCP-" + suri_msg + "\"; " \
                             + "flow: to_server; flowint:  "+ tcpConvoCounterVarName+", notset; flowint: " +tcpConvoCounterVarName+",=,1; flags: S; " \
-                            " sid: " + str(suri_sid) + ";)"
+                            + suri_adv_custom_rule+ " sid: " + str(suri_sid) + ";)"
                             suri_sid += 1
                             suricata_rule += "\r\n"
                             ####First Data Packet (PSH+ACK)
@@ -153,7 +151,7 @@ class SuricataRuleExtractor():
                             + "flow: to_server; flowint:  "+ tcpConvoCounterVarName+", isset; flowint: " +tcpConvoCounterVarName+",==,1; flowint: " + tcpConvoCounterVarName + ", +, 1; flags: PA; "
                             if suri_content != "":    
                                 suricata_rule += "content:" + suri_content + ";" 
-                            suricata_rule += " flags: " + suri_flags + "; " + suri_custom_attr + " sid: " + str(suri_sid) + ";)"
+                            suricata_rule += " flags: " + suri_flags + "; " + suri_custom_attr + suri_adv_custom_rule + " sid: " + str(suri_sid) + ";)"
                             suri_sid += 1
                             suricata_rule += "\r\n"
                             ####Reset Packet from Server
@@ -161,7 +159,7 @@ class SuricataRuleExtractor():
                             + suri_direction + " " + suri_ip_src + " " + suri_sport \
                             + " (msg: \"Abrupt End TCP Server-" + suri_msg + "\"; " \
                             + "flowint: "+ tcpConvoCounterVarName+", isset; flags: R; " \
-                            + " sid: " + str(suri_sid) + ";)"
+                            + suri_adv_custom_rule + " sid: " + str(suri_sid) + ";)"
                             suri_sid += 1
                             suricata_rule += "\r\n"
                             ####Reset Packet from Client
@@ -169,7 +167,7 @@ class SuricataRuleExtractor():
                             + suri_direction + " " + suri_ip_dest + " " + suri_dport \
                             + " (msg: \"Abrupt End TCP Client-" + suri_msg + "\"; " \
                             + "flowint: "+ tcpConvoCounterVarName+", isset; flags: R; " \
-                            + " sid: " + str(suri_sid) + ";)"
+                            + suri_adv_custom_rule + " sid: " + str(suri_sid) + ";)"
                             suri_sid += 1
                             suricata_rule += "\r\n"
                             ####Conn Closed
@@ -177,7 +175,7 @@ class SuricataRuleExtractor():
                             + suri_direction + " " + suri_ip_dest + " " + suri_dport \
                             + " (msg: \"Conn Closed Gracefully-" + suri_msg + "\"; " \
                             + "flowint: "+ tcpConvoCounterVarName+", isset; flags: FA; " \
-                            + " sid: " + str(suri_sid) + ";)"
+                            + suri_adv_custom_rule + " sid: " + str(suri_sid) + ";)"
                             suricata_rule += "\r\n"
                         else:
                             suricata_rule = "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
@@ -185,7 +183,7 @@ class SuricataRuleExtractor():
                             + " (msg: \"" + suri_msg + "\"; " 
                             if suri_content != "":
                                 suricata_rule += "content:" + suri_content + ";" 
-                            suricata_rule += " flags: " + suri_flags + "; " + suri_custom_attr + " sid:" + str(suri_sid) + ";)"
+                            suricata_rule += " flags: " + suri_flags + "; " + suri_custom_attr + suri_adv_custom_rule + " sid:" + str(suri_sid) + ";)"
                             
                 logging.debug("Suricata Rule: \r\n")
                 suricata_rules.append(suricata_rule)

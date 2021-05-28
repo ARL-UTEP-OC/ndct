@@ -51,7 +51,7 @@ class NewFromPCAPDialog(QtWidgets.QWidget):
         self.projectNameHorBoxPro.setObjectName("projectNameHorBoxPro")
         self.projectNameLabel = QtWidgets.QLabel()
         self.projectNameLabel.setObjectName("projectNameLabel")
-        self.projectNameLabel.setText("Type in New Project Name:")
+        self.projectNameLabel.setText("Project Name:")
         self.projectNameHorBoxPro.addWidget(self.projectNameLabel)
         self.configname = QLineEdit()
         self.configname.textChanged.connect(self.on_configname_changed)
@@ -202,6 +202,6 @@ class NewFromPCAPDialog(QtWidgets.QWidget):
                 os.makedirs(dst_folder)
             shutil.copy2(src_filename, dst_folder)
         except:
-            logging.error("generate_dissectors(): An error occured when trying to copy log files")
+            logging.error("copy_PCAP(): An error occured when trying to copy log files")
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback)
