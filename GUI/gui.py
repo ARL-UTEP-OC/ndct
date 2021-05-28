@@ -29,6 +29,7 @@ from GUI.listProjectSessions import ProjectSessions
 from GUI.Dialogs.ExportDialog import ExportDialog
 from GUI.Dialogs.NewFromCollectDataDialog import NewFromCollectDataDialog
 from GUI.Dialogs.NewFromPCAPDialog import NewFromPCAPDialog
+from GUI.Dialogs.NewSessionDialog import NewSessionDialog
 
 class MainGUI(QMainWindow):
     def __init__(self, logman, comment_mgr, val):
@@ -186,86 +187,83 @@ class MainGUI(QMainWindow):
         logging.debug("on_add_curation_clicked(): Instantiated")
         selectedItem = self.projectTree.currentItem()
 
-        if selectedItem == None:
-            QMessageBox.warning(self,
-                                        "No Project Selected",
-                                        "Could not add session, no project was selected",
-                                        QMessageBox.Ok) 
+        self.nsd = NewSessionDialog(selectedItem.text(0))
+        projectSessions = []
+        for pot_session in self.baseWidgets[selectedItem.text(0)]:
+            if pot_session.startswith("S:"):
+                projectSessions.append(pot_session)
+        if len(projectSessions) > 0:
+            self.nsd.templateNameComboBox.addItems(projectSessions)
+            self.nsd.templateNameComboBox.setEnabled(True)
+        self.nsd.created.connect(self.session_created)
+        self.nsd.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.nsd.show()
+
+    def addSession(self, projectItem, sessionName):
+        logging.debug("addSession(): Instantiated")
+
+        projectName = projectItem.text(0)
+        add_session_result = self.add_session_list(projectName, sessionName)
+
+        if add_session_result == False:
+            logging.error("An error occured when trying to add session to GUI: " + str(sessionName))
+            return
+        else:
+            sessionLabel = "S: " + sessionName
+            #create tree widget item
+            sessionItem = QtWidgets.QTreeWidgetItem(projectItem)
+            sessionItem.setText(0,sessionLabel)   
+            sessionWidget = SessionWidget(sessionName)
+
+            self.baseWidgets[projectName][sessionLabel] = {} #project name (Parent of Parent) + session name (parent of children)
+            self.baseWidgets[projectName][sessionLabel]["SessionWidget"] = sessionWidget
+            self.basedataStackedWidget.addWidget(sessionWidget)
+
+            #create other widget items
+            ##ANNOTATE
+            annItem = QtWidgets.QTreeWidgetItem()
+            annLabel = "A: " + "Annotate"
+            annItem.setText(0, annLabel)
+            sessionItem.addChild(annItem)
+            self.annotateWidget = AnnotateWidget(self.project_data_folder, projectName, os.path.basename(self.existingconfignames[projectName]), sessionName, self.comment_mgr) #send project name for the corresponding directory
+
+            self.baseWidgets[projectName][sessionLabel]["AnnotateWidget"] = self.annotateWidget #child
+            self.basedataStackedWidget.addWidget(self.annotateWidget)
+
+            ##RULES
+            rulesItem = QtWidgets.QTreeWidgetItem()
+            rulesLabel = "R: " + "Rules"
+            rulesItem.setText(0, rulesLabel)
+            sessionItem.addChild(rulesItem)
+            #add the corresponding directory -- if it is already created, skip
+            rulesDir = os.path.join(self.project_data_folder, projectName)
+            rulesDir = os.path.join(rulesDir, ConfigurationManager.STRUCTURE_RULES_GEN_PATH)
+
+            if os.path.exists(rulesDir) == False:
+                os.mkdir(rulesDir)
+
+            rulesWidget = RulesWidget(self.project_data_folder, projectName, os.path.basename(self.existingconfignames[projectName]), sessionName, rulesDir, self.comment_mgr, self.val)
+
+            self.baseWidgets[projectName][sessionLabel]["RulesWidget"] = rulesWidget
+            self.basedataStackedWidget.addWidget(rulesWidget)
+
+            ##RESULTS
+            resultsItem = QtWidgets.QTreeWidgetItem()
+            resultsLabel = "X: " + "Results"
+            resultsItem.setText(0, resultsLabel)
+            sessionItem.addChild(resultsItem)
+
+            #add the corresponding directory -- if it is already created, skip
+            resultsDir = os.path.join(self.project_data_folder, projectName)
+            resultsDir = os.path.join(resultsDir, "IDS-ALERTS")
+
+            if os.path.exists(resultsDir) == False:
+                os.mkdir(resultsDir)
         
-        selectedItemName = selectedItem.text(0)
-
-        sessionName, ok = QInputDialog.getText(self, 'New Session', 
-            'Enter new session name \r\n(non alphanumeric characters will be removed)')
-        if ok:
-            sessionName = ''.join(e for e in sessionName if e.isalnum())
-            if sessionName == '':
-                QMessageBox.warning(self,
-                                        "Invalid Name",
-                                        "The session name specified is invalid",
-                                        QMessageBox.Ok) 
-
-            else: 
-                add_session = self.add_session_list(selectedItemName, sessionName)
-                if add_session == False:
-                    QMessageBox.warning(self,
-                                            "Session Name Exists",
-                                            "The session name specified already exists",
-                                            QMessageBox.Ok)    
-                else:
-                    sessionLabel = "S: " + sessionName
-                    #create tree widget item
-                    sessionItem = QtWidgets.QTreeWidgetItem(selectedItem)
-                    sessionItem.setText(0,sessionLabel)   
-                    sessionWidget = SessionWidget(sessionName)
-
-                    self.baseWidgets[selectedItemName][sessionLabel] = {} #project name (Parent of Parent) + session name (parent of children)
-                    self.baseWidgets[selectedItemName][sessionLabel]["SessionWidget"] = sessionWidget
-                    self.basedataStackedWidget.addWidget(sessionWidget)
-
-                    #create other widget items
-                    ##ANNOTATE
-                    annItem = QtWidgets.QTreeWidgetItem()
-                    annLabel = "A: " + "Annotate"
-                    annItem.setText(0, annLabel)
-                    sessionItem.addChild(annItem)
-                    self.annotateWidget = AnnotateWidget(self.project_data_folder, selectedItemName, os.path.basename(self.existingconfignames[selectedItemName]), sessionName, self.comment_mgr) #send project name for the corresponding directory
-
-                    self.baseWidgets[selectedItemName][sessionLabel]["AnnotateWidget"] = self.annotateWidget #child
-                    self.basedataStackedWidget.addWidget(self.annotateWidget)
-
-                    ##RULES
-                    rulesItem = QtWidgets.QTreeWidgetItem()
-                    rulesLabel = "R: " + "Rules"
-                    rulesItem.setText(0, rulesLabel)
-                    sessionItem.addChild(rulesItem)
-                    #add the corresponding directory -- if it is already created, skip
-                    rulesDir = os.path.join(self.project_data_folder, selectedItemName)
-                    rulesDir = os.path.join(rulesDir, "RULES")
-    
-                    if os.path.exists(rulesDir) == False:
-                        os.mkdir(rulesDir)
-
-                    rulesWidget = RulesWidget(self.project_data_folder, selectedItemName, os.path.basename(self.existingconfignames[selectedItemName]), sessionName, rulesDir, self.comment_mgr, self.val)
-
-                    self.baseWidgets[selectedItemName][sessionLabel]["RulesWidget"] = rulesWidget
-                    self.basedataStackedWidget.addWidget(rulesWidget)
-
-                    ##RESULTS
-                    resultsItem = QtWidgets.QTreeWidgetItem()
-                    resultsLabel = "X: " + "Results"
-                    resultsItem.setText(0, resultsLabel)
-                    sessionItem.addChild(resultsItem)
-                    #add the corresponding directory -- if it is already created, skip
-                    resultsDir = os.path.join(self.project_data_folder, selectedItemName)
-                    resultsDir = os.path.join(resultsDir, "IDS-ALERTS")
-    
-                    if os.path.exists(resultsDir) == False:
-                        os.mkdir(resultsDir)
-                
-                    self.resultsWidget = ResultsWidget(self.project_data_folder, selectedItemName, sessionName, resultsDir, self.val)
-               
-                    self.baseWidgets[selectedItemName][sessionLabel]["ResultsWidget"] = self.resultsWidget
-                    self.basedataStackedWidget.addWidget(self.resultsWidget)
+            self.resultsWidget = ResultsWidget(self.project_data_folder, projectName, sessionName, resultsDir, self.val)
+        
+            self.baseWidgets[projectName][sessionLabel]["ResultsWidget"] = self.resultsWidget
+            self.basedataStackedWidget.addWidget(self.resultsWidget)
 
         logging.debug("on_add_curation_clicked(): Completed")
 
@@ -359,6 +357,12 @@ class MainGUI(QMainWindow):
         self.existingconfignames = existingconfignames
         #create the new project with the updated information
         self.addProject(configname, self.existingconfignames[configname], path)
+    
+    @QtCore.pyqtSlot(str)
+    def session_created(self, newsessionname):
+        #call the function to add session to gui
+        selectedProject =  self.projectTree.currentItem()
+        self.addSession(selectedProject, newsessionname)
 
     #Slot to let us know if the logging has started
     @QtCore.pyqtSlot(str)
@@ -559,7 +563,7 @@ class MainGUI(QMainWindow):
         sessionItem.addChild(rulesItem)
         #add the corresponding directory -- if it is already created, skip
         rulesDir = os.path.join(self.project_data_folder, project_name)
-        rulesDir = os.path.join(rulesDir, "RULES")
+        rulesDir = os.path.join(rulesDir, ConfigurationManager.STRUCTURE_RULES_GEN_PATH)
 
         if os.path.exists(rulesDir) == False:
             os.mkdir(rulesDir)
