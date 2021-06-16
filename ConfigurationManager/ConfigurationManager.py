@@ -15,10 +15,10 @@ class ConfigurationManager():
     STRUCTURE_TIMED_PATH="Timed"
     STRUCTURE_GEN_DISSECTORS_PATH="GeneratedDissectors"
     STRUCTURE_JSON_COMMENTS=os.path.join("tmp", "comments.JSON")
-    STRUCTURE_RULES_GEN_PATH=os.path.join("RULES")
-    STRUCTURE_RULES_GEN_FILE=os.path.join(STRUCTURE_RULES_GEN_PATH,"generated.rules")
-    STRUCTURE_ALERT_GEN_PATH=os.path.join("IDS-ALERTS")
-    STRUCTURE_ALERT_GEN_FILE=os.path.join("fast.log")
+    STRUCTURE_RULES_GEN_PATH="RULES"
+    STRUCTURE_RULES_GEN_FILE="generated.rules"
+    STRUCTURE_ALERT_GEN_PATH="IDS-ALERTS"
+    STRUCTURE_ALERT_GEN_FILE="fast.log"
 
     @staticmethod 
     def get_instance():

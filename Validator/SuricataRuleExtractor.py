@@ -62,7 +62,7 @@ class SuricataRuleExtractor():
                     elif "suricata-rule-attr" in ip_dict["comm_mode"]:
                         comm_mode_attr_dict = ip_dict["comm_mode"]["suricata-rule-attr"]
                         for attr in comm_mode_attr_dict:
-                            suri_custom_attr += str(attr) + "; "
+                            suri_custom_attr += str(attr)
                     
                     ##Write the rule as an IP rule
                     suricata_rule = "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
@@ -134,54 +134,63 @@ class SuricataRuleExtractor():
                         #alert tcp 10.0.2.2 any -> any any (msg: "Illegitimate Connection Stopped Abruptly by Client"; flags: R; flowint:count2, isset; sid: 10; )
                         #alert tcp 10.0.2.2 any -> any any (msg: "Illegitimate Connection Conn Closed"; flags: FA; flowint:count2, isset; sid: 11; )
                         if ip_dict["comm_mode"] == "conversation":
-                            self.tcp_convo_counter += 1
-                            tcpConvoCounterVarName = "tcp_convo_counter"+ str(self.tcp_convo_counter)
-                            ####SYN####
-                            suricata_rule = "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
-                            + suri_direction + " " + suri_ip_dest + " " + suri_dport \
-                            + " (msg: \"Start 3-way TCP-" + suri_msg + "\"; " \
-                            + "flow: to_server; flowint:  "+ tcpConvoCounterVarName+", notset; flowint: " +tcpConvoCounterVarName+",=,1; flags: S; " \
-                            + suri_adv_custom_rule+ " sid: " + str(suri_sid) + ";)"
-                            suri_sid += 1
-                            suricata_rule += "\r\n"
-                            ####First Data Packet (PSH+ACK)
-                            suricata_rule += "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
-                            + suri_direction + " " + suri_ip_dest + " " + suri_dport \
-                            + " (msg: \"Conn Established-" + suri_msg + "\"; " \
-                            + "flow: to_server; flowint:  "+ tcpConvoCounterVarName+", isset; flowint: " +tcpConvoCounterVarName+",==,1; flowint: " + tcpConvoCounterVarName + ", +, 1; flags: PA; "
-                            if suri_content != "":    
-                                suricata_rule += "content:" + suri_content + ";" 
-                            suricata_rule += " flags: " + suri_flags + "; " + suri_custom_attr + suri_adv_custom_rule + " sid: " + str(suri_sid) + ";)"
-                            suri_sid += 1
-                            suricata_rule += "\r\n"
-                            ####Reset Packet from Server
-                            suricata_rule += "alert " + suri_proto + " " + suri_ip_dest + " " + suri_dport + " " \
-                            + suri_direction + " " + suri_ip_src + " " + suri_sport \
-                            + " (msg: \"Abrupt End TCP Server-" + suri_msg + "\"; " \
-                            + "flowint: "+ tcpConvoCounterVarName+", isset; flags: R; " \
-                            + suri_adv_custom_rule + " sid: " + str(suri_sid) + ";)"
-                            suri_sid += 1
-                            suricata_rule += "\r\n"
-                            ####Reset Packet from Client
-                            suricata_rule += "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
-                            + suri_direction + " " + suri_ip_dest + " " + suri_dport \
-                            + " (msg: \"Abrupt End TCP Client-" + suri_msg + "\"; " \
-                            + "flowint: "+ tcpConvoCounterVarName+", isset; flags: R; " \
-                            + suri_adv_custom_rule + " sid: " + str(suri_sid) + ";)"
-                            suri_sid += 1
-                            suricata_rule += "\r\n"
-                            ####Conn Closed
-                            suricata_rule += "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
-                            + suri_direction + " " + suri_ip_dest + " " + suri_dport \
-                            + " (msg: \"Conn Closed Gracefully-" + suri_msg + "\"; " \
-                            + "flowint: "+ tcpConvoCounterVarName+", isset; flags: FA; " \
-                            + suri_adv_custom_rule + " sid: " + str(suri_sid) + ";)"
-                            suricata_rule += "\r\n"
+                            #If there are custom suricata parameters that indicate a flow
+                            if "flow:" in suri_adv_custom_rule:
+                                suricata_rule = "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
+                                + suri_direction + " " + suri_ip_dest + " " + suri_dport \
+                                + " (msg: \"" + suri_msg + "\"; " 
+                                if suri_content.strip().replace(" ", "") != "":
+                                    suricata_rule += "content:" + suri_content + ";" 
+                                suricata_rule += suri_custom_attr + suri_adv_custom_rule + " sid:" + str(suri_sid) + ";)"
+                            else:
+                                self.tcp_convo_counter += 1
+                                tcpConvoCounterVarName = "tcp_convo_counter"+ str(self.tcp_convo_counter)
+                                ####SYN####
+                                suricata_rule = "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
+                                + suri_direction + " " + suri_ip_dest + " " + suri_dport \
+                                + " (msg: \"Start 3-way TCP-" + suri_msg + "\"; " \
+                                + "flow: to_server; flowint:  "+ tcpConvoCounterVarName+", notset; flowint: " +tcpConvoCounterVarName+",=,1; flags: S; " \
+                                + suri_adv_custom_rule+ " sid: " + str(suri_sid) + ";)"
+                                suri_sid += 1
+                                suricata_rule += "\r\n"
+                                ####First Data Packet (PSH+ACK)
+                                suricata_rule += "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
+                                + suri_direction + " " + suri_ip_dest + " " + suri_dport \
+                                + " (msg: \"Conn Established-" + suri_msg + "\"; " \
+                                + "flow: to_server; flowint:  "+ tcpConvoCounterVarName+", isset; flowint: " +tcpConvoCounterVarName+",==,1; flowint: " + tcpConvoCounterVarName + ", +, 1; flags: PA; "
+                                if suri_content != "":    
+                                    suricata_rule += "content:" + suri_content + ";" 
+                                suricata_rule += " flags: " + suri_flags + "; " + suri_custom_attr + suri_adv_custom_rule + " sid: " + str(suri_sid) + ";)"
+                                suri_sid += 1
+                                suricata_rule += "\r\n"
+                                ####Reset Packet from Server
+                                suricata_rule += "alert " + suri_proto + " " + suri_ip_dest + " " + suri_dport + " " \
+                                + suri_direction + " " + suri_ip_src + " " + suri_sport \
+                                + " (msg: \"Abrupt End TCP Server-" + suri_msg + "\"; " \
+                                + "flowint: "+ tcpConvoCounterVarName+", isset; flags: R; " \
+                                + suri_adv_custom_rule + " sid: " + str(suri_sid) + ";)"
+                                suri_sid += 1
+                                suricata_rule += "\r\n"
+                                ####Reset Packet from Client
+                                suricata_rule += "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
+                                + suri_direction + " " + suri_ip_dest + " " + suri_dport \
+                                + " (msg: \"Abrupt End TCP Client-" + suri_msg + "\"; " \
+                                + "flowint: "+ tcpConvoCounterVarName+", isset; flags: R; " \
+                                + suri_adv_custom_rule + " sid: " + str(suri_sid) + ";)"
+                                suri_sid += 1
+                                suricata_rule += "\r\n"
+                                ####Conn Closed
+                                suricata_rule += "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
+                                + suri_direction + " " + suri_ip_dest + " " + suri_dport \
+                                + " (msg: \"Conn Closed Gracefully-" + suri_msg + "\"; " \
+                                + "flowint: "+ tcpConvoCounterVarName+", isset; flags: FA; " \
+                                + suri_adv_custom_rule + " sid: " + str(suri_sid) + ";)"
+                                suricata_rule += "\r\n"
                         else:
                             suricata_rule = "alert " + suri_proto + " " + suri_ip_src + " " + suri_sport + " " \
                             + suri_direction + " " + suri_ip_dest + " " + suri_dport \
                             + " (msg: \"" + suri_msg + "\"; " 
-                            if suri_content != "":
+                            if suri_content.strip().replace(" ","") != "":
                                 suricata_rule += "content:" + suri_content + ";" 
                             suricata_rule += " flags: " + suri_flags + "; " + suri_custom_attr + suri_adv_custom_rule + " sid:" + str(suri_sid) + ";)"
                             

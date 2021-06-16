@@ -43,6 +43,8 @@ class ResultsWidget(QtWidgets.QWidget):
         sessionPCAPFolder = os.path.join(projectPCAPFolder, sessionLabel)
         self.sessionPCAP = os.path.join(sessionPCAPFolder, "SessionGenerated.pcapng")
 
+        self.suspectPCAP = os.path.join(sessionPCAPFolder, "SuspectPCAP.pcapng")
+
         #Create dir for session alerts
         self.sessionAlertsDir = os.path.join(resultsDir, sessionLabel)
 
@@ -91,10 +93,12 @@ class ResultsWidget(QtWidgets.QWidget):
         self.pcapLineEdit2 = QtWidgets.QLineEdit()
         self.pcapLineEdit2.setFixedWidth(150)
         #self.pcapLineEdit2.setFixedHeight(25)
+        if os.path.exists(self.suspectPCAP):
+            self.pcapLineEdit2.setText(self.suspectPCAP)
         self.pcapLineEdit2.setAcceptDrops(False)
         self.pcapLineEdit2.setReadOnly(True)
         self.pcapLineEdit2.setObjectName("pcapLineEdit2") 
-        self.pcapLineEdit2.setAlignment(Qt.AlignLeft)    
+        self.pcapLineEdit2.setAlignment(Qt.AlignLeft)
         self.pcapHorBox2.addWidget(self.pcapLineEdit2)
         
         #view and ... button
@@ -131,10 +135,11 @@ class ResultsWidget(QtWidgets.QWidget):
         self.alertButtonHorBox = QtWidgets.QHBoxLayout()
         self.alertButtonHorBox.setObjectName("alertButtonHorBox")
         self.alertButton = QPushButton("Generate Alerts")
-        self.alertButton.setEnabled(False)
         self.alertButton.clicked.connect(self.on_alert_button_clicked)
         self.alertButtonHorBox.setAlignment(Qt.AlignRight)
         self.alertButtonHorBox.addWidget(self.alertButton)
+        if self.pcapLineEdit2 == "":
+            self.alertButton.setEnabled(False)
 
         self.outerVertBox.addLayout(self.labelVerBoxSess)
         self.outerVertBox.addLayout(self.ruleHorBox)
