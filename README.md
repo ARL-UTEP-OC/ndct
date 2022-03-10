@@ -2,6 +2,7 @@
 
 ## System Requirements
 NDCT should run from a variety of Linux Distros, but it has been primarily tested on:
+* Kali Linux 2021.1 64-bit
 * Kali Linux 2020.2 64-bit
 * Ubuntu 20.04 LTS 64-bit
 * [Python 3 >= 3.5](https://www.python.org/downloads/release/python-369/)
