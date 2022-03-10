@@ -1,9 +1,9 @@
 # Network Data Curation Toolkit (NDCT)
 
 ## System Requirements
-ECEL should run from a variety of Linux Distros, but it has been primarily tested on:
+NDCT should run from a variety of Linux Distros, but it has been primarily tested on:
 * Kali Linux 2020.2 64-bit
-* Ubuntu 20.04 LTS
+* Ubuntu 20.04 LTS 64-bit
 * [Python 3 >= 3.5](https://www.python.org/downloads/release/python-369/)
 
 ## Setting up from source
