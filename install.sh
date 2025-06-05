@@ -45,7 +45,7 @@ if lsb_release -c | grep -iq 'xenial'; then
 fi
 
 if lsb_release -d | grep -iq 'kali'; then
-    if lsb_release -r | grep -q '2020' || lsb_release -r | grep -q '2021.1'; then
+    if lsb_release -r | grep -q '2020' || lsb_release -r | grep -q '2021.1'|| lsb_release -r | grep -q '2025.1'; then
         OS_VERSION="kali_OOB"
         #works out of the box
     fi
@@ -143,7 +143,8 @@ if [ ! -d "venv" ]; then
     $PYTHON_EXEC -m venv venv
 fi
 
-source venv/bin/activate
+source /home/kali/miniconda3/bin/activate
+conda activate 3.9
 pip install pip --upgrade
 pip install $REQUIRED_PYTHON_PACKAGES
 
@@ -184,7 +185,7 @@ else
    sleep 5
 fi
 
-venv/bin/python3 main.py
+/home/kali/miniconda3/envs/3.9/bin/python3 main.py
 EOFeceld-netsys-gui
 
 chmod +x "$ECEL_NETSYS_DIR"/eceld-netsys-gui
