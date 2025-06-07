@@ -9,16 +9,14 @@ prompt_accepted_Yn() {
 }
 
 ECEL_NETSYS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ECELD_VENV_DIR=$ECEL_NETSYS_DIR/eceld/.eceld
 if [ "$EUID" -ne 0 ]; then
 echo "ECELD-NETSYS must be run as root"
 exit 1
 fi
 
+source $ECELD_VENV_DIR/bin/activate
 cd "$ECEL_NETSYS_DIR"
-
-source /home/kali/miniconda3/bin/activate
-conda activate 3.9
-
 if pyro4-nsc list | grep -iq 'ecel.service'; then
    if prompt_accepted_Yn "ECELd service already running, restart the service?"; then
       echo ***** Removing Service *****
@@ -34,5 +32,6 @@ else
    ./eceld/eceld_service &
    sleep 5
 fi
-
-/home/kali/miniconda3/envs/3.9/bin/python3 main.py
+deactivate
+source .ndct/bin/activate
+python3 main.py

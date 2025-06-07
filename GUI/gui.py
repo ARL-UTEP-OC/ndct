@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QTabWidget, QVB
 
 import time
 import re
-from distutils.dir_util import copy_tree
+from shutil import copytree
 from ConfigurationManager.ConfigurationManager import ConfigurationManager
 from PackageManager.PackageManager import PackageManager
 
@@ -475,7 +475,7 @@ class MainGUI(QMainWindow):
 
     def copy_dir(self, from_dir, to_dir):
         logging.debug("copy_dir(): copying selected directory")
-        copy_tree(from_dir, to_dir)
+        copytree(from_dir, to_dir)
         logging.debug("copy_dir(): copying complete")
 
     def copy_dir_complete(self):

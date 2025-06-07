@@ -5,6 +5,8 @@ ECEL_NETSYS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 OUTPUT_PREFIX="ECELD_NETSYS INSTALLER:"
 OUTPUT_ERROR_PREFIX="$OUTPUT_PREFIX ERROR:"
+VENV_DIR="$ECEL_NETSYS_DIR/.ndct"
+ECELD_VENV_DIR="$ECEL_NETSYS_DIR/eceld/.eceld"
 
 ### Helper functions
 #
@@ -71,13 +73,13 @@ if echo $OS_VERSION | grep -q "UNKNOWN"; then
     echo "This version of Linux is currently not support."
     echo "Currently Supported:"
     echo "Ubuntu: Focal, Xenial"
-    echo "Kali: 2019.2, 2020"
+    echo "Kali: 2019.2, 2020, 2025.1"
     exit 1
 fi
 
 # Updates
-#echo "Running apt-get update"
-#apt-get -y update
+echo "Running apt-get update"
+apt-get -y update
 #echo "Running apt-get upgrade"
 #apt-get upgrade
 
@@ -139,12 +141,11 @@ done
 
 ### Create virtualenv if it doesn't currently exist
 echo "$OUTPUT_PREFIX Installing python dependencies"
-if [ ! -d "venv" ]; then
-    $PYTHON_EXEC -m venv venv
+if [ ! -d $VENV_DIR ]; then
+    $PYTHON_EXEC -m venv $VENV_DIR
 fi
 
-source /home/kali/miniconda3/bin/activate
-conda activate 3.9
+source $VENV_DIR/bin/activate
 pip install pip --upgrade
 pip install $REQUIRED_PYTHON_PACKAGES
 
@@ -163,11 +164,13 @@ prompt_accepted_Yn() {
 }
 
 ECEL_NETSYS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ECELD_VENV_DIR=$ECEL_NETSYS_DIR/eceld/.eceld
 if [ "$EUID" -ne 0 ]; then
 	echo "ECELD-NETSYS must be run as root"
 	exit 1
 fi
 
+source $ECELD_VENV_DIR/bin/activate
 cd "$ECEL_NETSYS_DIR"
 if pyro4-nsc list | grep -iq 'ecel.service'; then
    if prompt_accepted_Yn "ECELd service already running, restart the service?"; then
@@ -184,8 +187,9 @@ else
    ./eceld/eceld_service &
    sleep 5
 fi
-
-/home/kali/miniconda3/envs/3.9/bin/python3 main.py
+deactivate
+source .ndct/bin/activate
+python3 main.py
 EOFeceld-netsys-gui
 
 chmod +x "$ECEL_NETSYS_DIR"/eceld-netsys-gui
